@@ -1,0 +1,1602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>SalesForge AI — Close More Deals. Automatically.</title>
+<meta name="description" content="SalesForge AI is the all-in-one AI sales platform — find prospects, automate outreach, and close more deals with autonomous AI agents.">
+<meta name="theme-color" content="#050505">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Inter:wght@400;450;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --bg:#050505;
+  --bg-2:#080a0e;
+  --panel:#0d1018;
+  --panel-2:#111520;
+  --line:rgba(255,255,255,.07);
+  --line-soft:rgba(255,255,255,.04);
+  --text:#f4f5f7;
+  --muted:#9598a3;
+  --faint:#555a66;
+  --accent:#C8FF00;        /* lime green */
+  --accent-rgb:200,255,0;
+  --accent-2:#a3e600;      /* lime darker */
+  --violet:#7c3aed;        /* violet */
+  --violet-2:#6d28d9;
+  --r:14px;
+  --r-lg:22px;
+  --maxw:1140px;
+  --font-body:'Inter',system-ui,sans-serif;
+  --font-display:'Syne',system-ui,sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--font-body);
+  background:var(--bg);
+  color:var(--text);
+  line-height:1.6;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+  letter-spacing:-.012em;
+}
+::selection{background:rgba(200,255,0,.22)}
+a{color:inherit;text-decoration:none}
+h1,h2,h3,h4{line-height:1.1;letter-spacing:-.03em;font-weight:700;font-family:var(--font-display)}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px}
+
+/* UTILITY */
+.accent{color:var(--accent)}
+.grad-text{
+  background:linear-gradient(100deg,#fff 20%,#C8FF00 55%,#7c3aed);
+  -webkit-background-clip:text;background-clip:text;color:transparent
+}
+.grad-text-2{
+  background:linear-gradient(120deg,#C8FF00,#a3e600 40%,#fff);
+  -webkit-background-clip:text;background-clip:text;color:transparent
+}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 22px;border-radius:11px;font-weight:600;font-size:14.5px;cursor:pointer;border:1px solid transparent;transition:all .2s;white-space:nowrap;font-family:var(--font-body)}
+.btn-primary{background:var(--accent);color:#050505}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 12px 36px rgba(200,255,0,.28)}
+.btn-ghost{background:rgba(255,255,255,.04);border-color:var(--line);color:var(--text)}
+.btn-ghost:hover{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.15)}
+.btn-violet{background:linear-gradient(120deg,var(--violet),#9333ea);color:#fff}
+.btn-violet:hover{transform:translateY(-2px);box-shadow:0 12px 34px rgba(124,58,237,.4)}
+
+/* LAYOUT */
+.eyebrow{display:inline-block;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:16px;font-family:var(--font-body)}
+.sec-head{max-width:680px;margin:0 auto 60px;text-align:center}
+.sec-head h2{font-size:clamp(28px,4.2vw,48px);margin-bottom:16px}
+.sec-head p{color:var(--muted);font-size:18px;font-weight:400}
+
+/* BACKGROUND */
+.bg-fx{position:fixed;inset:0;z-index:-2;background:
+  radial-gradient(65% 50% at 50% -10%,rgba(200,255,0,.1),transparent 70%),
+  radial-gradient(45% 40% at 85% 8%,rgba(124,58,237,.1),transparent 70%)}
+.grid-bg{position:fixed;inset:0;z-index:-1;
+  background-image:linear-gradient(rgba(255,255,255,.015) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.015) 1px,transparent 1px);
+  background-size:56px 56px;
+  mask-image:radial-gradient(ellipse 80% 60% at 50% 0%,#000 30%,transparent 100%);
+  -webkit-mask-image:radial-gradient(ellipse 80% 60% at 50% 0%,#000 30%,transparent 100%)}
+
+/* NAV */
+header{position:fixed;top:0;left:0;right:0;z-index:100;transition:background .3s,backdrop-filter .3s,border-color .3s;border-bottom:1px solid transparent}
+header.scrolled{background:rgba(5,5,5,.80);backdrop-filter:blur(20px);border-color:var(--line-soft)}
+nav{display:flex;align-items:center;justify-content:space-between;height:68px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:19px;font-family:var(--font-display);letter-spacing:-.04em}
+.logo .mark{width:30px;height:30px;border-radius:9px;background:var(--accent);position:relative;display:grid;place-items:center;box-shadow:0 0 20px rgba(200,255,0,.35)}
+.logo .mark svg{width:16px;height:16px}
+.logo span{background:linear-gradient(120deg,#C8FF00,#fff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.nav-links{display:flex;gap:30px;font-size:14px;color:var(--muted);font-weight:500}
+.nav-links a{transition:color .2s}
+.nav-links a:hover{color:var(--text)}
+.nav-badge{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#050505;background:var(--accent);padding:2px 7px;border-radius:4px;margin-left:6px;vertical-align:middle}
+.nav-cta{display:flex;gap:10px;align-items:center}
+@media(max-width:900px){.nav-links{display:none}.nav-cta .ghost-hide{display:none}}
+
+/* HERO */
+.hero{padding:152px 0 80px;text-align:center;position:relative}
+.hero-badge{display:inline-flex;align-items:center;gap:10px;padding:7px 16px 7px 10px;border-radius:999px;background:rgba(200,255,0,.06);border:1px solid rgba(200,255,0,.2);font-size:13px;color:var(--muted);margin-bottom:32px;font-weight:500}
+.hero-badge b{background:var(--accent);color:#050505;font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;letter-spacing:.04em}
+.hero-badge .pulse-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px rgba(200,255,0,.2);animation:pdot 1.5s ease-in-out infinite}
+@keyframes pdot{0%,100%{box-shadow:0 0 0 3px rgba(200,255,0,.2)}50%{box-shadow:0 0 0 8px rgba(200,255,0,0)}}
+.hero h1{font-size:clamp(40px,6.5vw,78px);font-weight:800;letter-spacing:-.04em;margin-bottom:24px;line-height:1.0}
+.hero p.lead{font-size:clamp(16px,2vw,21px);color:var(--muted);max-width:580px;margin:0 auto 36px;font-weight:400;line-height:1.65}
+.hero-cta{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.hero-note{margin-top:20px;font-size:13px;color:var(--faint)}
+.hero-note span{color:var(--accent);font-weight:600}
+
+/* LIVE COUNTER BAR */
+.live-bar{display:flex;gap:0;justify-content:center;flex-wrap:wrap;margin-top:52px;border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden;max-width:800px;margin-left:auto;margin-right:auto}
+.live-stat{flex:1;min-width:160px;padding:22px 16px;text-align:center;border-right:1px solid var(--line);background:rgba(255,255,255,.015)}
+.live-stat:last-child{border-right:none}
+.live-stat .lnum{font-size:26px;font-weight:800;font-family:var(--font-display);letter-spacing:-.04em}
+.live-stat .llab{font-size:12px;color:var(--faint);margin-top:4px;letter-spacing:.04em;text-transform:uppercase}
+.live-stat .ldelta{font-size:11px;color:var(--accent);font-weight:700;margin-top:3px}
+
+/* DASHBOARD MOCKUP */
+.shot{position:relative;margin:60px auto 0;max-width:1020px}
+.shot::after{content:"";position:absolute;inset:-8% -4% -28% -4%;background:radial-gradient(55% 55% at 50% 0%,rgba(200,255,0,.18),transparent 70%);z-index:-1;filter:blur(24px)}
+.frame{border-radius:var(--r-lg);border:1px solid rgba(200,255,0,.12);background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.01));box-shadow:0 30px 90px rgba(0,0,0,.65);overflow:hidden;backdrop-filter:blur(8px)}
+.frame-bar{display:flex;align-items:center;gap:7px;padding:12px 18px;border-bottom:1px solid var(--line-soft);background:rgba(255,255,255,.02)}
+.frame-bar i{width:11px;height:11px;border-radius:50%;background:rgba(255,255,255,.12)}
+.frame-bar i:first-child{background:#ff5f56}
+.frame-bar i:nth-child(2){background:#ffbd2e}
+.frame-bar i:nth-child(3){background:#27c93f}
+.frame-bar .url{margin-left:14px;font-size:12px;color:var(--faint);font-family:monospace}
+.frame-bar .live-pill{margin-left:auto;display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--accent);background:rgba(200,255,0,.1);border:1px solid rgba(200,255,0,.2);padding:3px 10px;border-radius:999px;letter-spacing:.04em}
+.frame-bar .live-pill .ld{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:blink 1.4s infinite}
+@keyframes blink{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(200,255,0,.5)}50%{opacity:.4;box-shadow:0 0 0 5px rgba(200,255,0,0)}}
+
+.app{display:grid;grid-template-columns:200px 1fr;min-height:360px}
+.app-side{border-right:1px solid var(--line-soft);padding:18px 12px;display:flex;flex-direction:column;gap:4px;background:rgba(255,255,255,.01)}
+.app-side .grp{font-size:10.5px;color:var(--faint);text-transform:uppercase;letter-spacing:.1em;margin:12px 8px 4px;font-weight:700}
+.app-side .it{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:9px;font-size:13px;color:var(--muted);cursor:pointer;transition:all .2s}
+.app-side .it.on{background:rgba(200,255,0,.08);color:var(--text);border:1px solid rgba(200,255,0,.12)}
+.app-side .it .dot{width:8px;height:8px;border-radius:3px;background:rgba(255,255,255,.1)}
+.app-side .it.on .dot{background:var(--accent);box-shadow:0 0 8px rgba(200,255,0,.4)}
+.app-side .it .badge-count{margin-left:auto;font-size:10px;background:rgba(200,255,0,.15);color:var(--accent);padding:2px 7px;border-radius:999px;font-weight:700}
+.app-main{padding:22px}
+.app-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+.kpi-card{background:rgba(255,255,255,.025);border:1px solid var(--line-soft);border-radius:12px;padding:14px}
+.kpi-card .klab{font-size:11px;color:var(--faint);margin-bottom:6px;letter-spacing:.04em;text-transform:uppercase}
+.kpi-card .kval{font-size:22px;font-weight:700;font-family:var(--font-display);letter-spacing:-.04em}
+.kpi-card .kdelta{font-size:11px;font-weight:700;margin-top:4px}
+.kpi-card .kdelta.up{color:var(--accent)}
+.kpi-card .kdelta.down{color:#f87171}
+
+.app-row{display:grid;grid-template-columns:1fr 260px;gap:12px}
+.prospect-list{background:rgba(255,255,255,.02);border:1px solid var(--line-soft);border-radius:12px;overflow:hidden}
+.pl-head{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--line-soft);font-size:12px;color:var(--faint);font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+.pl-head .ai-tag{color:var(--accent);font-size:10px;background:rgba(200,255,0,.1);padding:2px 8px;border-radius:999px}
+.pl-row{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line-soft);font-size:12.5px;transition:background .2s;cursor:pointer}
+.pl-row:hover{background:rgba(255,255,255,.03)}
+.pl-row:last-child{border-bottom:none}
+.pl-av{width:28px;height:28px;border-radius:50%;flex:none;font-size:11px;font-weight:700;display:grid;place-items:center;background:linear-gradient(140deg,var(--violet),#9333ea);color:#fff}
+.pl-info{flex:1;min-width:0}
+.pl-name{font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pl-role{font-size:11px;color:var(--faint)}
+.pl-score{font-size:11px;font-weight:700;color:var(--accent);background:rgba(200,255,0,.08);padding:2px 8px;border-radius:999px}
+.pl-status{font-size:10px;font-weight:600;padding:2px 8px;border-radius:999px}
+.pl-status.hot{background:rgba(251,191,36,.12);color:#fbbf24}
+.pl-status.seq{background:rgba(200,255,0,.1);color:var(--accent)}
+.pl-status.new{background:rgba(124,58,237,.12);color:#a78bfa}
+
+.ai-feed{background:rgba(255,255,255,.02);border:1px solid var(--line-soft);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:8px}
+.ai-feed .feed-head{font-size:11px;color:var(--faint);font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px;display:flex;align-items:center;gap:6px}
+.ai-feed .feed-head .ai-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:blink 1.4s infinite}
+.feed-item{background:rgba(255,255,255,.025);border:1px solid var(--line-soft);border-radius:9px;padding:9px 10px}
+.feed-item .ftype{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px}
+.feed-item .ftype.intent{color:var(--accent)}
+.feed-item .ftype.reply{color:#34d399}
+.feed-item .ftype.meeting{color:#818cf8}
+.feed-item .ftext{font-size:11.5px;color:var(--muted);line-height:1.4}
+.feed-item .ftime{font-size:10px;color:var(--faint);margin-top:3px}
+
+@media(max-width:680px){.app{grid-template-columns:1fr}.app-side{display:none}.app-kpis{grid-template-columns:1fr 1fr}.app-row{grid-template-columns:1fr}.ai-feed{display:none}}
+
+/* LOGOS MARQUEE */
+.logos{padding:56px 0 16px;text-align:center}
+.logos p{font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-bottom:24px;font-weight:600}
+.marquee{overflow:hidden;-webkit-mask-image:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent);mask-image:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent)}
+.marquee-track{display:flex;gap:0;width:max-content;animation:scrollx 28s linear infinite;align-items:center}
+.marquee-track.rev{animation-direction:reverse;animation-duration:34s}
+.logo-item{display:flex;align-items:center;gap:8px;padding:0 38px;opacity:.45;transition:opacity .3s;filter:grayscale(1)}
+.logo-item:hover{opacity:.8;filter:grayscale(0)}
+.logo-item svg{height:20px;width:auto;fill:var(--text)}
+.logo-item span{font-weight:700;font-size:17px;color:var(--text);letter-spacing:-.02em;white-space:nowrap}
+@keyframes scrollx{to{transform:translateX(-50%)}}
+
+/* MANIFESTO SCRUB */
+.manifesto{padding:120px 0;text-align:center}
+.manifesto .big{font-size:clamp(24px,4.2vw,50px);font-weight:700;line-height:1.3;letter-spacing:-.03em;max-width:920px;margin:0 auto;font-family:var(--font-display)}
+.manifesto .big .w{color:#2a2d35;transition:color .12s linear;will-change:color}
+
+/* FEATURE ROWS */
+section.section{padding:100px 0;position:relative}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center}
+.row+.row{margin-top:112px}
+.row.flip .copy{order:2}
+.copy h2{font-size:clamp(26px,3.8vw,40px);margin-bottom:16px}
+.copy p{color:var(--muted);font-size:16.5px;margin-bottom:24px;line-height:1.7}
+.ticks{list-style:none;display:flex;flex-direction:column;gap:13px}
+.ticks li{display:flex;gap:12px;align-items:flex-start;font-size:15px;color:var(--muted)}
+.ticks li b{color:var(--text)}
+.ticks svg{width:18px;height:18px;flex:none;margin-top:2px;stroke:var(--accent);stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.visual{border-radius:var(--r-lg);border:1px solid var(--line);background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.01));padding:24px;position:relative;overflow:hidden;min-height:320px}
+.visual::before{content:"";position:absolute;inset:0;background:radial-gradient(70% 60% at 50% 0%,rgba(200,255,0,.08),transparent 70%)}
+@media(max-width:860px){.row{grid-template-columns:1fr;gap:32px}.row+.row{margin-top:72px}.row.flip .copy{order:0}}
+
+/* MINI WIDGETS */
+.mini{position:relative;z-index:1;display:flex;flex-direction:column;gap:11px}
+.mini .bar{display:flex;align-items:center;gap:11px;background:rgba(255,255,255,.03);border:1px solid var(--line-soft);border-radius:11px;padding:11px 14px}
+.mini .bar .dot{width:9px;height:9px;border-radius:50%;background:var(--accent);flex:none}
+.mini .bar .dot.v{background:var(--violet)}
+.mini .bar .dot.c{background:#34d399}
+.mini .bar .t{font-size:13px;color:var(--text)}
+.mini .bar .t small{display:block;color:var(--faint);font-size:11px}
+.mini .bar .pill{margin-left:auto;font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:999px}
+.pill-lime{color:var(--accent);background:rgba(200,255,0,.1);border:1px solid rgba(200,255,0,.15)}
+.pill-green{color:#34d399;background:rgba(52,211,153,.08)}
+.pill-violet{color:#a78bfa;background:rgba(124,58,237,.1)}
+
+/* SEQUENCE VISUAL */
+.seq-visual{display:flex;flex-direction:column;gap:0;position:relative;z-index:1}
+.seq-step{display:flex;align-items:flex-start;gap:14px;padding:14px 0;position:relative}
+.seq-step::before{content:"";position:absolute;left:18px;top:42px;bottom:-14px;width:2px;background:linear-gradient(180deg,rgba(200,255,0,.3),transparent)}
+.seq-step:last-child::before{display:none}
+.seq-icon{width:38px;height:38px;border-radius:50%;flex:none;display:grid;place-items:center;border:2px solid rgba(200,255,0,.25);background:rgba(200,255,0,.06)}
+.seq-icon svg{width:16px;height:16px;stroke:var(--accent);stroke-width:2;fill:none}
+.seq-info .shead{font-size:14px;font-weight:700;color:var(--text)}
+.seq-info .ssub{font-size:12px;color:var(--faint);margin-top:2px}
+.seq-info .stat-row{display:flex;gap:8px;margin-top:6px}
+.sstat{font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px}
+.sstat.lime{color:var(--accent);background:rgba(200,255,0,.1)}
+.sstat.gray{color:var(--muted);background:rgba(255,255,255,.05)}
+
+/* FEATURE GRID */
+.grid6{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line-soft);border:1px solid var(--line-soft);border-radius:var(--r-lg);overflow:hidden}
+.cell{background:var(--bg);padding:30px 26px;transition:background .3s}
+.cell:hover{background:var(--panel)}
+.cell .ico{width:40px;height:40px;border-radius:11px;background:rgba(200,255,0,.08);border:1px solid rgba(200,255,0,.15);display:grid;place-items:center;margin-bottom:16px}
+.cell .ico svg{width:18px;height:18px;stroke:var(--accent);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.cell h3{font-size:16px;margin-bottom:8px;font-weight:700}
+.cell p{color:var(--muted);font-size:14px;line-height:1.6}
+@media(max-width:860px){.grid6{grid-template-columns:1fr 1fr}}
+@media(max-width:540px){.grid6{grid-template-columns:1fr}}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line-soft);border:1px solid var(--line-soft);border-radius:var(--r-lg);overflow:hidden}
+.stat{background:var(--bg);padding:36px 22px;text-align:center}
+.stat .num{font-size:clamp(32px,4.5vw,50px);font-weight:800;letter-spacing:-.04em;font-family:var(--font-display)}
+.stat .lab{color:var(--muted);font-size:13px;margin-top:8px}
+@media(max-width:680px){.stats{grid-template-columns:1fr 1fr}}
+
+/* INTEGRATIONS */
+.integ-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;max-width:800px;margin:0 auto}
+.integ-chip{aspect-ratio:1;border-radius:16px;background:var(--panel);border:1px solid var(--line-soft);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-weight:700;font-size:11px;color:var(--muted);transition:all .3s;cursor:default;padding:8px}
+.integ-chip:hover{border-color:rgba(200,255,0,.3);color:var(--text);transform:translateY(-4px);background:rgba(200,255,0,.04)}
+.integ-chip svg{width:24px;height:24px}
+.integ-chip span{font-size:10px;font-weight:600;text-align:center;line-height:1.2}
+@media(max-width:680px){.integ-grid{grid-template-columns:repeat(4,1fr)}}
+@media(max-width:440px){.integ-grid{grid-template-columns:repeat(3,1fr)}}
+
+/* TESTIMONIALS */
+.quotes{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.quote{background:var(--panel);border:1px solid var(--line-soft);border-radius:var(--r);padding:28px;font-size:15px;transition:border-color .3s}
+.quote:hover{border-color:rgba(200,255,0,.2)}
+.quote .stars{display:flex;gap:3px;margin-bottom:14px}
+.quote .stars span{color:var(--accent);font-size:14px}
+.quote p{color:var(--text);margin-bottom:22px;font-weight:400;line-height:1.65;font-size:14.5px}
+.quote .who{display:flex;align-items:center;gap:12px}
+.quote .av{width:40px;height:40px;border-radius:50%;flex:none;display:grid;place-items:center;font-weight:800;font-size:15px;color:#050505}
+.quote .who b{font-size:14px;display:block;font-weight:700}
+.quote .who span{font-size:12px;color:var(--faint)}
+.quote .who .company{font-size:11px;color:var(--accent);font-weight:600;margin-top:2px}
+@media(max-width:860px){.quotes{grid-template-columns:1fr}}
+
+/* PRICING */
+.pricing{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;align-items:stretch}
+.plan{position:relative;background:var(--panel);border:1px solid var(--line-soft);border-radius:var(--r-lg);padding:32px;display:flex;flex-direction:column;transition:transform .3s,border-color .3s}
+.plan:hover{transform:translateY(-4px)}
+.plan.featured{border-color:rgba(200,255,0,.35);background:linear-gradient(180deg,rgba(200,255,0,.06),rgba(255,255,255,.01))}
+.plan.featured:hover{border-color:rgba(200,255,0,.55)}
+.plan .ptag{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--accent);color:#050505;font-size:11px;font-weight:800;padding:4px 14px;border-radius:999px;letter-spacing:.05em;white-space:nowrap}
+.plan h3{font-size:15px;margin-bottom:4px;color:var(--muted);font-weight:600;font-family:var(--font-body);text-transform:uppercase;letter-spacing:.08em}
+.plan .price{font-size:44px;font-weight:800;letter-spacing:-.04em;margin:10px 0 4px;font-family:var(--font-display)}
+.plan .price small{font-size:15px;color:var(--faint);font-weight:400}
+.plan .pdesc{color:var(--muted);font-size:13.5px;margin-bottom:26px;min-height:36px}
+.plan hr{border:none;border-top:1px solid var(--line-soft);margin:0 0 20px}
+.plan ul{list-style:none;margin-bottom:28px;flex:1;display:flex;flex-direction:column;gap:11px}
+.plan li{display:flex;gap:10px;align-items:flex-start;font-size:14px;color:var(--muted);line-height:1.5}
+.plan li svg{width:16px;height:16px;flex:none;margin-top:2px;stroke:var(--accent);stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.plan li.off svg{stroke:var(--faint)}
+.plan li.off{color:var(--faint)}
+@media(max-width:860px){.pricing{grid-template-columns:1fr}}
+
+/* CTA BOX */
+.cta-box{position:relative;text-align:center;border-radius:28px;border:1px solid rgba(200,255,0,.15);padding:80px 28px;overflow:hidden;background:radial-gradient(ellipse at 50% 140%,rgba(200,255,0,.2),transparent 60%),var(--bg-2)}
+.cta-box::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 60% 50% at 50% 100%,rgba(124,58,237,.15),transparent 70%)}
+.cta-box h2{font-size:clamp(32px,5vw,54px);margin-bottom:18px;position:relative}
+.cta-box p{color:var(--muted);font-size:18px;max-width:500px;margin:0 auto 34px;position:relative}
+
+/* FAQ */
+.faq{max-width:800px;margin:0 auto}
+.qa{border-bottom:1px solid var(--line-soft)}
+.qa button{width:100%;text-align:left;background:none;border:none;color:var(--text);font-family:var(--font-display);font-size:17px;font-weight:700;padding:22px 44px 22px 0;cursor:pointer;position:relative;letter-spacing:-.02em}
+.qa button::after{content:"+";position:absolute;right:6px;top:50%;transform:translateY(-50%);font-size:24px;color:var(--accent);transition:transform .3s;font-weight:400;font-family:var(--font-body)}
+.qa.open button::after{transform:translateY(-50%) rotate(45deg)}
+.qa .a{max-height:0;overflow:hidden;transition:max-height .4s ease;color:var(--muted);font-size:15.5px}
+.qa .a p{padding:0 0 22px;line-height:1.7}
+
+/* FOOTER */
+footer{border-top:1px solid var(--line-soft);padding:60px 0 40px;margin-top:24px}
+.foot{display:grid;grid-template-columns:1.8fr repeat(4,1fr);gap:32px}
+.foot-brand p{color:var(--muted);font-size:13.5px;margin-top:14px;max-width:240px;line-height:1.7}
+.foot h4{font-size:11px;letter-spacing:.08em;color:var(--faint);margin-bottom:14px;font-weight:700;text-transform:uppercase}
+.foot a{display:block;color:var(--muted);font-size:14px;padding:5px 0;transition:color .2s}
+.foot a:hover{color:var(--text)}
+.foot-bot{display:flex;justify-content:space-between;align-items:center;margin-top:48px;padding-top:24px;border-top:1px solid var(--line-soft);color:var(--faint);font-size:13px;flex-wrap:wrap;gap:10px}
+.foot-socials{display:flex;gap:14px}
+.foot-socials a{width:34px;height:34px;border-radius:9px;border:1px solid var(--line);display:grid;place-items:center;transition:all .2s}
+.foot-socials a:hover{border-color:rgba(200,255,0,.3);background:rgba(200,255,0,.06)}
+.foot-socials svg{width:15px;height:15px;stroke:var(--muted);stroke-width:1.8;fill:none}
+@media(max-width:840px){.foot{grid-template-columns:1fr 1fr 1fr}}
+@media(max-width:560px){.foot{grid-template-columns:1fr 1fr}}
+
+/* CANVAS BG */
+#bgGL{position:fixed;inset:0;width:100%;height:100%;z-index:-3;pointer-events:none;display:block}
+
+/* KINETIC */
+.kinetic{padding:112px 0;overflow:hidden}
+.kinetic .lines{text-align:center}
+.kinetic .line{
+  display:flex;justify-content:center;align-items:center;
+  font-size:clamp(52px,14vw,190px);font-weight:800;line-height:.88;
+  letter-spacing:-.05em;text-transform:uppercase;
+  font-family:var(--font-display);
+}
+.kinetic .line .ch{display:inline-block;transform-style:preserve-3d;will-change:transform,opacity}
+.kinetic .line.fill .ch{background:linear-gradient(100deg,#C8FF00,#fff 50%,#7c3aed);-webkit-background-clip:text;background-clip:text;color:transparent}
+.kinetic .line.outline .ch{color:transparent;-webkit-text-stroke:1.8px rgba(255,255,255,.22)}
+.kinetic .line.solid .ch{color:var(--text)}
+.vmarq{margin-top:44px;overflow:hidden;white-space:nowrap;border-top:1px solid var(--line-soft);border-bottom:1px solid var(--line-soft);padding:16px 0}
+.vtrack{display:inline-flex;gap:0;will-change:transform}
+.vtrack span{font-size:clamp(16px,2.2vw,28px);font-weight:700;letter-spacing:-.02em;color:var(--faint);padding:0 28px;display:inline-flex;align-items:center;gap:28px;font-family:var(--font-display)}
+.vtrack span::after{content:"";width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.vtrack span.hl{color:var(--text)}
+
+/* REVEAL */
+.reveal{opacity:0;transform:translateY(24px)}
+
+/* COMPARE */
+.compare{position:relative;border-radius:var(--r-lg);border:1px solid var(--line);overflow:hidden;min-height:400px;background:var(--bg-2)}
+.compare .layer{position:absolute;inset:0;padding:48px;display:grid;grid-template-columns:1fr 1.05fr;gap:32px;align-items:center}
+.compare .before{background:repeating-linear-gradient(135deg,rgba(255,255,255,.018) 0 12px,transparent 12px 24px),var(--bg-2)}
+.compare .after{background:radial-gradient(80% 90% at 50% 50%,rgba(200,255,0,.08),transparent 70%),var(--bg-2);clip-path:inset(0 100% 0 0)}
+.compare .tagx{display:inline-block;font-size:12px;font-weight:700;padding:5px 13px;border-radius:999px;margin-bottom:14px;width:max-content;text-transform:uppercase;letter-spacing:.05em}
+.compare .before .tagx{background:rgba(255,255,255,.06);color:var(--muted)}
+.compare .after .tagx{background:var(--accent);color:#050505}
+.compare h3{font-size:clamp(22px,3vw,36px);margin-bottom:12px;max-width:420px}
+.compare p{color:var(--muted);font-size:15.5px;max-width:400px}
+.compare .handle{position:absolute;top:0;bottom:0;left:0;width:3px;background:linear-gradient(180deg,transparent,var(--accent),transparent);box-shadow:0 0 20px rgba(200,255,0,.5);z-index:3}
+.compare .handle::after{content:"⇆";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:36px;height:36px;border-radius:50%;background:var(--accent);color:#050505;display:grid;place-items:center;font-size:14px;font-weight:900}
+
+/* horizontal scroll cards */
+.hcard{flex:0 0 360px;background:var(--panel);border:1px solid var(--line-soft);border-radius:var(--r-lg);padding:28px;min-height:400px;display:flex;flex-direction:column;position:relative;overflow:hidden}
+.hcard::before{content:"";position:absolute;inset:0;background:radial-gradient(70% 50% at 50% 0%,rgba(200,255,0,.07),transparent 70%);opacity:0;transition:opacity .4s}
+.hcard:hover::before{opacity:1}
+.hcard .num{font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.08em;text-transform:uppercase}
+.hcard .vis{height:160px;border-radius:14px;border:1px solid var(--line-soft);background:rgba(255,255,255,.02);margin:18px 0 22px;display:grid;place-items:center;overflow:hidden;position:relative}
+.hcard h3{font-size:22px;margin-bottom:10px}
+.hcard p{color:var(--muted);font-size:14px;line-height:1.65}
+.hide-scrollbar::-webkit-scrollbar{display:none}
+.hide-scrollbar{scrollbar-width:none;-ms-overflow-style:none}
+</style>
+</head>
+
+<body>
+<canvas id="bgGL"></canvas>
+<div class="bg-fx"></div>
+<div class="grid-bg"></div>
+
+<!-- ═══ NAV ═══ -->
+<header id="header">
+  <div class="wrap">
+    <nav>
+      <div class="logo">
+        <span class="mark">
+          <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3 8L6.5 11.5L13 4.5" stroke="#050505" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+        <span>SalesForge</span><sup style="font-size:11px;color:var(--accent);font-weight:800;margin-left:1px;font-family:var(--font-body)">AI</sup>
+      </div>
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#agents">AI Agents<span class="nav-badge">New</span></a>
+        <a href="#integrations">Integrations</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#testimonials">Reviews</a>
+      </div>
+      <div class="nav-cta">
+        <a href="#" class="btn btn-ghost ghost-hide">Sign in</a>
+        <a href="#cta" class="btn btn-primary">Start Free →</a>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<!-- ═══ HERO ═══ -->
+<section class="hero">
+  <div class="wrap">
+    <div class="hero-badge reveal">
+      <span class="pulse-dot"></span>
+      <b>LIVE</b>
+      47 deals closed in the last hour by SalesForge AI
+    </div>
+
+    <h1 class="reveal">
+      Close More Deals.<br>
+      <span class="grad-text">Automatically.</span>
+    </h1>
+
+    <p class="lead reveal">
+      The AI-powered sales platform that finds your best prospects,
+      writes hyper-personalized outreach, and books meetings
+      on autopilot — 24/7.
+    </p>
+
+    <div class="hero-cta reveal">
+      <a href="#cta" class="btn btn-primary" style="font-size:16px;padding:14px 28px">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        Start Free Trial
+      </a>
+      <a href="#demo" class="btn btn-ghost" style="font-size:16px;padding:14px 28px">
+        Watch Demo
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polygon points="10,8 16,12 10,16" fill="currentColor"/></svg>
+      </a>
+    </div>
+
+    <div class="hero-note reveal">
+      <span>No credit card</span> required · Setup in <span>5 minutes</span> · Cancel anytime
+    </div>
+
+    <!-- LIVE STATS BAR -->
+    <div class="live-bar reveal">
+      <div class="live-stat">
+        <div class="lnum grad-text-2" id="lc1">12,847</div>
+        <div class="llab">Leads found today</div>
+        <div class="ldelta">▲ +342 in last hour</div>
+      </div>
+      <div class="live-stat">
+        <div class="lnum grad-text-2">3.8x</div>
+        <div class="llab">More meetings booked</div>
+        <div class="ldelta">vs manual outreach</div>
+      </div>
+      <div class="live-stat">
+        <div class="lnum grad-text-2">94%</div>
+        <div class="llab">Email deliverability</div>
+        <div class="ldelta">Industry avg: 71%</div>
+      </div>
+      <div class="live-stat">
+        <div class="lnum grad-text-2" id="lc2">2,194</div>
+        <div class="llab">Meetings booked today</div>
+        <div class="ldelta">▲ +18 in last hour</div>
+      </div>
+    </div>
+
+    <!-- DASHBOARD MOCKUP -->
+    <div class="shot reveal" id="shot">
+      <div class="frame">
+        <div class="frame-bar">
+          <i></i><i></i><i></i>
+          <span class="url">app.salesforge.ai / dashboard</span>
+          <span class="live-pill"><span class="ld"></span> AI Active</span>
+        </div>
+        <div class="app">
+          <div class="app-side">
+            <div class="grp">Core</div>
+            <div class="it on">
+              <span class="dot"></span> Dashboard
+              <span class="badge-count">12</span>
+            </div>
+            <div class="it"><span class="dot"></span> Prospects</div>
+            <div class="it"><span class="dot"></span> Sequences</div>
+            <div class="it"><span class="dot"></span> Inbox</div>
+            <div class="grp">AI Agents</div>
+            <div class="it"><span class="dot"></span> SDR Agent</div>
+            <div class="it"><span class="dot"></span> Deal Analyzer</div>
+            <div class="it"><span class="dot"></span> Email Coach</div>
+            <div class="grp">Reports</div>
+            <div class="it"><span class="dot"></span> Pipeline</div>
+            <div class="it"><span class="dot"></span> Analytics</div>
+          </div>
+          <div class="app-main">
+            <div class="app-kpis">
+              <div class="kpi-card">
+                <div class="klab">Prospects Today</div>
+                <div class="kval grad-text-2">1,284</div>
+                <div class="kdelta up">▲ +23% vs yesterday</div>
+              </div>
+              <div class="kpi-card">
+                <div class="klab">Emails Sent</div>
+                <div class="kval grad-text-2">3,817</div>
+                <div class="kdelta up">▲ 94% delivered</div>
+              </div>
+              <div class="kpi-card">
+                <div class="klab">Meetings Booked</div>
+                <div class="kval grad-text-2">47</div>
+                <div class="kdelta up">▲ Best day ever</div>
+              </div>
+              <div class="kpi-card">
+                <div class="klab">Revenue Pipeline</div>
+                <div class="kval grad-text-2">$284K</div>
+                <div class="kdelta up">▲ +$42K today</div>
+              </div>
+            </div>
+            <div class="app-row">
+              <div class="prospect-list">
+                <div class="pl-head">
+                  AI-Scored Prospects
+                  <span class="ai-tag">⚡ AI Ranked</span>
+                </div>
+                <div class="pl-row">
+                  <span class="pl-av">JM</span>
+                  <div class="pl-info">
+                    <div class="pl-name">James Morrison</div>
+                    <div class="pl-role">VP Sales · Stripe</div>
+                  </div>
+                  <span class="pl-score">98</span>
+                  <span class="pl-status hot">Hot</span>
+                </div>
+                <div class="pl-row">
+                  <span class="pl-av" style="background:linear-gradient(140deg,#C8FF00,#86efac);color:#050505">SC</span>
+                  <div class="pl-info">
+                    <div class="pl-name">Sarah Chen</div>
+                    <div class="pl-role">CRO · Linear</div>
+                  </div>
+                  <span class="pl-score">94</span>
+                  <span class="pl-status seq">In Seq</span>
+                </div>
+                <div class="pl-row">
+                  <span class="pl-av" style="background:linear-gradient(140deg,#818cf8,#c084fc)">RP</span>
+                  <div class="pl-info">
+                    <div class="pl-name">Raj Patel</div>
+                    <div class="pl-role">Head of Sales · Notion</div>
+                  </div>
+                  <span class="pl-score">91</span>
+                  <span class="pl-status new">New</span>
+                </div>
+                <div class="pl-row">
+                  <span class="pl-av" style="background:linear-gradient(140deg,#f59e0b,#ef4444)">AL</span>
+                  <div class="pl-info">
+                    <div class="pl-name">Amy Liu</div>
+                    <div class="pl-role">Director Sales · Figma</div>
+                  </div>
+                  <span class="pl-score">88</span>
+                  <span class="pl-status hot">Hot</span>
+                </div>
+              </div>
+              <div class="ai-feed">
+                <div class="feed-head"><span class="ai-dot"></span> AI Activity Feed</div>
+                <div class="feed-item">
+                  <div class="ftype intent">⚡ Intent Signal</div>
+                  <div class="ftext">Stripe just hired 3 SDRs — 94% buying probability</div>
+                  <div class="ftime">2 min ago</div>
+                </div>
+                <div class="feed-item">
+                  <div class="ftype reply">✓ Reply Detected</div>
+                  <div class="ftext">Sarah Chen replied: "Yes, I'm interested in a demo"</div>
+                  <div class="ftime">8 min ago</div>
+                </div>
+                <div class="feed-item">
+                  <div class="ftype meeting">📅 Meeting Booked</div>
+                  <div class="ftext">James Morrison — Tomorrow 2PM via Calendly</div>
+                  <div class="ftime">14 min ago</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ BRAND LOGOS ═══ -->
+<div class="logos">
+  <div class="wrap"><p class="reveal">Trusted by sales teams at</p></div>
+  <div class="marquee">
+    <div class="marquee-track">
+      <!-- Stripe -->
+      <div class="logo-item">
+        <svg viewBox="0 0 60 25" xmlns="http://www.w3.org/2000/svg"><path d="M59.6 12.8c0-4.2-2-7.5-5.9-7.5-3.9 0-6.3 3.3-6.3 7.4 0 4.9 2.8 7.4 6.8 7.4 2 0 3.5-.4 4.6-1.1v-3.1c-1.1.6-2.3.9-3.8.9-1.5 0-2.9-.5-3-2.5H59.6v-1.5zm-7.6-1.5c0-1.8 1.1-2.6 2.1-2.6 1 0 2 .8 2 2.6h-4.1zM41.6 5.3c-1.5 0-2.4.7-3 1.2l-.2-1H35v20.1l3.7-.8v-4.9c.6.4 1.4.9 2.8.9 2.8 0 5.4-2.3 5.4-7.3-.1-4.6-2.6-6.2-5.3-6.2zm-.9 9.6c-.9 0-1.5-.3-1.9-.8V9.6c.4-.5 1-.8 1.9-.8 1.5 0 2.5 1.6 2.5 3.1 0 1.5-1 3-2.5 3zm-10-10.5l-3.7.8V19.8h3.7V4.4zm-1.9-1.2c1.2 0 2.2-1 2.2-2.2 0-1.2-1-2.2-2.2-2.2-1.2 0-2.2 1-2.2 2.2 0 1.2 1 2.2 2.2 2.2zm-7.8 6.8c0-1.7 2-2.3 4.6-2.3V5.3c-2.9 0-5.8 1.3-5.8 5 0 4.5 5.9 3.8 5.9 5.7 0 .7-.5 1.2-2.1 1.2-1.8 0-3.5-.7-4.8-1.6v3.7c1.1.5 2.8 1 4.6 1 3.4 0 5.7-1.7 5.7-5.2-.1-4.9-5.9-3.9-5.9-5.7h1.8zM5 6.6l3.7-.8 5.2 11L11 20h3.4l7.5-14.5h-3.9L15 12.9 11.7 5.8H5.3L5 6.6z"/></svg>
+        <span>Stripe</span>
+      </div>
+      <!-- HubSpot -->
+      <div class="logo-item">
+        <svg viewBox="0 0 120 40" xmlns="http://www.w3.org/2000/svg"><text x="0" y="30" font-family="Arial" font-weight="900" font-size="26" fill="currentColor">HubSpot</text></svg>
+      </div>
+      <!-- Salesforce -->
+      <div class="logo-item">
+        <svg viewBox="0 0 120 40" xmlns="http://www.w3.org/2000/svg"><text x="0" y="30" font-family="Arial" font-weight="900" font-size="22" fill="currentColor">Salesforce</text></svg>
+      </div>
+      <!-- Notion -->
+      <div class="logo-item">
+        <svg viewBox="0 0 80 30" xmlns="http://www.w3.org/2000/svg"><text x="0" y="24" font-family="Arial" font-weight="900" font-size="22" fill="currentColor">Notion</text></svg>
+      </div>
+      <!-- Linear -->
+      <div class="logo-item">
+        <svg viewBox="0 0 80 30" xmlns="http://www.w3.org/2000/svg"><text x="0" y="24" font-family="Arial" font-weight="700" font-size="22" fill="currentColor">Linear</text></svg>
+      </div>
+      <!-- Figma -->
+      <div class="logo-item">
+        <svg viewBox="0 0 80 30" xmlns="http://www.w3.org/2000/svg"><text x="0" y="24" font-family="Arial" font-weight="900" font-size="22" fill="currentColor">Figma</text></svg>
+      </div>
+      <!-- Slack -->
+      <div class="logo-item">
+        <svg viewBox="0 0 80 30" xmlns="http://www.w3.org/2000/svg"><text x="0" y="24" font-family="Arial" font-weight="700" font-size="22" fill="currentColor">Slack</text></svg>
+      </div>
+      <!-- Vercel -->
+      <div class="logo-item">
+        <svg viewBox="0 0 80 30" xmlns="http://www.w3.org/2000/svg"><text x="0" y="24" font-family="Arial" font-weight="700" font-size="22" fill="currentColor">▲ Vercel</text></svg>
+      </div>
+      <!-- duplicate for loop -->
+      <div class="logo-item"><svg viewBox="0 0 80 30"><text x="0" y="24" font-family="Arial" font-weight="900" font-size="22" fill="currentColor">Stripe</text></svg></div>
+      <div class="logo-item"><svg viewBox="0 0 120 40"><text x="0" y="30" font-family="Arial" font-weight="900" font-size="26" fill="currentColor">HubSpot</text></svg></div>
+      <div class="logo-item"><svg viewBox="0 0 120 40"><text x="0" y="30" font-family="Arial" font-weight="900" font-size="22" fill="currentColor">Salesforce</text></svg></div>
+      <div class="logo-item"><svg viewBox="0 0 80 30"><text x="0" y="24" font-family="Arial" font-weight="900" font-size="22" fill="currentColor">Notion</text></svg></div>
+      <div class="logo-item"><svg viewBox="0 0 80 30"><text x="0" y="24" font-family="Arial" font-weight="700" font-size="22" fill="currentColor">Linear</text></svg></div>
+      <div class="logo-item"><svg viewBox="0 0 80 30"><text x="0" y="24" font-family="Arial" font-weight="900" font-size="22" fill="currentColor">Figma</text></svg></div>
+      <div class="logo-item"><svg viewBox="0 0 80 30"><text x="0" y="24" font-family="Arial" font-weight="700" font-size="22" fill="currentColor">Slack</text></svg></div>
+      <div class="logo-item"><svg viewBox="0 0 80 30"><text x="0" y="24" font-family="Arial" font-weight="700" font-size="22" fill="currentColor">▲ Vercel</text></svg></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MANIFESTO ═══ -->
+<section class="manifesto" id="manifesto">
+  <div class="wrap">
+    <span class="eyebrow reveal">The Problem</span>
+    <p class="big" id="manifestoText">
+      Most sales teams spend 73% of their time on manual prospecting that never converts.
+      SalesForge AI flips that — autonomous agents find your best buyers,
+      craft personalized messages, and book meetings while your reps sleep.
+    </p>
+  </div>
+</section>
+
+<!-- ═══ ALTERNATING FEATURE ROWS ═══ -->
+<section class="section" id="features">
+  <div class="wrap">
+
+    <!-- ROW 1: Prospecting -->
+    <div class="row reveal">
+      <div class="copy">
+        <span class="eyebrow">200M+ Contact Database</span>
+        <h2>Find your perfect buyer in seconds</h2>
+        <p>
+          AI-powered lead discovery with real-time verified data.
+          Filter by role, company size, tech stack, funding stage,
+          and buying intent signals — then export in one click.
+        </p>
+        <ul class="ticks">
+          <li>
+            <svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
+            <span><b>Real-time verification.</b> Email, phone, and LinkedIn — verified the moment you search.</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
+            <span><b>Intent signals.</b> Know who's actively looking to buy right now.</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
+            <span><b>Chrome extension.</b> 1-click prospect capture from LinkedIn.</span>
+          </li>
+        </ul>
+      </div>
+      <div class="visual">
+        <div class="mini">
+          <div class="bar">
+            <span class="dot"></span>
+            <span class="t">Intent: Buying Signal Detected<small>Stripe · Just hired 3 SDRs · 94% match</small></span>
+            <span class="pill pill-lime">Hot 🔥</span>
+          </div>
+          <div class="bar">
+            <span class="dot v"></span>
+            <span class="t">Technographic Filter Active<small>Uses Salesforce + HubSpot + Outreach</small></span>
+            <span class="pill pill-violet">Filtered</span>
+          </div>
+          <div class="bar">
+            <span class="dot c"></span>
+            <span class="t">Email Verified ✓<small>james.morrison@stripe.com · 99.2% deliverable</small></span>
+            <span class="pill pill-green">Live</span>
+          </div>
+          <div class="bar">
+            <span class="dot"></span>
+            <span class="t">AI Score: 98/100<small>Highest match in your ICP this week</small></span>
+            <span class="pill pill-lime">AI Ranked</span>
+          </div>
+          <div style="margin-top:6px;padding:14px;background:rgba(200,255,0,.05);border:1px solid rgba(200,255,0,.1);border-radius:12px">
+            <div style="font-size:11px;color:var(--faint);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;font-weight:700">Prospects Found Today</div>
+            <div style="display:flex;align-items:flex-end;gap:5px;height:60px">
+              <div style="flex:1;background:linear-gradient(180deg,var(--accent),rgba(200,255,0,.1));border-radius:4px 4px 0 0;height:45%"></div>
+              <div style="flex:1;background:linear-gradient(180deg,var(--accent),rgba(200,255,0,.1));border-radius:4px 4px 0 0;height:65%"></div>
+              <div style="flex:1;background:linear-gradient(180deg,var(--accent),rgba(200,255,0,.1));border-radius:4px 4px 0 0;height:50%"></div>
+              <div style="flex:1;background:linear-gradient(180deg,var(--accent),rgba(200,255,0,.1));border-radius:4px 4px 0 0;height:82%"></div>
+              <div style="flex:1;background:linear-gradient(180deg,var(--accent),rgba(200,255,0,.1));border-radius:4px 4px 0 0;height:60%"></div>
+              <div style="flex:1;background:linear-gradient(180deg,var(--accent),rgba(200,255,0,.1));border-radius:4px 4px 0 0;height:100%"></div>
+              <div style="flex:1;background:linear-gradient(180deg,var(--accent),rgba(200,255,0,.1));border-radius:4px 4px 0 0;height:75%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROW 2: Sequences -->
+    <div class="row flip reveal">
+      <div class="copy">
+        <span class="eyebrow">Multi-Channel Outreach</span>
+        <h2>Sequences that convert, written by AI</h2>
+        <p>
+          Deploy multi-channel sequences across email, LinkedIn,
+          phone, and SMS. AI writes every message, personalized
+          to each prospect's background, company news, and tech stack.
+        </p>
+        <ul class="ticks">
+          <li>
+            <svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
+            <span><b>AI copywriting.</b> Hyper-personalized emails based on prospect's LinkedIn & company news.</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
+            <span><b>Smart send-time.</b> AI picks the optimal time per recipient.</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
+            <span><b>A/B testing.</b> Auto-selects winning variants after 50 sends.</span>
+          </li>
+        </ul>
+      </div>
+      <div class="visual">
+        <div class="seq-visual">
+          <div class="seq-step">
+            <div class="seq-icon">
+              <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 8l10 6 10-6"/></svg>
+            </div>
+            <div class="seq-info">
+              <div class="shead">Email 1 — Cold Intro</div>
+              <div class="ssub">AI-personalized · Day 1</div>
+              <div class="stat-row">
+                <span class="sstat lime">67% open rate</span>
+                <span class="sstat gray">AI written</span>
+              </div>
+            </div>
+          </div>
+          <div class="seq-step">
+            <div class="seq-icon">
+              <svg viewBox="0 0 24 24"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+            </div>
+            <div class="seq-info">
+              <div class="shead">LinkedIn Connect</div>
+              <div class="ssub">Automated · Day 3</div>
+              <div class="stat-row">
+                <span class="sstat lime">42% accept rate</span>
+              </div>
+            </div>
+          </div>
+          <div class="seq-step">
+            <div class="seq-icon">
+              <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            </div>
+            <div class="seq-info">
+              <div class="shead">Phone Call Prompt</div>
+              <div class="ssub">AI script ready · Day 7</div>
+              <div class="stat-row">
+                <span class="sstat lime">23% connect rate</span>
+              </div>
+            </div>
+          </div>
+          <div class="seq-step">
+            <div class="seq-icon" style="border-color:rgba(200,255,0,.5);background:rgba(200,255,0,.12)">
+              <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </div>
+            <div class="seq-info">
+              <div class="shead">Meeting Booked ✓</div>
+              <div class="ssub">Auto Calendly invite · Average Day 9</div>
+              <div class="stat-row">
+                <span class="sstat lime">38% booking rate</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROW 3: AI Agents -->
+    <div class="row reveal" id="agents">
+      <div class="copy">
+        <span class="eyebrow">Autonomous AI Agents</span>
+        <h2>Your AI SDR that never sleeps</h2>
+        <p>
+          Deploy AI agents that prospect, qualify, and book meetings
+          on their own. The AI SDR Agent monitors intent signals,
+          sends follow-ups, handles objections, and routes hot leads
+          to your reps in real time.
+        </p>
+        <ul class="ticks">
+          <li>
+            <svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
+            <span><b>SDR Agent.</b> Books meetings autonomously — avg 47 per month per seat.</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
+            <span><b>Deal Analyzer.</b> Flags at-risk deals 14 days before they die.</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
+            <span><b>Meeting Summarizer.</b> Auto-generates CRM notes post-call.</span>
+          </li>
+        </ul>
+        <a href="#cta" class="btn btn-violet" style="margin-top:8px">
+          Deploy Your AI Agent →
+        </a>
+      </div>
+      <div class="visual" style="min-height:360px;padding:20px">
+        <div style="position:relative;z-index:1">
+          <div style="background:rgba(200,255,0,.05);border:1px solid rgba(200,255,0,.15);border-radius:14px;padding:16px;margin-bottom:12px">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+              <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(140deg,#C8FF00,#86efac);display:grid;place-items:center">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#050505" stroke-width="3" stroke-linecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+              </div>
+              <div>
+                <div style="font-size:13px;font-weight:700;color:var(--text)">SDR Agent · Active</div>
+                <div style="font-size:11px;color:var(--accent)">Working on 127 prospects</div>
+              </div>
+              <div style="margin-left:auto;font-size:10px;font-weight:700;color:var(--accent);background:rgba(200,255,0,.1);border:1px solid rgba(200,255,0,.2);padding:3px 9px;border-radius:999px;animation:blink 1.4s infinite">● LIVE</div>
+            </div>
+            <div style="font-size:12px;color:var(--muted);background:rgba(255,255,255,.03);border-radius:9px;padding:10px;font-family:monospace;line-height:1.8">
+              <span style="color:var(--accent)">→</span> Sending follow-up to James Morrison...<br>
+              <span style="color:#34d399">✓</span> Sarah Chen replied — routing to rep<br>
+              <span style="color:var(--accent)">→</span> Detecting intent signal at Figma...<br>
+              <span style="color:#818cf8">📅</span> Meeting booked: Raj Patel — Thu 3PM
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div style="background:rgba(255,255,255,.025);border:1px solid var(--line-soft);border-radius:12px;padding:14px;text-align:center">
+              <div style="font-size:24px;font-weight:800;color:var(--accent);font-family:var(--font-display)">47</div>
+              <div style="font-size:11px;color:var(--faint);margin-top:3px">Meetings/Month</div>
+            </div>
+            <div style="background:rgba(255,255,255,.025);border:1px solid var(--line-soft);border-radius:12px;padding:14px;text-align:center">
+              <div style="font-size:24px;font-weight:800;color:#a78bfa;font-family:var(--font-display)">2.1s</div>
+              <div style="font-size:11px;color:var(--faint);margin-top:3px">Avg Response Time</div>
+            </div>
+            <div style="background:rgba(255,255,255,.025);border:1px solid var(--line-soft);border-radius:12px;padding:14px;text-align:center">
+              <div style="font-size:24px;font-weight:800;color:#34d399;font-family:var(--font-display)">94%</div>
+              <div style="font-size:11px;color:var(--faint);margin-top:3px">Email Deliverability</div>
+            </div>
+            <div style="background:rgba(255,255,255,.025);border:1px solid var(--line-soft);border-radius:12px;padding:14px;text-align:center">
+              <div style="font-size:24px;font-weight:800;color:var(--accent);font-family:var(--font-display)">24/7</div>
+              <div style="font-size:11px;color:var(--faint);margin-top:3px">Always Working</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══ FEATURE GRID ═══ -->
+<section class="section" style="padding-top:24px">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">Everything You Need</span>
+      <h2>One platform. Every stage of the sale.</h2>
+      <p>Replace 7 tools with one AI-powered workspace that actually closes deals.</p>
+    </div>
+    <div class="grid6">
+      <div class="cell reveal">
+        <div class="ico"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></div>
+        <h3>Prospect Intelligence</h3>
+        <p>200M+ contacts with real-time verified emails, phones, and intent data. Know your buyer before you reach out.</p>
+      </div>
+      <div class="cell reveal">
+        <div class="ico"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+        <h3>AI Email Writer</h3>
+        <p>Hyper-personalized emails written for each prospect in seconds. Referencing their LinkedIn, news, and tech stack.</p>
+      </div>
+      <div class="cell reveal">
+        <div class="ico"><svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
+        <h3>AI SDR Agent</h3>
+        <p>Fully autonomous agent that prospects, outreaches, handles replies, and books meetings around the clock.</p>
+      </div>
+      <div class="cell reveal">
+        <div class="ico"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+        <h3>Pipeline Analytics</h3>
+        <p>Real-time pipeline health scores, revenue forecasting, and AI-powered deal risk detection.</p>
+      </div>
+      <div class="cell reveal">
+        <div class="ico"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+        <h3>Team Collaboration</h3>
+        <p>Shared sequences, rep leaderboards, and AI coaching — everyone performs like your best rep.</p>
+      </div>
+      <div class="cell reveal">
+        <div class="ico"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
+        <h3>Conversation Intel</h3>
+        <p>Record, transcribe, and analyze every sales call. AI highlights objections, next steps, and coaching moments.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ KINETIC TYPOGRAPHY ═══ -->
+<section class="kinetic">
+  <div class="wrap">
+    <div class="lines">
+      <div class="line fill" data-split="Find"><span class="ch">F</span><span class="ch">i</span><span class="ch">n</span><span class="ch">d</span></div>
+      <div class="line outline" data-split="Engage"><span class="ch">E</span><span class="ch">n</span><span class="ch">g</span><span class="ch">a</span><span class="ch">g</span><span class="ch">e</span></div>
+      <div class="line solid" data-split="Close"><span class="ch">C</span><span class="ch">l</span><span class="ch">o</span><span class="ch">s</span><span class="ch">e</span></div>
+    </div>
+  </div>
+  <div class="vmarq">
+    <div class="vtrack" id="vtrack">
+      <span>AI-Powered</span>
+      <span class="hl">Autonomous</span>
+      <span>Personalized</span>
+      <span>Real-time</span>
+      <span class="hl">High-Converting</span>
+      <span>Scalable</span>
+      <span>AI-Powered</span>
+      <span class="hl">Autonomous</span>
+      <span>Personalized</span>
+      <span>Real-time</span>
+      <span class="hl">High-Converting</span>
+      <span>Scalable</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ STATS ═══ -->
+<section class="section" style="padding-top:24px">
+  <div class="wrap">
+    <div class="stats reveal">
+      <div class="stat">
+        <div class="num grad-text" data-count="200" data-suffix="M+">0</div>
+        <div class="lab">Verified contacts in database</div>
+      </div>
+      <div class="stat">
+        <div class="num grad-text" data-count="3.8" data-suffix="x" data-dec="1">0</div>
+        <div class="lab">More meetings vs manual</div>
+      </div>
+      <div class="stat">
+        <div class="num grad-text" data-count="94" data-suffix="%">0</div>
+        <div class="lab">Email deliverability rate</div>
+      </div>
+      <div class="stat">
+        <div class="num grad-text" data-count="12000" data-suffix="+">0</div>
+        <div class="lab">Sales teams using SalesForge</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ BEFORE / AFTER COMPARE ═══ -->
+<section class="section" style="padding-top:24px">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">The Difference</span>
+      <h2>Manual prospecting is dead. AI is here.</h2>
+      <p>Scroll to wipe between the old way and the SalesForge way.</p>
+    </div>
+    <div class="compare reveal" id="compare">
+      <div class="layer before">
+        <div class="txt">
+          <span class="tagx">Old Way</span>
+          <h3>You spend 6 hours finding one lead</h3>
+          <p>Manual LinkedIn searches, CSV exports, copy-pasting emails, zero personalization. Your best reps waste their talent on data entry.</p>
+        </div>
+        <div style="background:rgba(255,255,255,.02);border:1px solid var(--line-soft);border-radius:14px;padding:20px">
+          <div style="font-size:11px;color:var(--faint);text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-bottom:14px">Manual Workflow</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="background:rgba(255,255,255,.03);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--muted)">⏱ Search LinkedIn... 45 min</div>
+            <div style="background:rgba(255,255,255,.03);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--muted)">📋 Copy to spreadsheet... 20 min</div>
+            <div style="background:rgba(255,255,255,.03);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--muted)">✍️ Write email manually... 30 min</div>
+            <div style="background:rgba(255,255,255,.03);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--muted)">❌ Email bounced — wrong address</div>
+          </div>
+        </div>
+      </div>
+      <div class="after" id="afterLayer">
+        <div class="txt">
+          <span class="tagx">SalesForge AI</span>
+          <h3>AI finds 500 leads and emails them in minutes</h3>
+          <p>Autonomous agents prospect, personalize, and send while you focus on closing. From zero to booked meeting in under 10 minutes.</p>
+        </div>
+        <div style="background:rgba(200,255,0,.04);border:1px solid rgba(200,255,0,.15);border-radius:14px;padding:20px">
+          <div style="font-size:11px;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-bottom:14px">AI Workflow</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="background:rgba(200,255,0,.05);border:1px solid rgba(200,255,0,.1);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--text)">⚡ 500 prospects found — 30 sec</div>
+            <div style="background:rgba(200,255,0,.05);border:1px solid rgba(200,255,0,.1);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--text)">✓ All verified — 99.2% deliverable</div>
+            <div style="background:rgba(200,255,0,.05);border:1px solid rgba(200,255,0,.1);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--text)">🤖 AI wrote 500 unique emails — 2 min</div>
+            <div style="background:rgba(200,255,0,.05);border:1px solid rgba(200,255,0,.1);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--text)">📅 3 meetings booked — same day</div>
+          </div>
+        </div>
+      </div>
+      <div class="handle" id="compareHandle"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ INTEGRATIONS ═══ -->
+<section class="section" id="integrations" style="padding-top:24px">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">Integrations</span>
+      <h2>Plugs into your entire stack</h2>
+      <p>Native sync with 80+ tools. Your CRM, calendar, and inbox — connected in minutes.</p>
+    </div>
+    <div class="integ-grid" id="integ">
+      <div class="integ-chip reveal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span>Salesforce</span>
+      </div>
+      <div class="integ-chip reveal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        <span>HubSpot</span>
+      </div>
+      <div class="integ-chip reveal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 3H8l-2 4h12l-2-4z"/></svg>
+        <span>Pipedrive</span>
+      </div>
+      <div class="integ-chip reveal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+        <span>LinkedIn</span>
+      </div>
+      <div class="integ-chip reveal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6z"/></svg>
+        <span>Twilio</span>
+      </div>
+      <div class="integ-chip reveal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span>Slack</span>
+      </div>
+      <div class="integ-chip reveal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span>Calendly</span>
+      </div>
+      <div class="integ-chip reveal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        <span>Gmail</span>
+      </div>
+      <div class="integ-chip reveal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        <span>Outlook</span>
+      </div>
+      <div class="integ-chip reveal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        <span>Zapier</span>
+      </div>
+      <div class="integ-chip reveal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        <span>Apollo</span>
+      </div>
+      <div class="integ-chip reveal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        <span>API</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ TESTIMONIALS ═══ -->
+<section class="section" id="testimonials">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">Real Reviews</span>
+      <h2>Sales teams love SalesForge</h2>
+      <p>Join 12,000+ sales professionals who've replaced their entire stack.</p>
+    </div>
+    <div class="quotes">
+      <div class="quote reveal">
+        <div class="stars"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div>
+        <p>"We went from 4 meetings a week to 47. The AI SDR agent is unreal — it handles the entire top of funnel while my reps focus on closing. SalesForge paid for itself in week one."</p>
+        <div class="who">
+          <div class="av" style="background:linear-gradient(140deg,#C8FF00,#86efac)">JM</div>
+          <span>
+            <b>James Morrison</b>
+            <span>VP Sales, Stripe</span>
+            <div class="company">$2.4M revenue added in 90 days</div>
+          </span>
+        </div>
+      </div>
+      <div class="quote reveal">
+        <div class="stars"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div>
+        <p>"The personalization is insane. Prospects think my reps spent hours researching them. Meanwhile the AI wrote 500 emails in 3 minutes. Our reply rates tripled in the first month."</p>
+        <div class="who">
+          <div class="av" style="background:linear-gradient(140deg,#818cf8,#c084fc)">SC</div>
+          <span>
+            <b>Sarah Chen</b>
+            <span>CRO, Linear</span>
+            <div class="company">3x reply rate, 67% open rate</div>
+          </span>
+        </div>
+      </div>
+      <div class="quote reveal">
+        <div class="stars"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div>
+        <p>"We cancelled Apollo, Outreach, and ZoomInfo on the same day. SalesForge does everything better for 40% less cost. The intent signals alone are worth the subscription."</p>
+        <div class="who">
+          <div class="av" style="background:linear-gradient(140deg,#f59e0b,#ef4444)">RP</div>
+          <span>
+            <b>Raj Patel</b>
+            <span>Head of Sales, Notion</span>
+            <div class="company">Replaced 4 tools, saved $3,200/mo</div>
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ PRICING ═══ -->
+<section class="section" id="pricing">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">Pricing</span>
+      <h2>Scales with your pipeline, not your headcount</h2>
+      <p>No per-seat nonsense. Pay for results, not licenses.</p>
+    </div>
+
+    <div class="pricing">
+      <!-- FREE -->
+      <div class="plan reveal">
+        <h3>Starter</h3>
+        <div class="price">$0 <small>/month</small></div>
+        <p class="pdesc">For solo reps testing the waters.</p>
+        <hr>
+        <ul>
+          <li><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg> 100 prospects / month</li>
+          <li><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg> 500 AI emails</li>
+          <li><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg> 1 email sequence</li>
+          <li><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg> Gmail & Outlook sync</li>
+          <li class="off"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg> AI SDR Agent</li>
+          <li class="off"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg> Intent signals</li>
+          <li class="off"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg> CRM sync</li>
+        </ul>
+        <a href="#cta" class="btn btn-ghost" style="width:100%;justify-content:center">Get Started Free</a>
+      </div>
+
+      <!-- GROWTH (FEATURED) -->
+      <div class="plan featured reveal" style="margin-top:-20px">
+        <span class="ptag">⚡ MOST POPULAR</span>
+        <h3>Growth</h3>
+        <div class="price" style="color:var(--accent)">$149 <small style="color:var(--faint)">/month</small></div>
+        <p class="pdesc">For sales teams serious about pipeline.</p>
+        <hr>
+        <ul>
+          <li><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg> 10,000 prospects / month</li>
+          <li><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg> Unlimited AI emails</li>
+          <li><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg> Unlimited sequences</li>
+          <li><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg> 1 AI SDR Agent</li>
+          <li><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg> Intent signals</li>
+          <li><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg> Salesforce & HubSpot sync</li>
+          <li><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg> LinkedIn automation</li>
+          <li><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg> Priority support</li>
+        </ul>
+        <a href="#cta" class="btn btn-primary" style="width:100%;justify-content:center;font-size:15px;padding:14px">
+          Start 14-Day Free Trial →
+        </a>
+        <p style="font-size:12px;color:var(--faint);text-align:center;margin-top:10px">No credit card required</p>
+      </div>
+
+      <!-- ENTERPRISE -->
+      <div class="plan reveal">
+        <h3>Enterprise</h3>
+        <div class="price">Custom</div>
+        <p class="pdesc">For high-velocity sales orgs.</p>
+        <hr>
+        <ul>
+          <li><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg> Unlimited everything</li>
+          <li><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg> Unlimited AI Agents</li>
+          <li><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg> Custom AI training on your ICP</li>
+          <li><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg> SSO / SAML</li>
+          <li><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg> SOC 2 Type II</li>
+          <li><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg> Dedicated success engineer</li>
+          <li><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg> SLA guarantee</li>
+        </ul>
+        <a href="#cta" class="btn btn-ghost" style="width:100%;justify-content:center">Talk to Sales</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FAQ ═══ -->
+<section class="section" id="faq">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">FAQ</span>
+      <h2>Questions answered</h2>
+    </div>
+    <div class="faq" id="faqList">
+      <div class="qa reveal">
+        <button>How is SalesForge AI different from Apollo?</button>
+        <div class="a"><p>Apollo is a database. SalesForge is an autonomous agent. We find prospects, write personalized emails, send them, handle replies, and book meetings automatically — Apollo requires you to do all of that manually. We also have real-time intent signals and AI deal analysis that Apollo doesn't offer.</p></div>
+      </div>
+      <div class="qa reveal">
+        <button>How does the AI SDR Agent work?</button>
+        <div class="a"><p>The AI SDR Agent monitors your ICP criteria, finds new prospects daily, writes personalized outreach, sends emails at optimal times, detects replies, handles common objections, and routes hot leads to your reps. It runs 24/7 and averages 47 booked meetings per month.</p></div>
+      </div>
+      <div class="qa reveal">
+        <button>Will emails land in spam?</button>
+        <div class="a"><p>Our AI maintains 94% deliverability through domain warming, optimal send timing, spam-trigger avoidance, and automatic bounce handling. We also monitor sender reputation in real-time and pause sequences if deliverability drops — something no manual sender can do.</p></div>
+      </div>
+      <div class="qa reveal">
+        <button>Can I import my existing contacts?</button>
+        <div class="a"><p>Yes — import any CSV, sync directly from Salesforce, HubSpot, or Pipedrive, or use our Chrome extension to pull contacts from LinkedIn one-click. We enrich all imported contacts with verified emails, phones, and intent data.</p></div>
+      </div>
+      <div class="qa reveal">
+        <button>Is there a free trial?</button>
+        <div class="a"><p>The Growth plan includes a 14-day free trial with full access — no credit card required. You can also start on our Starter plan free forever, then upgrade when you're ready to scale.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ CTA ═══ -->
+<section class="section" id="cta">
+  <div class="wrap">
+    <div class="cta-box reveal">
+      <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 16px;background:rgba(200,255,0,.1);border:1px solid rgba(200,255,0,.2);border-radius:999px;font-size:12px;font-weight:700;color:var(--accent);margin-bottom:24px;letter-spacing:.06em;text-transform:uppercase">
+        <span style="width:7px;height:7px;background:var(--accent);border-radius:50%;animation:blink 1.4s infinite"></span>
+        47 meetings booked in the last hour
+      </div>
+      <h2 class="grad-text">Start Closing More Deals Today</h2>
+      <p>Join 12,000+ sales teams using AI to 3x their pipeline. Free trial, no credit card, setup in 5 minutes.</p>
+      <div class="hero-cta">
+        <a href="#" class="btn btn-primary" style="font-size:16px;padding:15px 32px">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          Start Free Trial
+        </a>
+        <a href="#" class="btn btn-ghost" style="font-size:16px;padding:15px 32px">Book a Demo</a>
+      </div>
+      <p style="font-size:13px;color:var(--faint);margin-top:18px;position:relative">
+        ✓ No credit card &nbsp;·&nbsp; ✓ 14-day free trial &nbsp;·&nbsp; ✓ Cancel anytime
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FOOTER ═══ -->
+<footer>
+  <div class="wrap">
+    <div class="foot">
+      <div class="foot-brand">
+        <div class="logo" style="margin-bottom:0">
+          <span class="mark" style="width:26px;height:26px">
+            <svg viewBox="0 0 16 16" fill="none"><path d="M3 8L6.5 11.5L13 4.5" stroke="#050505" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+          <span>SalesForge</span><sup style="font-size:10px;color:var(--accent);font-weight:800;font-family:var(--font-body)">AI</sup>
+        </div>
+        <p>The AI-powered sales platform that finds prospects, writes personalized outreach, and closes deals on autopilot.</p>
+        <div class="foot-socials" style="margin-top:18px">
+          <a href="#"><svg viewBox="0 0 24 24"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"/></svg></a>
+          <a href="#"><svg viewBox="0 0 24 24"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg></a>
+          <a href="#"><svg viewBox="0 0 24 24"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg></a>
+        </div>
+      </div>
+      <div>
+        <h4>Product</h4>
+        <a href="#features">Features</a>
+        <a href="#agents">AI Agents</a>
+        <a href="#integrations">Integrations</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#">Changelog</a>
+      </div>
+      <div>
+        <h4>Solutions</h4>
+        <a href="#">SDR Teams</a>
+        <a href="#">AE Teams</a>
+        <a href="#">Startups</a>
+        <a href="#">Enterprise</a>
+        <a href="#">Agencies</a>
+      </div>
+      <div>
+        <h4>Resources</h4>
+        <a href="#">Documentation</a>
+        <a href="#">API Reference</a>
+        <a href="#">Blog</a>
+        <a href="#">Case Studies</a>
+        <a href="#">Status</a>
+      </div>
+      <div>
+        <h4>Company</h4>
+        <a href="#">About</a>
+        <a href="#">Careers</a>
+        <a href="#">Contact</a>
+        <a href="#">Security</a>
+        <a href="#">Privacy Policy</a>
+      </div>
+    </div>
+    <div class="foot-bot">
+      <span>© 2026 SalesForge AI, Inc. All rights reserved.</span>
+      <span>Privacy · Terms · SOC 2 Type II · GDPR</span>
+    </div>
+  </div>
+</footer>
+
+<!-- ═══ SCRIPTS ═══ -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lenis/1.1.13/lenis.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<script>
+// ═══ MAGIC RINGS THREE.JS BACKGROUND (lime green + violet palette) ═══
+(function(){
+  const canvas = document.getElementById('bgGL');
+  if(!canvas || !window.THREE) { if(canvas) canvas.style.display='none'; return; }
+  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(prefersReduced) { canvas.style.display='none'; return; }
+
+  const CFG = {
+    color:'#C8FF00', colorTwo:'#7c3aed',
+    speed:0.7, ringCount:5, attenuation:12, lineThickness:1.8,
+    baseRadius:0.3, radiusStep:0.12, scaleRate:0.08, opacity:0.9,
+    blur:0, noiseAmount:0.05, rotation:15, ringGap:1.4,
+    fadeIn:0.7, fadeOut:0.5, followMouse:true, mouseInfluence:0.12, parallax:0.04
+  };
+
+  const vert = 'void main(){gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}';
+  const frag = [
+    'precision highp float;',
+    'uniform float uTime,uAttenuation,uLineThickness;',
+    'uniform float uBaseRadius,uRadiusStep,uScaleRate;',
+    'uniform float uOpacity,uNoiseAmount,uRotation,uRingGap;',
+    'uniform float uFadeIn,uFadeOut,uMouseInfluence,uParallax;',
+    'uniform vec2 uResolution,uMouse;',
+    'uniform vec3 uColor,uColorTwo;',
+    'uniform int uRingCount;',
+    'const float HP=1.5707963;',
+    'const float CYCLE=3.45;',
+    'float fade(float t){return t<uFadeIn?smoothstep(0.0,uFadeIn,t):1.0-smoothstep(uFadeOut,CYCLE-0.2,t);}',
+    'float ring(vec2 p,float ri,float cut,float t0,float px){',
+    ' float t=mod(uTime+t0,CYCLE);',
+    ' float r=ri+t/CYCLE*uScaleRate;',
+    ' float d=abs(length(p)-r);',
+    ' float a=atan(abs(p.y),abs(p.x))/HP;',
+    ' float th=max(1.0-a,0.5)*px*uLineThickness;',
+    ' float h=(1.0-smoothstep(th,th*1.5,d))+1.0;',
+    ' d+=pow(cut*a,3.0)*r;',
+    ' return h*exp(-uAttenuation*d)*fade(t);',
+    '}',
+    'void main(){',
+    ' float px=1.0/min(uResolution.x,uResolution.y);',
+    ' vec2 p=(gl_FragCoord.xy-0.5*uResolution.xy)*px;',
+    ' float cr=cos(uRotation),sr=sin(uRotation);',
+    ' p=mat2(cr,-sr,sr,cr)*p;',
+    ' p-=uMouse*uMouseInfluence;',
+    ' vec3 c=vec3(0.0);',
+    ' float rcf=max(float(uRingCount)-1.0,1.0);',
+    ' for(int i=0;i<10;i++){',
+    '  if(i>=uRingCount)break;',
+    '  float fi=float(i);',
+    '  vec2 pr=p-fi*uParallax*uMouse;',
+    '  vec3 rc=mix(uColor,uColorTwo,fi/rcf);',
+    '  c=mix(c,rc,vec3(ring(pr,uBaseRadius+fi*uRadiusStep,pow(uRingGap,fi),i==0?0.0:2.95*fi,px)));',
+    ' }',
+    ' float n=fract(sin(dot(gl_FragCoord.xy+uTime*100.0,vec2(12.9898,78.233)))*43758.5453);',
+    ' c+=(n-0.5)*uNoiseAmount;',
+    ' gl_FragColor=vec4(c,max(c.r,max(c.g,c.b))*uOpacity);',
+    '}'
+  ].join('\n');
+
+  let renderer;
+  try { renderer = new THREE.WebGLRenderer({canvas, alpha:true, antialias:true}); }
+  catch(e) { canvas.style.display='none'; return; }
+  renderer.setClearColor(0x000000, 0);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.OrthographicCamera(-0.5,0.5,0.5,-0.5,0.1,10);
+  camera.position.z = 1;
+
+  const uniforms = {
+    uTime:{value:0}, uAttenuation:{value:CFG.attenuation},
+    uResolution:{value:new THREE.Vector2()},
+    uColor:{value:new THREE.Color(CFG.color)},
+    uColorTwo:{value:new THREE.Color(CFG.colorTwo)},
+    uLineThickness:{value:CFG.lineThickness},
+    uBaseRadius:{value:CFG.baseRadius},
+    uRadiusStep:{value:CFG.radiusStep},
+    uScaleRate:{value:CFG.scaleRate},
+    uRingCount:{value:CFG.ringCount},
+    uOpacity:{value:CFG.opacity},
+    uNoiseAmount:{value:CFG.noiseAmount},
+    uRotation:{value:CFG.rotation*Math.PI/180},
+    uRingGap:{value:CFG.ringGap},
+    uFadeIn:{value:CFG.fadeIn},
+    uFadeOut:{value:CFG.fadeOut},
+    uMouse:{value:new THREE.Vector2()},
+    uMouseInfluence:{value:CFG.followMouse?CFG.mouseInfluence:0},
+    uParallax:{value:CFG.parallax}
+  };
+  const material = new THREE.ShaderMaterial({vertexShader:vert,fragmentShader:frag,uniforms,transparent:true});
+  scene.add(new THREE.Mesh(new THREE.PlaneGeometry(1,1), material));
+
+  function resize(){
+    const w=window.innerWidth, h=window.innerHeight, dpr=Math.min(window.devicePixelRatio||1,2);
+    renderer.setPixelRatio(dpr);
+    renderer.setSize(w,h);
+    uniforms.uResolution.value.set(w*dpr,h*dpr);
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  const mouse=[0,0], smooth=[0,0];
+  window.addEventListener('pointermove', e=>{
+    mouse[0]= e.clientX/window.innerWidth - 0.5;
+    mouse[1]= -(e.clientY/window.innerHeight - 0.5);
+  }, {passive:true});
+
+  let visible=true;
+  const checkVis = () => { visible = window.scrollY < window.innerHeight*1.5; };
+  window.addEventListener('scroll', checkVis, {passive:true});
+
+  (function loop(t){
+    requestAnimationFrame(loop);
+    if(!visible) return;
+    smooth[0] += (mouse[0]-smooth[0])*0.07;
+    smooth[1] += (mouse[1]-smooth[1])*0.07;
+    uniforms.uTime.value = t*0.001*CFG.speed;
+    uniforms.uMouse.value.set(smooth[0], smooth[1]);
+    renderer.render(scene, camera);
+  })(0);
+})();
+
+// ═══ SMOOTH SCROLL (LENIS) ═══
+const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+let lenis;
+if(window.Lenis && !prefersReduced){
+  lenis = new Lenis({duration:1.1, easing:t=>Math.min(1,1.001-Math.pow(2,-10*t)), smoothWheel:true});
+  function raf(t){ lenis.raf(t); requestAnimationFrame(raf); }
+  requestAnimationFrame(raf);
+}
+
+// ═══ GSAP SCROLL ANIMATIONS ═══
+if(window.gsap){
+  gsap.registerPlugin(ScrollTrigger);
+  if(lenis){
+    lenis.on('scroll', ScrollTrigger.update);
+    gsap.ticker.add(t => lenis.raf(t*1000));
+    gsap.ticker.lagSmoothing(0);
+  }
+
+  // Anchor scroll
+  document.querySelectorAll('a[href^="#"]').forEach(a=>{
+    a.addEventListener('click', e=>{
+      const id = a.getAttribute('href'); if(id==='#') return;
+      const el = document.querySelector(id); if(!el) return;
+      e.preventDefault();
+      lenis ? lenis.scrollTo(el, {offset:-70}) : el.scrollIntoView({behavior:'smooth'});
+    });
+  });
+
+  // Header scroll
+  const header = document.getElementById('header');
+  const onScroll = () => header.classList.toggle('scrolled', window.scrollY > 40);
+  window.addEventListener('scroll', onScroll, {passive:true});
+
+  // Hero entrance
+  const tl = gsap.timeline({defaults:{ease:'power3.out'}});
+  tl.fromTo('.hero-badge',{y:20,opacity:0},{y:0,opacity:1,duration:.6})
+    .fromTo('.hero h1',{y:32,opacity:0},{y:0,opacity:1,duration:.9},'-=.35')
+    .fromTo('.hero .lead',{y:22,opacity:0},{y:0,opacity:1,duration:.7},'-=.55')
+    .fromTo('.hero-cta',{y:18,opacity:0},{y:0,opacity:1,duration:.6},'-=.45')
+    .fromTo('.hero-note',{opacity:0},{opacity:1,duration:.5},'-=.35')
+    .fromTo('.live-bar',{y:30,opacity:0},{y:0,opacity:1,duration:.7},'-=.3')
+    .fromTo('#shot',{y:50,opacity:0},{y:0,opacity:1,duration:1},'-=.4');
+
+  // Hero shot parallax
+  gsap.to('#shot',{yPercent:-6,ease:'none',scrollTrigger:{trigger:'.hero',start:'top top',end:'bottom top',scrub:true}});
+
+  // Rings fade on scroll
+  gsap.to('#bgGL',{opacity:0,ease:'none',scrollTrigger:{trigger:'.hero',start:'center top',end:'bottom top',scrub:true}});
+
+  // Generic reveals
+  gsap.utils.toArray('.reveal').forEach(el=>{
+    if(el.closest('.hero')) return;
+    gsap.fromTo(el,{y:28,opacity:0},{y:0,opacity:1,duration:.8,ease:'power2.out',
+      scrollTrigger:{trigger:el,start:'top 90%'}});
+  });
+
+  // Feature grid stagger
+  gsap.fromTo('.grid6 .cell',{y:30,opacity:0},{y:0,opacity:1,duration:.6,stagger:.07,ease:'power2.out',
+    scrollTrigger:{trigger:'.grid6',start:'top 82%'}});
+
+  // Integration chips stagger
+  gsap.utils.toArray('.integ-chip').forEach((c,i)=>{
+    const dir = (i%3)-1;
+    gsap.fromTo(c,{y:dir*20},{y:dir*-20,ease:'none',
+      scrollTrigger:{trigger:'#integrations',start:'top bottom',end:'bottom top',scrub:true}});
+  });
+
+  // Manifesto word scrub
+  const mEl = document.getElementById('manifestoText');
+  if(mEl){
+    mEl.innerHTML = mEl.textContent.trim().split(/\s+/).map(w=>'<span class="w">'+w+'</span>').join(' ');
+    const words = gsap.utils.toArray('.manifesto .w');
+    gsap.to(words,{color:'#f4f5f7',ease:'none',stagger:1,
+      scrollTrigger:{trigger:'#manifesto',start:'top 75%',end:'bottom 60%',scrub:true}});
+  }
+
+  // Compare clip-path wipe
+  const after = document.getElementById('afterLayer');
+  const handle = document.getElementById('compareHandle');
+  if(after){
+    gsap.fromTo(after,{clipPath:'inset(0 100% 0 0)'},{clipPath:'inset(0 0% 0 0)',ease:'none',
+      scrollTrigger:{trigger:'#compare',start:'top 78%',end:'bottom 65%',scrub:true}});
+    if(handle) gsap.fromTo(handle,{left:'0%'},{left:'100%',ease:'none',
+      scrollTrigger:{trigger:'#compare',start:'top 78%',end:'bottom 65%',scrub:true}});
+  }
+
+  // Kinetic typography
+  document.querySelectorAll('.kinetic [data-split]').forEach((line,i)=>{
+    const txt = line.getAttribute('data-split') || '';
+    line.innerHTML = [...txt].map(c=>'<span class="ch">'+c+'</span>').join('');
+    const chars = line.querySelectorAll('.ch');
+    gsap.fromTo(chars,
+      {yPercent:120,opacity:0,rotateX:-90},
+      {yPercent:0,opacity:1,rotateX:0,ease:'power3.out',
+       stagger:{each:.04,from:(i%2?'end':'start')},
+       scrollTrigger:{trigger:line,start:'top 92%',end:'top 40%',scrub:true}});
+  });
+
+  // Velocity marquee
+  const vtrack = document.getElementById('vtrack');
+  if(vtrack){
+    const loop = gsap.to(vtrack,{xPercent:-50,duration:24,ease:'none',repeat:-1});
+    let targetSkew=0, ts=1, skew=0;
+    ScrollTrigger.create({onUpdate:self=>{
+      targetSkew = gsap.utils.clamp(-18,18,self.getVelocity()/-80);
+      ts = gsap.utils.clamp(1,4,1+Math.abs(self.getVelocity())/400);
+    }});
+    gsap.ticker.add(()=>{
+      skew += (targetSkew-skew)*0.1; targetSkew *= 0.9;
+      const cur = loop.timeScale(); loop.timeScale(cur+(ts-cur)*0.05); ts += (1-ts)*0.05;
+      gsap.set(vtrack,{skewX:skew});
+    });
+  }
+
+  // Count up
+  document.querySelectorAll('[data-count]').forEach(el=>{
+    const target = parseFloat(el.dataset.count);
+    const suffix = el.dataset.suffix||'';
+    const dec = parseInt(el.dataset.dec||'0');
+    const obj = {v:0};
+    ScrollTrigger.create({trigger:el,start:'top 95%',once:true,onEnter:()=>{
+      gsap.to(obj,{v:target,duration:1.8,ease:'power2.out',onUpdate:()=>{
+        const n = obj.v;
+        let s;
+        if(dec>0) s=n.toFixed(dec);
+        else if(n>=1000) s=Math.round(n).toLocaleString();
+        else s=Math.round(n).toString();
+        const small = el.querySelector('small');
+        if(el.firstChild&&el.firstChild.nodeType===3) el.firstChild.nodeValue=s+suffix;
+        else el.textContent=s+suffix;
+        if(small) el.appendChild(small);
+      }});
+    }});
+  });
+
+  // Live counter increment
+  let lc1=12847, lc2=2194;
+  setInterval(()=>{
+    lc1 += Math.floor(Math.random()*8)+1;
+    lc2 += Math.floor(Math.random()*2);
+    const e1=document.getElementById('lc1'), e2=document.getElementById('lc2');
+    if(e1) e1.textContent = lc1.toLocaleString();
+    if(e2) e2.textContent = lc2.toLocaleString();
+  }, 2800);
+
+  ScrollTrigger.refresh();
+}
+
+// ═══ FAQ ACCORDION ═══
+document.querySelectorAll('#faqList .qa').forEach(item=>{
+  const btn = item.querySelector('button');
+  const ans = item.querySelector('.a');
+  btn.addEventListener('click', ()=>{
+    const open = item.classList.contains('open');
+    document.querySelectorAll('#faqList .qa').forEach(o=>{
+      o.classList.remove('open'); o.querySelector('.a').style.maxHeight=null;
+    });
+    if(!open){ item.classList.add('open'); ans.style.maxHeight = ans.scrollHeight+'px'; }
+  });
+});
+</script>
+</body>
+</html>
