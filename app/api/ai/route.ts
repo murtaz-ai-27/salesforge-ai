@@ -1,69 +1,66 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const SYSTEM_PROMPTS: Record<string, string> = {
-  emailWriter: `You are an elite B2B cold email writer for SalesForge AI.
+  emailWriter: `You are an elite B2B cold email writer.
 Write hyper-personalized cold emails that:
-- Start with a SPECIFIC insight about the prospect or their company
+- Start with a specific insight about the prospect
 - Have ONE clear value proposition
 - Are under 120 words
 - End with a soft CTA (15 min call)
 - Sound human, not salesy
-- Never use "I hope this email finds you well"
-- Use {{firstName}} as placeholder for first name
-Return ONLY the email body, no subject line, no explanation.`,
+Return ONLY the email body. No subject line. No explanation.`,
 
   subjectLine: `You are a cold email subject line expert.
-Write 3 subject line options that:
-- Are under 8 words each
-- Create curiosity without clickbait
-- Feel personal, not mass-email
-- Reference something specific about the prospect
-Return ONLY 3 subject lines, numbered 1-3. Nothing else.`,
+Write 3 subject lines under 8 words each.
+Return ONLY 3 numbered subject lines. Nothing else.`,
 
   iceBreaker: `You are a sales personalization expert.
-Write a 1-2 sentence personalized ice breaker based on the prospect info provided.
-Reference something specific: recent news, LinkedIn activity, company milestone, job change.
-Sound like you actually researched them. Be natural, not creepy.
-Return ONLY the ice breaker sentences. Nothing else.`,
+Write 1-2 sentence personalized ice breaker.
+Reference something specific about the prospect.
+Return ONLY the ice breaker. Nothing else.`,
 
   objectionHandler: `You are a world-class sales coach.
-Handle the sales objection provided with:
-- Acknowledge the concern genuinely
-- Reframe with a specific counter-point  
-- End with a question to keep dialogue open
-Keep it under 80 words. Sound confident but not pushy.
-Return ONLY the response. No explanation, no preamble.`,
+Handle the objection in under 80 words:
+- Acknowledge the concern
+- Reframe with counter-point
+- End with a question
+Return ONLY the response. No preamble.`,
 
-  prospectAnalyzer: `You are an ICP (Ideal Customer Profile) analyst for a B2B sales platform.
-Analyze the prospect data and return a JSON object.
-Return ONLY valid JSON, no markdown, no backticks, no explanation:
-{
-  "score": 85,
-  "buyingIntent": "high",
-  "bestChannel": "email",
-  "personalizationHooks": ["hook1", "hook2"],
-  "recommendedTiming": "immediate",
-  "reasoning": "brief explanation"
-}
-score must be 0-100. buyingIntent must be high, medium, or low. bestChannel must be email, linkedin, or phone.`,
+  prospectAnalyzer: `You are an ICP analyst. Analyze the prospect.
+Return ONLY this exact JSON (no markdown, no backticks):
+{"score":85,"buyingIntent":"high","bestChannel":"email","personalizationHooks":["hook1","hook2"],"recommendedTiming":"immediate","reasoning":"brief reason"}
+score=0-100, buyingIntent=high/medium/low, bestChannel=email/linkedin/phone`,
 
   dealAnalyzer: `You are a B2B deal intelligence expert.
-Analyze the deal/prospect situation and provide:
+Analyze the deal situation and provide:
 - Deal health score (0-100)
-- Risk factors
+- Top 3 risk factors
 - Recommended next actions
-- Win probability
-Format as clear sections. Be specific and actionable.`,
+- Win probability %
+Be specific and actionable.`,
 
   meetingSummarizer: `You are a sales meeting summarizer.
-Extract and format:
-**Key Discussion Points:** (bullet points)
-**Decisions Made:** (bullet points)  
-**Action Items:** (bullet points with owner and deadline if mentioned)
-**Next Steps:** (bullet points)
-**Sentiment:** (positive/neutral/negative with brief reason)
-Be concise and actionable.`,
+Format output as:
+KEY POINTS:
+- point 1
+
+ACTION ITEMS:
+- item 1 (owner, deadline)
+
+NEXT STEPS:
+- step 1
+
+SENTIMENT: positive/neutral/negative`,
 };
+
+// FREE models on OpenRouter — ordered by quality
+const FREE_MODELS = [
+  "meta-llama/llama-3.3-70b-instruct:free",
+  "meta-llama/llama-3.1-8b-instruct:free",
+  "mistralai/mistral-7b-instruct:free",
+  "microsoft/phi-3-mini-128k-instruct:free",
+  "qwen/qwen-2.5-7b-instruct:free",
+];
 
 export async function POST(req: NextRequest) {
   try {
@@ -75,70 +72,70 @@ export async function POST(req: NextRequest) {
     }
 
     const apiKey = process.env.OPENROUTER_API_KEY;
+
     if (!apiKey) {
-      return NextResponse.json({ error: "OPENROUTER_API_KEY not configured in .env.local" }, { status: 500 });
+      return NextResponse.json({
+        error: "OPENROUTER_API_KEY missing from .env.local"
+      }, { status: 500 });
     }
 
-    const systemPrompt = customSystem || SYSTEM_PROMPTS[type] || "You are a helpful B2B sales assistant. Be concise and practical.";
+    const systemPrompt = customSystem || SYSTEM_PROMPTS[type] || "You are a helpful B2B sales AI. Be concise.";
 
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-        "HTTP-Referer": "https://salesforge.ai",
-        "X-Title": "SalesForge AI",
-      },
-      body: JSON.stringify({
-        model: "google/gemma-3-27b-it:free",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: prompt },
-        ],
-        max_tokens: 800,
-        temperature: 0.7,
-      }),
-    });
+    let lastError = "";
 
-    if (!response.ok) {
-      const errText = await response.text();
-      console.error("OpenRouter error:", errText);
+    for (const model of FREE_MODELS) {
+      try {
+        const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${apiKey}`,
+            "Content-Type": "application/json",
+            "HTTP-Referer": "https://salesforge.ai",
+            "X-Title": "SalesForge AI",
+          },
+          body: JSON.stringify({
+            model,
+            messages: [
+              { role: "system", content: systemPrompt },
+              { role: "user", content: prompt },
+            ],
+            max_tokens: 800,
+            temperature: 0.7,
+          }),
+        });
 
-      // Try fallback model
-      const fallback = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-          "HTTP-Referer": "https://salesforge.ai",
-          "X-Title": "SalesForge AI",
-        },
-        body: JSON.stringify({
-          model: "meta-llama/llama-3.2-3b-instruct:free",
-          messages: [
-            { role: "system", content: systemPrompt },
-            { role: "user", content: prompt },
-          ],
-          max_tokens: 800,
-          temperature: 0.7,
-        }),
-      });
+        const data = await res.json();
 
-      if (!fallback.ok) {
-        return NextResponse.json({ error: `AI API error: ${response.status}. Check your OpenRouter API key.` }, { status: 500 });
+        if (res.status === 401) {
+          return NextResponse.json({
+            error: "Invalid OpenRouter API key. Go to openrouter.ai/keys to get a valid key."
+          }, { status: 401 });
+        }
+
+        if (!res.ok) {
+          lastError = `${model}: ${res.status}`;
+          continue; // try next model
+        }
+
+        const result = data.choices?.[0]?.message?.content;
+        if (!result) {
+          lastError = `${model}: empty response`;
+          continue;
+        }
+
+        return NextResponse.json({ result, model });
+
+      } catch (err: any) {
+        lastError = `${model}: ${err.message}`;
+        continue;
       }
-
-      const fallbackData = await fallback.json();
-      const result = fallbackData.choices?.[0]?.message?.content ?? "No response from AI.";
-      return NextResponse.json({ result, model: "llama-3.2-3b (fallback)" });
     }
 
-    const data = await response.json();
-    const result = data.choices?.[0]?.message?.content ?? "No response from AI.";
-    return NextResponse.json({ result, model: data.model });
+    return NextResponse.json({
+      error: `All models failed. Last: ${lastError}`
+    }, { status: 500 });
 
-  } catch (error: any) {
-    console.error("API route error:", error);
-    return NextResponse.json({ error: error.message ?? "Internal server error" }, { status: 500 });
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
