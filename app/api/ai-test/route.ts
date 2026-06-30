@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 
-const FREE_MODELS = [
+const MODELS = [
+  "openrouter/free",
+  "google/gemma-2-9b-it:free",
   "meta-llama/llama-3.3-70b-instruct:free",
-  "meta-llama/llama-3.1-8b-instruct:free",
-  "mistralai/mistral-7b-instruct:free",
-  "microsoft/phi-3-mini-128k-instruct:free",
-  "qwen/qwen-2.5-7b-instruct:free",
+  "mistralai/mistral-small-3.1-24b-instruct:free",
+  "qwen/qwen2.5-vl-72b-instruct:free",
 ];
 
 export async function GET() {
@@ -20,8 +20,9 @@ export async function GET() {
 
   const results: Record<string, string> = {};
   let workingModel = "";
+  let aiResponse = "";
 
-  for (const model of FREE_MODELS) {
+  for (const model of MODELS) {
     try {
       const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
@@ -33,7 +34,7 @@ export async function GET() {
         },
         body: JSON.stringify({
           model,
-          messages: [{ role: "user", content: "Reply with: WORKS" }],
+          messages: [{ role: "user", content: "Reply with exactly: WORKS" }],
           max_tokens: 10,
         }),
       });
@@ -42,9 +43,12 @@ export async function GET() {
 
       if (res.ok && data.choices?.[0]?.message?.content) {
         results[model] = "✅ WORKING";
-        if (!workingModel) workingModel = model;
+        if (!workingModel) {
+          workingModel = model;
+          aiResponse = data.choices[0].message.content;
+        }
       } else {
-        results[model] = `❌ ${res.status}: ${data.error?.message?.slice(0, 60) ?? "failed"}`;
+        results[model] = `❌ ${res.status}: ${(data.error?.message ?? "failed").slice(0, 80)}`;
       }
     } catch (err: any) {
       results[model] = `❌ Error: ${err.message}`;
@@ -54,6 +58,7 @@ export async function GET() {
   return NextResponse.json({
     status: workingModel ? "✅ API WORKING" : "❌ ALL MODELS FAILED",
     bestModel: workingModel || "none",
+    aiResponse,
     keyPreview: apiKey.slice(0, 20) + "...",
     modelResults: results,
   });
