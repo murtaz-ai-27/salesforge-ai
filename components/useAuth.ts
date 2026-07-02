@@ -2,7 +2,12 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-type User = { displayName: string | null; email: string | null; photoURL: string | null; };
+export type User = {
+  displayName: string | null;
+  email: string | null;
+  photoURL: string | null;
+  uid: string;
+};
 
 export function useAuth() {
   const router = useRouter();
@@ -12,8 +17,16 @@ export function useAuth() {
   useEffect(() => {
     import("@/lib/firebase").then(({ onAuthChange }) => {
       const unsub = onAuthChange((u) => {
-        if (u) setUser({ displayName: u.displayName, email: u.email, photoURL: u.photoURL });
-        else setUser(null);
+        if (u) {
+          setUser({
+            displayName: u.displayName,
+            email: u.email,
+            photoURL: u.photoURL,
+            uid: u.uid,
+          });
+        } else {
+          setUser(null);
+        }
         setLoading(false);
       });
       return () => unsub();
@@ -21,11 +34,12 @@ export function useAuth() {
   }, []);
 
   const handleLogout = async () => {
-    try { const { logOut } = await import("@/lib/firebase"); await logOut(); } catch {}
+    try {
+      const { logOut } = await import("@/lib/firebase");
+      await logOut();
+    } catch {}
     router.push("/");
   };
 
   return { user, loading, handleLogout };
 }
-
-export type { User };
