@@ -53,14 +53,14 @@ NEXT STEPS:
 SENTIMENT: positive/neutral/negative`,
 };
 
-// Ordered fallback chain. openrouter/free is OpenRouter's own auto-router
-// that picks whichever free model is currently healthy — most reliable option.
-const MODELS = [
-  "openrouter/free",
-  "google/gemma-2-9b-it:free",
-  "meta-llama/llama-3.3-70b-instruct:free",
-  "mistralai/mistral-small-3.1-24b-instruct:free",
-  "qwen/qwen2.5-vl-72b-instruct:free",
+// July 2026 working free models on OpenRouter
+const FREE_MODELS = [
+  "openrouter/free",                              // auto-router — always try first
+  "nvidia/nemotron-3-ultra-550b-a55b:free",       // best quality free
+  "qwen/qwen3-coder:free",                        // strong coder/general
+  "meta-llama/llama-3.3-70b-instruct:free",       // reliable fallback
+  "nvidia/nemotron-nano-12b-v2-vl:free",          // NVIDIA free
+  "deepseek/deepseek-r1:free",                    // DeepSeek reasoning
 ];
 
 export async function POST(req: NextRequest) {
@@ -73,18 +73,15 @@ export async function POST(req: NextRequest) {
     }
 
     const apiKey = process.env.OPENROUTER_API_KEY;
-
     if (!apiKey) {
-      return NextResponse.json({
-        error: "OPENROUTER_API_KEY missing from .env.local"
-      }, { status: 500 });
+      return NextResponse.json({ error: "OPENROUTER_API_KEY missing from .env.local" }, { status: 500 });
     }
 
-    const systemPrompt = customSystem || SYSTEM_PROMPTS[type] || "You are a helpful B2B sales AI. Be concise.";
+    const systemPrompt = customSystem || SYSTEM_PROMPTS[type] || "You are a helpful B2B sales AI. Be concise and practical.";
 
     let lastError = "";
 
-    for (const model of MODELS) {
+    for (const model of FREE_MODELS) {
       try {
         const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
           method: "POST",
@@ -108,13 +105,11 @@ export async function POST(req: NextRequest) {
         const data = await res.json();
 
         if (res.status === 401) {
-          return NextResponse.json({
-            error: "Invalid OpenRouter API key. Get a new one at openrouter.ai/keys"
-          }, { status: 401 });
+          return NextResponse.json({ error: "Invalid OpenRouter API key. Get a new one at openrouter.ai/keys" }, { status: 401 });
         }
 
         if (!res.ok) {
-          lastError = `${model}: ${res.status} ${data?.error?.message ?? ""}`;
+          lastError = `${model}: ${res.status} - ${data?.error?.message ?? "failed"}`;
           continue;
         }
 
@@ -132,9 +127,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    return NextResponse.json({
-      error: `All models failed. Last: ${lastError}`
-    }, { status: 500 });
+    return NextResponse.json({ error: `All models failed. Last: ${lastError}` }, { status: 500 });
 
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });

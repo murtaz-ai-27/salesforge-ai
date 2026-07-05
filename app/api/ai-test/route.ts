@@ -1,28 +1,23 @@
 import { NextResponse } from "next/server";
 
-const MODELS = [
+const FREE_MODELS = [
   "openrouter/free",
-  "google/gemma-2-9b-it:free",
+  "nvidia/nemotron-3-ultra-550b-a55b:free",
+  "qwen/qwen3-coder:free",
   "meta-llama/llama-3.3-70b-instruct:free",
-  "mistralai/mistral-small-3.1-24b-instruct:free",
-  "qwen/qwen2.5-vl-72b-instruct:free",
+  "nvidia/nemotron-nano-12b-v2-vl:free",
+  "deepseek/deepseek-r1:free",
 ];
 
 export async function GET() {
   const apiKey = process.env.OPENROUTER_API_KEY;
-
-  if (!apiKey) {
-    return NextResponse.json({
-      status: "❌ KEY MISSING",
-      fix: "Add OPENROUTER_API_KEY=sk-or-v1-xxx to .env.local and restart server"
-    });
-  }
+  if (!apiKey) return NextResponse.json({ status: "❌ KEY MISSING" });
 
   const results: Record<string, string> = {};
   let workingModel = "";
   let aiResponse = "";
 
-  for (const model of MODELS) {
+  for (const model of FREE_MODELS) {
     try {
       const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
@@ -40,13 +35,9 @@ export async function GET() {
       });
 
       const data = await res.json();
-
       if (res.ok && data.choices?.[0]?.message?.content) {
         results[model] = "✅ WORKING";
-        if (!workingModel) {
-          workingModel = model;
-          aiResponse = data.choices[0].message.content;
-        }
+        if (!workingModel) { workingModel = model; aiResponse = data.choices[0].message.content; }
       } else {
         results[model] = `❌ ${res.status}: ${(data.error?.message ?? "failed").slice(0, 80)}`;
       }
