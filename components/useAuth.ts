@@ -9,29 +9,33 @@ export type User = {
   uid: string;
 };
 
-export function useAuth() {
+export function useAuth(redirectOnLogout = true) {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    import("@/lib/firebase").then(({ onAuthChange }) => {
-      const unsub = onAuthChange((u) => {
-        if (u) {
-          setUser({
-            displayName: u.displayName,
-            email: u.email,
-            photoURL: u.photoURL,
-            uid: u.uid,
-          });
-        } else {
-          setUser(null);
-        }
-        setLoading(false);
-      });
-      return () => unsub();
-    }).catch(() => setLoading(false));
-  }, []);
+    let unsub: (() => void) | undefined;
+    import("@/lib/firebase")
+      .then(({ onAuthChange }) => {
+        unsub = onAuthChange((u) => {
+          if (u) {
+            setUser({
+              displayName: u.displayName,
+              email: u.email,
+              photoURL: u.photoURL,
+              uid: u.uid,
+            });
+          } else {
+            setUser(null);
+            if (redirectOnLogout) router.push("/auth/login");
+          }
+          setLoading(false);
+        });
+      })
+      .catch(() => setLoading(false));
+    return () => unsub?.();
+  }, [router, redirectOnLogout]);
 
   const handleLogout = async () => {
     try {
