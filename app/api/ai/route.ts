@@ -1,4 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
+import { supabaseAdmin } from "@/lib/supabaseServer";
+
+const PLAN_LIMITS = {
+  free:       { agentRunsPerDay: 5  },
+  starter:    { agentRunsPerDay: 50 },
+  pro:        { agentRunsPerDay: -1 },
+  enterprise: { agentRunsPerDay: -1 },
+};
 
 const SYSTEM_PROMPTS: Record<string, string> = {
   emailWriter: `You are an elite B2B cold email copywriter. Your emails get 40%+ reply rates.
@@ -24,207 +32,73 @@ RULES:
 - Reference something specific about the prospect
 - Format: just 3 numbered lines, nothing else
 
-Example format:
-1. Quick question about [Company]
-2. [Specific observation] → idea
-3. [Name], saw your post on [topic]
-
 Write 3 subject lines now:`,
 
   iceBreaker: `You are a B2B sales personalization expert.
+Write a 1-2 sentence personalized ice breaker based on the prospect info.
+Reference something SPECIFIC: recent news, LinkedIn post, company milestone, job change.
+Sound natural and researched. Return ONLY the ice breaker.`,
 
-Write a 1-2 sentence personalized ice breaker based on the prospect info provided.
-- Reference something SPECIFIC: recent news, LinkedIn post, company milestone, job change, or industry trend
-- Sound natural and researched, not generic
-- Keep it conversational
+  objectionHandler: `You are a world-class B2B sales coach.
+Handle the objection: 1) Acknowledge genuinely (1 sentence) 2) Reframe with counter-point (2 sentences) 3) End with open question (1 sentence).
+Total under 80 words. Return ONLY the response.`,
 
-Return ONLY the ice breaker sentences. No explanation, no preamble.`,
+  prospectAnalyzer: `You are an ICP analyst. Analyze the prospect and return ONLY valid JSON (no markdown, no backticks):
+{"score":85,"buyingIntent":"high","bestChannel":"email","personalizationHooks":["hook1","hook2","hook3"],"recommendedTiming":"immediate","reasoning":"explanation"}
+score=0-100, buyingIntent=high/medium/low, bestChannel=email/linkedin/phone`,
 
-  objectionHandler: `You are a world-class B2B sales coach who has closed $50M+ in deals.
-
-Handle the sales objection provided. Follow this structure:
-1. Acknowledge their concern genuinely (1 sentence)
-2. Reframe with a specific, compelling counter-point (2 sentences)
-3. End with an open question to keep dialogue going (1 sentence)
-
-Total response: under 80 words. Sound confident but empathetic, never pushy.
-
-Return ONLY the response. No label, no preamble.`,
-
-  prospectAnalyzer: `You are an ICP (Ideal Customer Profile) analyst for a B2B SaaS sales platform.
-
-Analyze the prospect data and return ONLY a valid JSON object. No markdown, no backticks, no explanation before or after.
-
-Return exactly this JSON structure:
-{"score":85,"buyingIntent":"high","bestChannel":"email","personalizationHooks":["hook1","hook2","hook3"],"recommendedTiming":"immediate","reasoning":"2-3 sentence explanation"}
-
-Rules:
-- score: integer 0-100
-- buyingIntent: exactly "high", "medium", or "low"  
-- bestChannel: exactly "email", "linkedin", or "phone"
-- personalizationHooks: array of 3 specific talking points
-- recommendedTiming: "immediate", "this-week", or "next-month"`,
-
-  dealAnalyzer: `You are a B2B deal intelligence expert with 15 years of enterprise sales experience.
-
-Analyze the deal situation provided and give a structured analysis:
-
+  dealAnalyzer: `You are a B2B deal intelligence expert. Analyze the deal and provide:
 **Deal Health Score:** X/100
-
-**Top 3 Risk Factors:**
-- Risk 1
-- Risk 2  
-- Risk 3
-
-**Recommended Next Actions:**
-1. Action 1 (specific and actionable)
-2. Action 2
-3. Action 3
-
+**Top 3 Risk Factors:** bullet points
+**Recommended Next Actions:** numbered list
 **Win Probability:** X%
+**Why:** 2-3 sentence reasoning. Be specific.`,
 
-**Why:** 2-3 sentence reasoning
+  meetingSummarizer: `You are a sales meeting summarizer. Format as:
+**KEY POINTS:** bullet points
+**ACTION ITEMS:** [ ] item (Owner, Due date)
+**NEXT STEPS:** bullet points
+**DEAL SENTIMENT:** Positive/Neutral/Negative — reason`,
 
-Be specific and actionable. No generic advice.`,
+  cold_caller: `You are an expert B2B cold call script writer.
+Write a complete script:
+**OPENING (5 sec):** hook
+**BRIDGE (10 sec):** connect situation to solution
+**VALUE PROP (15 sec):** specific result
+**QUALIFYING QUESTION:** one question
+**OBJECTION HANDLERS:** "Not interested" / "Send email" / "No budget"
+**CLOSE:** ask for meeting
+Under 200 words. Conversational, not robotic.`,
 
-  meetingSummarizer: `You are a professional sales meeting summarizer.
+  linkedin_writer: `You are a LinkedIn outreach expert (35%+ acceptance rates).
+Write:
+1. CONNECTION REQUEST (max 300 chars): reference their specific post/activity, clear reason to connect
+2. FOLLOW-UP MESSAGE (under 150 words): soft value prop, clear next step
+Label both clearly.`,
 
-Extract and organize the meeting notes into this exact format:
+  proposal_writer: `You are a senior B2B sales consultant. Write a proposal outline:
+**EXECUTIVE SUMMARY:** problem + solution (2-3 sentences)
+**THE PROBLEM:** specific pain points
+**OUR SOLUTION:** how we address each
+**EXPECTED ROI:** specific numbers + timeline
+**INVESTMENT:** pricing recommendation
+**NEXT STEPS:** 3 actions with dates`,
 
-**KEY DISCUSSION POINTS:**
-- Point 1
-- Point 2
-
-**DECISIONS MADE:**
-- Decision 1
-
-**ACTION ITEMS:**
-- [ ] Action item (Owner: Name, Due: timeframe)
-
-**NEXT STEPS:**
-- Step 1
-
-**DEAL SENTIMENT:** Positive / Neutral / Negative
-**REASON:** One sentence why
-
-Be concise and actionable.`,
-
-  cold_caller: `You are an expert cold call script writer for B2B sales.
-
-Write a complete cold call script with these sections:
-
-**OPENING (5 seconds):**
-[Hook that creates immediate curiosity]
-
-**BRIDGE (10 seconds):**
-[Connect their situation to your solution]
-
-**VALUE PROP (15 seconds):**
-[Specific result you deliver]
-
-**QUALIFYING QUESTION:**
-[One question to uncover pain]
-
-**OBJECTION HANDLERS:**
-- "Not interested": [Response]
-- "Send an email": [Response]
-- "No budget": [Response]
-
-**CLOSE:**
-[Ask for the meeting]
-
-Make it conversational, not robotic. Under 200 words total.`,
-
-  linkedin_writer: `You are a LinkedIn outreach expert. Your messages get 35%+ acceptance rates.
-
-Write a LinkedIn connection request message:
-- Maximum 300 characters (LinkedIn limit)
-- Reference something SPECIFIC from their profile or recent activity
-- Clear reason for connecting
-- No generic "I'd love to connect" phrases
-- Sound like a real person, not a sales bot
-
-Then write a follow-up message (if they accept):
-- Under 150 words
-- Soft value proposition
-- One clear next step
-
-Return both messages clearly labeled.`,
-
-  proposal_writer: `You are a senior B2B sales consultant who writes winning proposals.
-
-Create a professional sales proposal outline with:
-
-**EXECUTIVE SUMMARY:**
-[2-3 sentences on their problem and your solution]
-
-**THE PROBLEM WE'RE SOLVING:**
-[Specific pain points based on their situation]
-
-**OUR SOLUTION:**
-[How SalesForge AI addresses each pain point]
-
-**EXPECTED ROI:**
-[Specific numbers and timeline]
-
-**INVESTMENT:**
-[Pricing recommendation]
-
-**NEXT STEPS:**
-[3 clear action items with dates]
-
-Be specific to the prospect's industry and situation provided.`,
-
-  competitor_intel: `You are a competitive intelligence analyst for a B2B sales platform.
-
-Generate a competitive battle card based on the competitor mentioned:
-
-**COMPETITOR WEAKNESSES TO HIGHLIGHT:**
-- Weakness 1 (with specific data if possible)
-- Weakness 2
-- Weakness 3
-
-**OUR ADVANTAGES:**
-- Advantage 1 vs their weakness
-- Advantage 2
-- Advantage 3
-
-**WINNING TALK TRACK:**
-[2-3 sentences to use when prospect mentions competitor]
-
-**SPECIFIC QUESTIONS TO ASK:**
-1. Question that exposes competitor weakness
-2. Question that highlights our strength
-
-**ONE-LINER CLOSER:**
-[Memorable line that wins the comparison]`,
+  competitor_intel: `You are a competitive intelligence analyst.
+**COMPETITOR WEAKNESSES:** 3 specific weaknesses with data
+**OUR ADVANTAGES:** direct comparisons
+**WINNING TALK TRACK:** 2-3 sentences to use
+**QUESTIONS TO ASK:** 2 questions that expose competitor weakness
+**ONE-LINER CLOSER:** memorable line`,
 
   revenue_forecaster: `You are a B2B revenue forecasting expert.
-
-Analyze the pipeline data provided and give:
-
-**PIPELINE SUMMARY:**
-- Total pipeline value: $X
-- Weighted pipeline (by probability): $X
-- Deals by stage: [breakdown]
-
-**Q[X] FORECAST:**
-- Conservative: $X (X% probability)
-- Base case: $X (X% probability)  
-- Optimistic: $X (X% probability)
-
-**DEALS MOST LIKELY TO CLOSE:**
-1. Deal name - $X - reason
-2. Deal name - $X - reason
-
-**AT-RISK DEALS:**
-1. Deal name - risk factor - recommended action
-
-**RECOMMENDATION:**
-2-3 specific actions to hit forecast.`,
+**PIPELINE SUMMARY:** total value, weighted, by stage
+**FORECAST:** Conservative / Base / Optimistic with %
+**LIKELY TO CLOSE:** top 2-3 deals with reasons
+**AT-RISK:** deals + recommended actions
+**RECOMMENDATION:** 3 specific actions to hit forecast`,
 };
 
-// Reliable models — tested July 2026
 const MODELS = [
   "nvidia/nemotron-3-ultra-550b-a55b:free",
   "nvidia/nemotron-nano-12b-v2-vl:free",
@@ -234,20 +108,42 @@ const MODELS = [
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { prompt, type, system: customSystem } = body;
+    const { prompt, type, system: customSystem, userId } = body;
 
-    if (!prompt) {
-      return NextResponse.json({ error: "prompt is required" }, { status: 400 });
-    }
+    if (!prompt) return NextResponse.json({ error: "prompt is required" }, { status: 400 });
 
     const apiKey = process.env.OPENROUTER_API_KEY;
-    if (!apiKey) {
-      return NextResponse.json({ error: "OPENROUTER_API_KEY missing from .env.local" }, { status: 500 });
+    if (!apiKey) return NextResponse.json({ error: "OPENROUTER_API_KEY missing" }, { status: 500 });
+
+    // Check daily agent run limits if userId provided
+    if (userId) {
+      try {
+        const { data: planData } = await supabaseAdmin
+          .from("user_plans").select("plan").eq("user_id", userId).single();
+        const plan = planData?.plan ?? "free";
+        const limit = PLAN_LIMITS[plan as keyof typeof PLAN_LIMITS]?.agentRunsPerDay ?? 5;
+
+        if (limit !== -1) {
+          const startOfDay = new Date();
+          startOfDay.setHours(0,0,0,0);
+          const { count } = await supabaseAdmin
+            .from("agent_runs").select("*", { count:"exact", head:true })
+            .eq("user_id", userId).gte("created_at", startOfDay.toISOString());
+
+          if ((count ?? 0) >= limit) {
+            return NextResponse.json({
+              error: `Daily AI agent limit reached (${count}/${limit}). Upgrade your plan at /dashboard/pricing`,
+              upgrade: true, currentPlan: plan, used: count, limit,
+            }, { status: 429 });
+          }
+        }
+      } catch {}
     }
 
     const systemPrompt = customSystem || SYSTEM_PROMPTS[type] || SYSTEM_PROMPTS.emailWriter;
-
     let lastError = "";
+    let result = "";
+    let usedModel = "";
 
     for (const model of MODELS) {
       try {
@@ -267,47 +163,44 @@ export async function POST(req: NextRequest) {
             ],
             max_tokens: 1000,
             temperature: 0.7,
-            top_p: 0.9,
           }),
         });
 
         const data = await res.json();
 
-        if (res.status === 401) {
-          return NextResponse.json({ error: "Invalid OpenRouter API key. Get a new one at openrouter.ai/keys" }, { status: 401 });
-        }
+        if (!res.ok) { lastError = `${model}: ${res.status}`; continue; }
 
-        if (!res.ok) {
-          lastError = `${model}: ${res.status} - ${data?.error?.message ?? "failed"}`;
-          continue;
-        }
+        const text = data.choices?.[0]?.message?.content;
+        if (!text || text.trim().length < 10) { lastError = `${model}: empty`; continue; }
 
-        const result = data.choices?.[0]?.message?.content;
+        // Garbage detection
+        const garbled = (text.match(/[^\x20-\x7E\n\r\t]/g) || []).length;
+        if (garbled / text.length > 0.1) { lastError = `${model}: garbled`; continue; }
 
-        if (!result || result.trim().length < 10) {
-          lastError = `${model}: empty or too short response`;
-          continue;
-        }
-
-        // Check for corrupt/garbage output
-        const garbledChars = (result.match(/[^\x20-\x7E\n\r\t]/g) || []).length;
-        const garbledRatio = garbledChars / result.length;
-        if (garbledRatio > 0.1) {
-          lastError = `${model}: garbled/corrupt output detected`;
-          continue;
-        }
-
-        return NextResponse.json({ result: result.trim(), model });
-
+        result = text.trim();
+        usedModel = model;
+        break;
       } catch (err: any) {
         lastError = `${model}: ${err.message}`;
-        continue;
       }
     }
 
-    return NextResponse.json({
-      error: `All models failed. Last: ${lastError}. Try again in a moment.`
-    }, { status: 500 });
+    if (!result) return NextResponse.json({ error: `All models failed. ${lastError}` }, { status: 500 });
+
+    // Log agent run to DB
+    if (userId) {
+      try {
+        await supabaseAdmin.from("agent_runs").insert({
+          user_id: userId,
+          agent_type: type ?? "general",
+          prompt: prompt.slice(0, 500),
+          result: result.slice(0, 500),
+          model_used: usedModel,
+        });
+      } catch {}
+    }
+
+    return NextResponse.json({ result, model: usedModel });
 
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
