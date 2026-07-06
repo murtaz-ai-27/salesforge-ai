@@ -1,12 +1,9 @@
 import { NextResponse } from "next/server";
 
-const FREE_MODELS = [
-  "openrouter/free",
+const MODELS = [
   "nvidia/nemotron-3-ultra-550b-a55b:free",
-  "qwen/qwen3-coder:free",
-  "meta-llama/llama-3.3-70b-instruct:free",
   "nvidia/nemotron-nano-12b-v2-vl:free",
-  "deepseek/deepseek-r1:free",
+  "openrouter/free",
 ];
 
 export async function GET() {
@@ -17,7 +14,7 @@ export async function GET() {
   let workingModel = "";
   let aiResponse = "";
 
-  for (const model of FREE_MODELS) {
+  for (const model of MODELS) {
     try {
       const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
@@ -29,15 +26,29 @@ export async function GET() {
         },
         body: JSON.stringify({
           model,
-          messages: [{ role: "user", content: "Reply with exactly: WORKS" }],
-          max_tokens: 10,
+          messages: [
+            { role: "system", content: "You are a helpful assistant. Reply with exactly what is asked, nothing more." },
+            { role: "user", content: "Reply with exactly this text: API WORKING FINE" }
+          ],
+          max_tokens: 20,
+          temperature: 0,
         }),
       });
 
       const data = await res.json();
+
       if (res.ok && data.choices?.[0]?.message?.content) {
-        results[model] = "✅ WORKING";
-        if (!workingModel) { workingModel = model; aiResponse = data.choices[0].message.content; }
+        const response = data.choices[0].message.content;
+        // Check for garbage
+        const garbledChars = (response.match(/[^\x20-\x7E\n\r\t]/g) || []).length;
+        const isGarbled = garbledChars / response.length > 0.1;
+
+        if (isGarbled) {
+          results[model] = `⚠️ GARBLED OUTPUT: ${response.slice(0,50)}`;
+        } else {
+          results[model] = `✅ WORKING: "${response.trim()}"`;
+          if (!workingModel) { workingModel = model; aiResponse = response; }
+        }
       } else {
         results[model] = `❌ ${res.status}: ${(data.error?.message ?? "failed").slice(0, 80)}`;
       }
