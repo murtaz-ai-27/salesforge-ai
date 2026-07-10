@@ -250,7 +250,7 @@ export default function SettingsPage() {
           <div style={{ background:S.panel,border:`1px solid ${S.lineSoft}`,borderRadius:16,padding:24 }}>
             <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:20 }}>
               <div style={{ fontSize:14,fontWeight:700,color:S.text }}>Team Members</div>
-              <div style={{ fontSize:12,color:S.faint,background:"rgba(200,255,0,0.08)",border:"1px solid rgba(200,255,0,0.2)",padding:"6px 14px",borderRadius:999,color:S.accent,fontWeight:700 }}>
+              <div style={{ fontSize:12,background:"rgba(200,255,0,0.08)",border:"1px solid rgba(200,255,0,0.2)",padding:"6px 14px",borderRadius:999,color:S.accent,fontWeight:700 }}>
                 Pro plan required
               </div>
             </div>
