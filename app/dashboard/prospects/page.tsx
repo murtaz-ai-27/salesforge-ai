@@ -19,8 +19,8 @@ const AVATARS = [
 
 type Prospect = {
   id:string; name:string; email:string; role:string; company:string;
-  industry:string; company_size:string; ai_score:number; buying_intent:string;
-  status:string; notes:string; avatar_init:string; avatar_bg:string; avatar_color:string;
+  industry:string; company_size:string; ai_score:number; buying_intent:"high"|"medium"|"low";
+  status:"new"|"contacted"|"replied"|"meeting"|"closed"|"lost"; notes:string; avatar_init:string; avatar_bg:string; avatar_color:string;
 };
 
 type Toast = { msg:string; type:"success"|"error"|"warning" };
@@ -89,7 +89,7 @@ export default function ProspectsPage() {
     catch(err:any) { showToast(err.message,"error"); }
   };
 
-  const handleStatusChange = async (id:string, status:string) => {
+  const handleStatusChange = async (id:string, status:"new"|"contacted"|"replied"|"meeting"|"closed"|"lost") => {
     try { await updateProspect(id,{status}); showToast(`Status updated to ${status}`); }
     catch(err:any) { showToast(err.message,"error"); }
   };
@@ -431,7 +431,7 @@ export default function ProspectsPage() {
 
                 {/* Status */}
                 <div>
-                  <select value={p.status} onChange={e=>handleStatusChange(p.id,e.target.value)}
+                  <select value={p.status} onChange={e=>handleStatusChange(p.id, e.target.value as "new"|"contacted"|"replied"|"meeting"|"closed"|"lost")}
                     style={{ fontSize:11,fontWeight:700,padding:"4px 8px",borderRadius:8,border:"1px solid rgba(255,255,255,0.08)",background:"rgba(255,255,255,0.04)",color:p.status==="replied"?"#34d399":p.status==="contacted"?"#818cf8":p.status==="meeting"?"#f59e0b":"#9598a3",fontFamily:"Inter,sans-serif",cursor:"pointer",outline:"none" }}>
                     {["new","contacted","replied","meeting","closed"].map(s=>(
                       <option key={s} value={s} style={{ background:"#0d1018",color:"#f4f5f7" }}>{s}</option>
