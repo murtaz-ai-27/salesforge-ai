@@ -30,10 +30,15 @@ export default function AnalyticsPage() {
     setLoading(true);
     fetch(`/api/stats?userId=${user.uid}`)
       .then(r => r.json())
-      .then(d => { if (!d.error) setStats(d); })
-      .catch(() => {})
+      .then(d => { if (!d.error) setStats(d); else setStats(null); })
+      .catch(() => setStats(null))
       .finally(() => setLoading(false));
   }, [user?.uid]);
+
+  // If auth done but no uid yet, stop loading
+  useEffect(() => {
+    if (!authLoading && !user?.uid) setLoading(false);
+  }, [authLoading, user?.uid]);
 
   if (authLoading || loading) return (
     <div style={{ minHeight:"100vh",background:S.bg,display:"grid",placeItems:"center" }}>
