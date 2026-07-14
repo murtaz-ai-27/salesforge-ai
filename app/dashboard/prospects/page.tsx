@@ -41,7 +41,7 @@ function replaceVars(text:string, prospect:Prospect):string {
 
 export default function ProspectsPage() {
   const { user, loading: authLoading, handleLogout } = useAuth();
-  const { prospects, loading: dataLoading, addProspect, updateProspect, deleteProspect, importCSV } = useProspects(user?.uid);
+  const { prospects, loading: dataLoading, addProspect, updateProspect, deleteProspect, bulkAddProspects } = useProspects(user?.uid);
 
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
@@ -106,7 +106,7 @@ export default function ProspectsPage() {
         headers.forEach((h:string,i:number)=>{ row[h]=vals[i]??""; });
         return row;
       }).filter((r:any)=>r.email||r.name);
-      await importCSV(rows);
+      await bulkAddProspects(rows);
       showToast(`✓ ${rows.length} prospects imported`);
     } catch(err:any) { showToast(err.message,"error"); }
     e.target.value="";
