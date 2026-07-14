@@ -72,7 +72,7 @@ export default function ProspectsPage() {
       await addProspect({
         ...form,
         ai_score: Math.floor(Math.random()*30)+65,
-        buying_intent: ["high","medium","low"][Math.floor(Math.random()*3)],
+        buying_intent: (["high","medium","low"] as const)[Math.floor(Math.random()*3)],
         status:"new",
         avatar_init: form.name.split(" ").map((n:string)=>n[0]).join("").slice(0,2).toUpperCase(),
         avatar_bg: av.bg, avatar_color: av.color,
