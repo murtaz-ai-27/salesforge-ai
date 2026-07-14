@@ -321,7 +321,7 @@ export default function ProspectsPage() {
                 onFocus={e=>(e.target as HTMLTextAreaElement).style.borderColor="rgba(200,255,0,0.3)"}
                 onBlur={e=>(e.target as HTMLTextAreaElement).style.borderColor=S.lineSoft}/>
             </div>
-            <div style={{ display:"flex",gap:8" }}>
+            <div style={{ display:"flex",gap:8 }}>
               <button onClick={handleAdd}
                 style={{ padding:"10px 24px",borderRadius:10,background:S.accent,border:"none",color:"#050505",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"Inter,sans-serif" }}>
                 Add Prospect
