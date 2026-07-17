@@ -113,22 +113,20 @@ export default function SettingsPage() {
     const file = e.target.files?.[0];
     if (!file || !user?.uid) return;
     if (file.size > 2 * 1024 * 1024) { showToast("Image must be under 2MB","error"); return; }
-
     setAvatarUploading(true);
     try {
-      // Convert to base64 for preview
+      // Show local preview immediately
       const reader = new FileReader();
-      reader.onload = async (ev) => {
-        const base64 = ev.target?.result as string;
-        setAvatarUrl(base64);
-        // Save to profile
-        await fetch("/api/profile", {
-          method:"POST", headers:{"Content-Type":"application/json"},
-          body:JSON.stringify({ userId:user.uid, name, company, role, timezone, avatar_url:base64 }),
-        });
-        showToast("✓ Profile photo updated!");
-      };
+      reader.onload = (ev) => setAvatarUrl(ev.target?.result as string);
       reader.readAsDataURL(file);
+      // Upload to Supabase Storage
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("userId", user.uid);
+      const res = await fetch("/api/profile", { method:"PUT", body:formData });
+      const data = await res.json();
+      if (!res.ok) { showToast(data.error??"Upload failed","error"); }
+      else { setAvatarUrl(data.avatar_url); showToast("✓ Profile photo updated!"); }
     } catch { showToast("Error uploading photo","error"); }
     setAvatarUploading(false);
     e.target.value = "";
