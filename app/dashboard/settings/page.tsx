@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import Sidebar from "@/components/Sidebar";
 import { useAuth } from "@/components/useAuth";
+import LoadingScreen from "@/components/LoadingScreen";
 
 const S = { bg:"#050505",panel:"#0d1018",lineSoft:"rgba(255,255,255,0.05)",text:"#f4f5f7",muted:"#9598a3",faint:"#555a66",accent:"#C8FF00" };
 const TABS = ["Profile","Plan & Usage","Integrations","Notifications","Team","Danger Zone"];
@@ -126,7 +127,7 @@ export default function SettingsPage() {
       const res = await fetch("/api/profile", { method:"PUT", body:formData });
       const data = await res.json();
       if (!res.ok) { showToast(data.error??"Upload failed","error"); }
-      else { setAvatarUrl(data.avatar_url); showToast("✓ Profile photo updated!"); }
+      else { setAvatarUrl(data.avatar_url); showToast("✓ Profile photo updated!"); window.dispatchEvent(new Event("avatar-updated")); }
     } catch { showToast("Error uploading photo","error"); }
     setAvatarUploading(false);
     e.target.value = "";
@@ -140,12 +141,7 @@ export default function SettingsPage() {
 
   const toastColor = toast.type==="error"?"#f87171":toast.type==="warning"?"#f59e0b":S.accent;
 
-  if (authLoading || profileLoading) return (
-    <div style={{ minHeight:"100vh",background:S.bg,display:"grid",placeItems:"center" }}>
-      <div style={{ width:36,height:36,border:"3px solid rgba(200,255,0,0.2)",borderTopColor:S.accent,borderRadius:"50%",animation:"spin 0.8s linear infinite" }}/>
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-    </div>
-  );
+  if (authLoading || profileLoading) return <LoadingScreen text="Loading your settings"/>;
 
   const PLAN_LIMITS: Record<string,any> = {
     free:     { prospects:50,  agentRuns:5,  sequences:2,  emails:0      },

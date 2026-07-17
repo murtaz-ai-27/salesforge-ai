@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import { useAuth } from "@/components/useAuth";
+import LoadingScreen from "@/components/LoadingScreen";
 
 const S = { bg:"#050505",panel:"#0d1018",lineSoft:"rgba(255,255,255,0.05)",text:"#f4f5f7",muted:"#9598a3",faint:"#555a66",accent:"#C8FF00" };
 
@@ -144,12 +145,7 @@ export default function InboxPage() {
   const toastColor = toast.type==="error"?"#f87171":toast.type==="warning"?"#f59e0b":S.accent;
   const toastBorder = toast.type==="error"?"rgba(248,113,113,0.3)":toast.type==="warning"?"rgba(245,158,11,0.3)":"rgba(200,255,0,0.3)";
 
-  if (authLoading) return (
-    <div style={{ minHeight:"100vh",background:S.bg,display:"grid",placeItems:"center" }}>
-      <div style={{ width:36,height:36,border:"3px solid rgba(200,255,0,0.2)",borderTopColor:S.accent,borderRadius:"50%",animation:"spin 0.8s linear infinite" }}/>
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-    </div>
-  );
+  if (authLoading) return <LoadingScreen text="Loading inbox"/>;
 
   return (
     <div style={{ background:S.bg,minHeight:"100vh",fontFamily:"Inter,sans-serif" }}>

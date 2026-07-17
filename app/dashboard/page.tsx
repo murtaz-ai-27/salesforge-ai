@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
+import LoadingScreen from "@/components/LoadingScreen";
 
 const S = { bg:"#050505",panel:"#0d1018",lineSoft:"rgba(255,255,255,0.05)",text:"#f4f5f7",muted:"#9598a3",faint:"#555a66",accent:"#C8FF00" };
 type User = { displayName:string|null; email:string|null; photoURL:string|null; uid:string; };
@@ -81,7 +82,7 @@ export default function DashboardPage() {
       <div className="sf-main">
 
         {/* Header */}
-        <div className="sf-page-header" style={{ display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:28 }}>
+        <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:28 }}>
           <div>
             <h1 style={{ fontFamily:"Syne,sans-serif",fontSize:26,fontWeight:800,color:S.text,letterSpacing:"-0.03em",marginBottom:4 }}>
               {isNewUser ? `Welcome to SalesForge AI, ${user?.displayName?.split(" ")[0]??"there"}! 🚀` : `Good morning, ${user?.displayName?.split(" ")[0]??"there"} 👋`}
@@ -108,7 +109,7 @@ export default function DashboardPage() {
               <div style={{ fontSize:15,fontWeight:700,color:S.text,marginBottom:4 }}>🎯 Quick Start — 3 steps to your first meeting</div>
               <div style={{ fontSize:13,color:S.muted }}>SalesForge AI will handle the rest automatically</div>
             </div>
-            <div className="sf-page-header-actions" style={{ display:"flex",gap:10,flexWrap:"wrap" }}>
+            <div style={{ display:"flex",gap:10,flexWrap:"wrap" }}>
               {[
                 { step:"1",label:"Add Prospects",href:"/dashboard/prospects",done:false },
                 { step:"2",label:"Create Sequence",href:"/dashboard/sequences",done:false },
@@ -127,7 +128,7 @@ export default function DashboardPage() {
         )}
 
         {/* KPI Row 1 */}
-        <div className="sf-grid-4" style={{ display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14,marginBottom:14 }}>
+        <div className="sf-grid-4" style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:14
           {kpis.slice(0,4).map(k=>(
             <a key={k.label} href={k.href} style={{ textDecoration:"none" }}>
               <div style={{ background:S.panel,border:`1px solid ${S.lineSoft}`,borderRadius:14,padding:"18px 20px",transition:"border-color 0.2s",cursor:"pointer" }}
@@ -142,7 +143,7 @@ export default function DashboardPage() {
         </div>
 
         {/* KPI Row 2 */}
-        <div className="sf-grid-4" style={{ display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14,marginBottom:28 }}>
+        <div style={{ display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14,marginBottom:28 }}>
           {kpis.slice(4).map(k=>(
             <a key={k.label} href={k.href} style={{ textDecoration:"none" }}>
               <div style={{ background:S.panel,border:`1px solid ${S.lineSoft}`,borderRadius:14,padding:"16px 20px",transition:"border-color 0.2s" }}
@@ -157,7 +158,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Main Grid */}
-        <div className="sf-grid-2" style={{ display:"grid",gridTemplateColumns:"1fr 340px",gap:20 }}>
+        <div style={{ display:"grid",gridTemplateColumns:"1fr 340px",gap:20 }}>
           {/* Prospects Table */}
           <div style={{ background:S.panel,border:`1px solid ${S.lineSoft}`,borderRadius:16,overflow:"hidden" }}>
             <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",padding:"16px 20px",borderBottom:`1px solid ${S.lineSoft}` }}>
