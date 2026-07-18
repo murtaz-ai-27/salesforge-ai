@@ -647,7 +647,7 @@ export default function AutomationsPage() {
     setRunning(false);
   };
 
-  if (authLoading) return <LoadingScreen text="Loading automations"/>;
+  if (loading) return <LoadingScreen text="Loading automations"/>;
 
   return (
     <div style={{ background:S.bg,minHeight:"100vh",fontFamily:"Inter,sans-serif" }}>
