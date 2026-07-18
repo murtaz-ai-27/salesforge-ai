@@ -128,7 +128,7 @@ export default function DashboardPage() {
         )}
 
         {/* KPI Row 1 */}
-        <div className="sf-grid-4" style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:14
+        <div className="sf-grid-4" style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:14, marginBottom:14 }}>
           {kpis.slice(0,4).map(k=>(
             <a key={k.label} href={k.href} style={{ textDecoration:"none" }}>
               <div style={{ background:S.panel,border:`1px solid ${S.lineSoft}`,borderRadius:14,padding:"18px 20px",transition:"border-color 0.2s",cursor:"pointer" }}
