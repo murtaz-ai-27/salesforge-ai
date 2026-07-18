@@ -360,7 +360,7 @@ export default function SettingsPage() {
         {tab==="Notifications"&&(
           <div style={{ background:S.panel,border:`1px solid ${S.lineSoft}`,borderRadius:16,padding:24 }}>
             <div style={{ fontSize:14,fontWeight:700,color:S.text,marginBottom:6 }}>Notification Preferences</div>
-            <div style={{ fontSize:12,color:S.faint,marginBottom:20 }}>Changes save to Supabase — your preferences sync across devices</div>
+            <div style={{ fontSize:12,color:S.faint,marginBottom:20 }}>Changes save to Supabase — your preferences sync across devices</div> }}>
             {([
               { key:"hotLead",          label:"Hot Lead Alert",         desc:"When a prospect AI score exceeds 85" },
               { key:"replyReceived",    label:"Reply Received",         desc:"When a prospect replies to your email" },

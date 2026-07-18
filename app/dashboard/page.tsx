@@ -255,7 +255,7 @@ export default function DashboardPage() {
 
             {/* Quick Actions */}
             <div style={{ background:S.panel,border:`1px solid ${S.lineSoft}`,borderRadius:16,padding:16 }}>
-              <div style={{ fontSize:12,fontWeight:700,color:S.text,textTransform:"uppercase",letterSpacing:".08em",marginBottom:14 }}>Quick Actions</div>
+              <div style={{ fontSize:12,fontWeight:700,color:S.text,textTransform:"uppercase",letterSpacing:".08em",marginBottom:14 }}>Quick Actions</div> }}>
               {[
                 { label:"Add Prospects",     icon:"M12 5v14M5 12h14",                                                                                                               href:"/dashboard/prospects" },
                 { label:"Create Sequence",   icon:"M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z",                       href:"/dashboard/sequences" },

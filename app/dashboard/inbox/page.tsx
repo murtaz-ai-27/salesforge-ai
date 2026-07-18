@@ -158,7 +158,7 @@ export default function InboxPage() {
         <div style={{ borderRight:`1px solid ${S.lineSoft}`,display:"flex",flexDirection:"column",height:"100vh",overflow:"hidden" }}>
           <div style={{ padding:"20px 16px 14px",borderBottom:`1px solid ${S.lineSoft}`,flexShrink:0 }}>
             <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14 }}>
-              <h1 style={{ fontFamily:"Syne,sans-serif",fontSize:20,fontWeight:800,color:S.text }}>Inbox</h1>
+              <h1 style={{ fontFamily:"Syne,sans-serif",fontSize:20,fontWeight:800,color:S.text }}>Inbox</h1> }}>
               {threads.length>0&&(
                 <span style={{ fontSize:11,fontWeight:700,padding:"3px 9px",borderRadius:999,background:"rgba(200,255,0,0.1)",color:S.accent }}>
                   {threads.filter(t=>t.unread).length > 0 ? `${threads.filter(t=>t.unread).length} new` : `${threads.length} sent`}
