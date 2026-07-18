@@ -330,7 +330,7 @@ export default function SequencesPage() {
             <div style={{ display:"grid",gridTemplateColumns:"280px 1fr",minHeight:500 }}>
               {/* Steps sidebar */}
               <div style={{ borderRight:`1px solid ${S.lineSoft}`,padding:16 }}>
-                <div style={{ fontSize:11,fontWeight:700,color:S.faint,textTransform:"uppercase",letterSpacing:".08em",marginBottom:12 }}>Steps ({steps.length})</div> }}>
+                <div style={{ fontSize:11,fontWeight:700,color:S.faint,textTransform:"uppercase",letterSpacing:".08em",marginBottom:12 }}>Steps ({steps.length})</div>
                 {steps.map((step,i)=>{
                   const st = STEP_TYPES.find(t=>t.type===step.type)??STEP_TYPES[0];
                   const isActive = activeStep?.id===step.id;
@@ -462,7 +462,7 @@ export default function SequencesPage() {
                         <div style={{ fontSize:11,color:S.faint }}>{p.role} · {p.company}</div>
                       </div>
                       <div style={{ display:"flex",gap:8,alignItems:"center" }}>
-                        <span style={{ fontSize:11,fontWeight:700,padding:"3px 8px",borderRadius:999,color:p.ai_score>=85?S.accent:"#f59e0b",background:p.ai_score>=85?"rgba(200,255,0,0.08)":"rgba(245,158,11,0.08)" }}>{p.ai_score}</span> }}>
+                        <span style={{ fontSize:11,fontWeight:700,padding:"3px 8px",borderRadius:999,color:p.ai_score>=85?S.accent:"#f59e0b",background:p.ai_score>=85?"rgba(200,255,0,0.08)":"rgba(245,158,11,0.08)" }}>{p.ai_score}</span>
                         {alreadyEnrolled?(
                           <span style={{ fontSize:11,color:S.faint,fontStyle:"italic" }}>Already enrolled</span>
                         ):(
@@ -504,7 +504,7 @@ export default function SequencesPage() {
                       <div style={{ width:34,height:34,borderRadius:"50%",background:p.avatar_bg,color:p.avatar_color,display:"grid",placeItems:"center",fontSize:11,fontWeight:800,flexShrink:0 }}>{p.avatar_init}</div>
                       <div style={{ flex:1 }}>
                         <div style={{ fontSize:13,fontWeight:600,color:S.text }}>{p.name}</div>
-                        <div style={{ fontSize:11,color:S.faint }}>{p.role} · {p.company} · {p.email}</div> }}>
+                        <div style={{ fontSize:11,color:S.faint }}>{p.role} · {p.company} · {p.email}</div>
                         {result&&<div style={{ fontSize:11,color:"#34d399",marginTop:3 }}>✓ {result.message}</div>}
                       </div>
                       <div style={{ display:"flex",gap:8,alignItems:"center" }}>

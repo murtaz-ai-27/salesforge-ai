@@ -149,7 +149,7 @@ export default function PricingPage() {
                   <span style={{ fontFamily:"Syne,sans-serif",fontSize:40,fontWeight:800,color:S.text,letterSpacing:"-0.04em" }}>
                     ${billing==="annual"&&plan.price>0?Math.round(plan.price*0.8):plan.price}
                   </span>
-                  {plan.price>0&&<span style={{ fontSize:13,color:S.faint }}>/{plan.period}</span>} }}>
+                  {plan.price>0&&<span style={{ fontSize:13,color:S.faint }}>/{plan.period}</span>}
                   {plan.price===0&&<span style={{ fontSize:16,color:S.faint,marginLeft:4 }}>forever</span>}
                 </div>
                 {billing==="annual"&&plan.price>0&&(
@@ -216,7 +216,7 @@ export default function PricingPage() {
 
         {/* FAQ */}
         <div style={{ maxWidth:600,margin:"0 auto" }}>
-          <div style={{ fontSize:20,fontWeight:800,color:S.text,fontFamily:"Syne,sans-serif",textAlign:"center",marginBottom:24 }}>FAQ</div> }}>
+          <div style={{ fontSize:20,fontWeight:800,color:S.text,fontFamily:"Syne,sans-serif",textAlign:"center",marginBottom:24 }}>FAQ</div>
           {[
             { q:"Can I cancel anytime?", a:"Yes — no contracts, no commitments. Downgrade to free or cancel with one click. Your data stays safe." },
             { q:"What happens when I hit free tier limits?", a:"You'll see a friendly upgrade prompt. Nothing breaks — you just won't be able to add more until you upgrade or remove old data." },

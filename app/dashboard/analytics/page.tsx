@@ -262,7 +262,7 @@ export default function AnalyticsPage() {
               <div style={{ fontSize:14,fontWeight:700,color:S.text }}>Pipeline Funnel</div>
               <a href="/dashboard/prospects" style={{ fontSize:12,color:S.accent,textDecoration:"none",fontWeight:600 }}>View all →</a>
             </div>
-            <div style={{ fontSize:12,color:S.faint,marginBottom:20 }}>Real conversion data · {formatDateRange()}</div> }}>
+            <div style={{ fontSize:12,color:S.faint,marginBottom:20 }}>Real conversion data · {formatDateRange()}</div>
             {funnelStages.map((stage,i)=>{
               const maxCount = Math.max(totalProspects,1);
               const pct = Math.round((stage.count/maxCount)*100);
@@ -340,7 +340,7 @@ export default function AnalyticsPage() {
               <div style={{ fontSize:14,fontWeight:700,color:S.text }}>Buying Intent</div>
               <a href="/dashboard/prospects" style={{ fontSize:12,color:S.accent,textDecoration:"none",fontWeight:600 }}>View prospects →</a>
             </div>
-            <div style={{ fontSize:12,color:S.faint,marginBottom:20 }}>AI-scored across all prospects</div> }}>
+            <div style={{ fontSize:12,color:S.faint,marginBottom:20 }}>AI-scored across all prospects</div>
             {totalProspects===0?(
               <div style={{ textAlign:"center",padding:"32px 0" }}>
                 <div style={{ fontSize:32,marginBottom:12 }}>🎯</div>

@@ -202,7 +202,7 @@ export default function AgentsPage() {
 
               {/* Auto-replace notice */}
               <div style={{ padding:"8px 12px",borderRadius:9,background:"rgba(200,255,0,0.04)",border:"1px solid rgba(200,255,0,0.12)",fontSize:11,color:S.muted,marginBottom:10,display:"flex",alignItems:"center",gap:6 }}>
-                <span style={{ color:S.accent }}>✓</span> }}>
+                <span style={{ color:S.accent }}>✓</span>
                 {"{{firstName}}"}, {"{{company}}"}, {"{{role}}"} auto-replaced from your input
               </div>
 
@@ -239,7 +239,7 @@ export default function AgentsPage() {
                   <div style={{ fontSize:10,fontWeight:700,color:aiOutput.startsWith("⚠️")||aiOutput.startsWith("Error")?"#f87171":selected.color,textTransform:"uppercase",letterSpacing:".08em",marginBottom:10 }}>
                     {aiOutput.startsWith("⚠️")||aiOutput.startsWith("Error")?"⚠️ Notice":"⚡ Agent Output — Variables Replaced"}
                   </div>
-                  <pre style={{ fontSize:13,color:S.text,lineHeight:1.8,whiteSpace:"pre-wrap",fontFamily:"Inter,sans-serif",margin:"0 0 14px" }}>{aiOutput}</pre> }}>
+                  <pre style={{ fontSize:13,color:S.text,lineHeight:1.8,whiteSpace:"pre-wrap",fontFamily:"Inter,sans-serif",margin:"0 0 14px" }}>{aiOutput}</pre>
                   {!aiOutput.startsWith("⚠️")&&!aiOutput.startsWith("Error")&&(
                     <div style={{ display:"flex",gap:8 }}>
                       <button onClick={copyOutput}
