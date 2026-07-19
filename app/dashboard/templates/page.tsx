@@ -317,12 +317,21 @@ Rewrite the email filling in all {{variables}} with relevant, specific informati
             ))}
           </div>
           <div style={{ width:1,background:S.lineSoft }}/>
-          <div style={{ display:"flex",gap:6,flexWrap:"wrap" }}>
-            {INDUSTRIES.map(i=>(
-              <button key={i} onClick={()=>setIndustry(i)}
-                style={{ padding:"7px 14px",borderRadius:9,border:`1px solid ${industry===i?"rgba(129,140,248,0.3)":S.lineSoft}`,background:industry===i?"rgba(129,140,248,0.08)":"transparent",color:industry===i?"#818cf8":S.faint,fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"Inter,sans-serif" }}>
-                {i}
-              </button>
+          <div style={{ display:"flex",gap:6,flexWrap:"wrap",alignItems:"center" }}>
+            <button onClick={()=>setIndustry("All")}
+              style={{ padding:"7px 14px",borderRadius:9,border:`1px solid ${industry==="All"?"rgba(129,140,248,0.3)":S.lineSoft}`,background:industry==="All"?"rgba(129,140,248,0.08)":"transparent",color:industry==="All"?"#818cf8":S.faint,fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"Inter,sans-serif" }}>
+              All
+            </button>
+            {["SaaS","Fintech","DevTools","E-commerce","Healthcare"].map(i=>(
+              <div key={i} style={{ position:"relative",display:"inline-flex",alignItems:"center" }}>
+                <button disabled
+                  style={{ padding:"7px 14px",borderRadius:9,border:`1px solid ${S.lineSoft}`,background:"transparent",color:S.faint,fontSize:12,fontWeight:600,cursor:"not-allowed",fontFamily:"Inter,sans-serif",opacity:0.5 }}>
+                  {i}
+                </button>
+                <span style={{ position:"absolute",top:-8,right:-4,fontSize:8,fontWeight:700,padding:"2px 5px",borderRadius:999,background:"rgba(245,158,11,0.15)",border:"1px solid rgba(245,158,11,0.3)",color:"#f59e0b",whiteSpace:"nowrap" }}>
+                  Soon
+                </span>
+              </div>
             ))}
           </div>
         </div>
