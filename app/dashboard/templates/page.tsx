@@ -277,7 +277,7 @@ Rewrite the email filling in all {{variables}} with relevant, specific informati
       });
       const data = await res.json();
       if (data.result) { setCustomized(data.result); showToast("✓ AI customized this template!"); }
-      else showToast(data.error??"AI error","error" as any);
+      else showToast(data.error??"AI error");
     } catch { showToast("AI error"); }
     setAiGenerating(false);
   };
