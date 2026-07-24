@@ -90,12 +90,14 @@ export async function POST(req: NextRequest) {
       if (!error) inserted += Math.min(50, processed.length - i);
     }
 
-    await supabaseAdmin.from("notifications").insert({
-      user_id: userId, type:"general",
-      title:`✅ ${inserted} prospects imported`,
-      message:`${inserted} prospects imported and AI-scored. ${processed.filter((p:any)=>p.buying_intent==="high").length} are high intent.`,
-      link:"/dashboard/prospects", read:false,
-    }).catch(()=>{});
+    try {
+      await supabaseAdmin.from("notifications").insert({
+        user_id: userId, type:"general",
+        title:`✅ ${inserted} prospects imported`,
+        message:`${inserted} prospects imported and AI-scored. ${processed.filter((p:any)=>p.buying_intent==="high").length} are high intent.`,
+        link:"/dashboard/prospects", read:false,
+      });
+    } catch {}
 
     return NextResponse.json({
       success:true, imported:inserted,
