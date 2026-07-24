@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
     if (prospectId) {
       await supabaseAdmin.from("prospects").update({ status:"meeting", updated_at:new Date().toISOString() }).eq("id",prospectId);
     }
-    await supabaseAdmin.from("notifications").insert({ user_id:userId, type:"meeting", title:"📅 Meeting Link Sent", message:`Calendly link sent to ${prospectName??"prospect"}`, link:"/dashboard/inbox", read:false }).catch(()=>{});
+    try { await supabaseAdmin.from("notifications").insert({ user_id:userId, type:"meeting", title:"📅 Meeting Link Sent", message:`Calendly link sent to ${prospectName??"prospect"}`, link:"/dashboard/inbox", read:false }); } catch {}
     return NextResponse.json({ booking: data, calendlyUrl: calendlyLink });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
