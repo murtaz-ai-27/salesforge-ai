@@ -3,32 +3,20 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   compress: true,
   poweredByHeader: false,
-  
-  async redirects() {
-    return [
-      { source:"/apollo", destination:"/vs-apollo", permanent:true },
-      { source:"/pricing", destination:"/dashboard/pricing", permanent:false },
-    ];
-  },
 
   async rewrites() {
     return [
       {
         source: "/",
-        destination: "/salevrix-landing.html",
+        destination: "/index.html",
       },
     ];
   },
 
-  async headers() {
+  async redirects() {
     return [
-      {
-        source: "/(.*)",
-        headers: [
-          { key:"X-Frame-Options", value:"DENY" },
-          { key:"X-Content-Type-Options", value:"nosniff" },
-        ],
-      },
+      { source:"/apollo", destination:"/vs-apollo", permanent:true },
+      { source:"/pricing", destination:"/dashboard/pricing", permanent:false },
     ];
   },
 
