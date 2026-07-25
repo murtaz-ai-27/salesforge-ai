@@ -91,7 +91,7 @@ export default function Sidebar({ active, user, onLogout }: { active:string; use
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8L6.5 11.5L13 4.5" stroke="#050505" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </div>
             <div>
-              <div style={{ fontFamily:"Syne,sans-serif",fontWeight:800,fontSize:15,color:"#f4f5f7",letterSpacing:"-0.02em" }}>SalesForge AI</div>
+              <div style={{ fontFamily:"Syne,sans-serif",fontWeight:800,fontSize:15,color:"#f4f5f7",letterSpacing:"-0.02em" }}>Salevrix AI</div>
               <div style={{ fontSize:10,color:"#555a66",marginTop:1 }}>Sales Platform</div>
             </div>
           </div>

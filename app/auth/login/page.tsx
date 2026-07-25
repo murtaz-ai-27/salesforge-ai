@@ -46,7 +46,7 @@ export default function LoginPage() {
           <div style={{ width:36,height:36,borderRadius:10,background:S.accent,display:"grid",placeItems:"center",boxShadow:"0 0 20px rgba(200,255,0,0.3)" }}>
             <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><path d="M3 8L6.5 11.5L13 4.5" stroke="#050505" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </div>
-          <span style={{ fontFamily:"Syne,sans-serif",fontWeight:800,fontSize:18,color:S.text }}>SalesForge AI</span>
+          <span style={{ fontFamily:"Syne,sans-serif",fontWeight:800,fontSize:18,color:S.text }}>Salevrix AI</span>
         </div>
 
         <div style={{ background:S.panel,border:`1px solid ${S.lineSoft}`,borderRadius:18,padding:32 }}>
@@ -54,7 +54,7 @@ export default function LoginPage() {
             Welcome back
           </h1>
           <p style={{ fontSize:13,color:S.muted,textAlign:"center",marginBottom:28 }}>
-            Sign in to your SalesForge AI dashboard
+            Sign in to your Salevrix AI dashboard
           </p>
 
           <button onClick={handleGoogle} disabled={loading}

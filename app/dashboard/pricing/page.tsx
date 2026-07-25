@@ -185,7 +185,7 @@ export default function PricingPage() {
         <div style={{ background:S.panel,border:`1px solid ${S.lineSoft}`,borderRadius:18,overflow:"hidden",marginBottom:40 }}>
           <div style={{ padding:"20px 24px",borderBottom:`1px solid ${S.lineSoft}`,display:"flex",alignItems:"center",justifyContent:"space-between" }}>
             <div>
-              <div style={{ fontSize:16,fontWeight:800,color:S.text,fontFamily:"Syne,sans-serif",marginBottom:4 }}>SalesForge AI vs Apollo.io</div>
+              <div style={{ fontSize:16,fontWeight:800,color:S.text,fontFamily:"Syne,sans-serif",marginBottom:4 }}>Salevrix AI vs Apollo.io</div>
               <div style={{ fontSize:12,color:S.faint }}>Why we beat Apollo on every metric that matters</div>
             </div>
             <div style={{ fontSize:12,fontWeight:700,color:S.accent,background:"rgba(200,255,0,0.08)",border:"1px solid rgba(200,255,0,0.2)",padding:"6px 14px",borderRadius:999 }}>
@@ -200,7 +200,7 @@ export default function PricingPage() {
               <div style={{ width:20,height:20,borderRadius:6,background:S.accent,display:"grid",placeItems:"center" }}>
                 <svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M3 8L6.5 11.5L13 4.5" stroke="#050505" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </div>
-              SalesForge AI
+              Salevrix AI
             </div>
             <div style={{ fontSize:11,fontWeight:700,color:S.faint,textTransform:"uppercase",letterSpacing:".08em" }}>Apollo.io</div>
           </div>
@@ -221,7 +221,7 @@ export default function PricingPage() {
             { q:"Can I cancel anytime?", a:"Yes — no contracts, no commitments. Downgrade to free or cancel with one click. Your data stays safe." },
             { q:"What happens when I hit free tier limits?", a:"You'll see a friendly upgrade prompt. Nothing breaks — you just won't be able to add more until you upgrade or remove old data." },
             { q:"Is my data safe?", a:"Absolutely. We use Supabase with Row-Level Security — your data is completely isolated from other users." },
-            { q:"How is this better than Apollo?", a:"Apollo has 65% data accuracy and 20-30% email bounce rates. SalesForge AI uses your own verified data (100% accuracy) + 10x more AI agents + actual automation vs Apollo's manual workflows." },
+            { q:"How is this better than Apollo?", a:"Apollo has 65% data accuracy and 20-30% email bounce rates. Salevrix AI uses your own verified data (100% accuracy) + 10x more AI agents + actual automation vs Apollo's manual workflows." },
           ].map((faq,i)=>(
             <div key={i} style={{ marginBottom:16,background:S.panel,border:`1px solid ${S.lineSoft}`,borderRadius:12,padding:"16px 20px" }}>
               <div style={{ fontSize:14,fontWeight:700,color:S.text,marginBottom:8 }}>{faq.q}</div>

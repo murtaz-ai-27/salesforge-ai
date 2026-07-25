@@ -7,11 +7,11 @@ const S = { bg:"#050505", text:"#f4f5f7", muted:"#9598a3", faint:"#555a66", acce
 type User = { displayName:string|null; email:string|null; uid:string; };
 
 const STEPS = [
-  { id:1, title:"Welcome to SalesForge AI", subtitle:"Let's set up your AI sales machine in 5 minutes", icon:"🚀" },
+  { id:1, title:"Welcome to Salevrix AI", subtitle:"Let's set up your AI sales machine in 5 minutes", icon:"🚀" },
   { id:2, title:"Tell us about yourself", subtitle:"We'll personalize your AI agents for your industry", icon:"👤" },
   { id:3, title:"Add your first prospect", subtitle:"Your AI will score and personalize outreach instantly", icon:"🎯" },
   { id:4, title:"Meet your AI agents", subtitle:"10 agents ready to work 24/7 for you", icon:"⚡" },
-  { id:5, title:"You're ready to crush it", subtitle:"SalesForge AI is set up and ready to go", icon:"🏆" },
+  { id:5, title:"You're ready to crush it", subtitle:"Salevrix AI is set up and ready to go", icon:"🏆" },
 ];
 
 const INDUSTRIES = ["SaaS","Fintech","DevTools","E-commerce","Healthcare","Real Estate","Marketing","Consulting","Other"];
@@ -128,7 +128,7 @@ export default function OnboardingPage() {
         <div style={{ width:32,height:32,borderRadius:9,background:S.accent,display:"grid",placeItems:"center",boxShadow:"0 0 16px rgba(200,255,0,0.3)" }}>
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8L6.5 11.5L13 4.5" stroke="#050505" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
         </div>
-        <span style={{ fontFamily:"Syne,sans-serif",fontWeight:800,fontSize:15,color:S.text }}>SalesForge AI</span>
+        <span style={{ fontFamily:"Syne,sans-serif",fontWeight:800,fontSize:15,color:S.text }}>Salevrix AI</span>
       </div>
 
       {/* Progress bar */}
@@ -299,7 +299,7 @@ export default function OnboardingPage() {
                 </div>
 
                 <div style={{ background:"rgba(200,255,0,0.04)",border:"1px solid rgba(200,255,0,0.12)",borderRadius:10,padding:"10px 14px",fontSize:12,color:S.muted,marginBottom:20,lineHeight:1.6 }}>
-                  💡 <strong style={{ color:S.accent }}>Tip:</strong> Add someone you actually want to reach out to — SalesForge AI will score their buying intent and write your first email automatically.
+                  💡 <strong style={{ color:S.accent }}>Tip:</strong> Add someone you actually want to reach out to — Salevrix AI will score their buying intent and write your first email automatically.
                 </div>
 
                 <div style={{ display:"flex",gap:10,marginBottom:16 }}>
@@ -408,7 +408,7 @@ export default function OnboardingPage() {
               You're all set, {firstName}!
             </h2>
             <p style={{ fontSize:15,color:S.muted,lineHeight:1.7,marginBottom:32,maxWidth:400,margin:"0 auto 32px" }}>
-              SalesForge AI is configured and your agents are ready. Let's go beat Apollo.
+              Salevrix AI is configured and your agents are ready. Let's go beat Apollo.
             </p>
 
             {/* Quick start checklist */}

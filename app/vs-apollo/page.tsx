@@ -21,12 +21,12 @@ const COMPARISON = [
 ];
 
 const PAIN_POINTS = [
-  { icon:"💸", title:"Tired of paying $119/user/month?", desc:"Apollo's pricing adds up fast. A team of 5 = $7,140/year. SalesForge AI starts at $0 and scales to $79/mo for your whole team — not per user." },
-  { icon:"📉", title:"Your emails are bouncing?", desc:"Apollo's 210M contact database is ~65% accurate. That means 35% of your emails never arrive. SalesForge AI uses your own verified data — 100% accurate, 0% bounce." },
-  { icon:"🤖", title:"Apollo's AI feels generic?", desc:"Apollo's AI assistant writes copy that sounds like a robot. SalesForge AI's 10 agents write hyper-personalized emails referencing LinkedIn posts, funding rounds, and company news." },
-  { icon:"🔧", title:"Everything still feels manual?", desc:"Apollo creates tasks for humans to do manually. SalesForge AI's 15 automations actually execute — enriching leads, sending follow-ups, handling objections, and booking meetings." },
-  { icon:"📊", title:"No real sales intelligence?", desc:"Apollo shows you contact data. SalesForge AI's Deal Analyzer scores deal health, flags at-risk deals, and gives you exact scripts to rescue them before it's too late." },
-  { icon:"⏰", title:"Your team wastes hours on research?", desc:"Apollo reps spend 2-3 hours/day manually researching prospects. SalesForge AI's SDR Agent does that research in seconds and writes the personalized email automatically." },
+  { icon:"💸", title:"Tired of paying $119/user/month?", desc:"Apollo's pricing adds up fast. A team of 5 = $7,140/year. Salevrix AI starts at $0 and scales to $79/mo for your whole team — not per user." },
+  { icon:"📉", title:"Your emails are bouncing?", desc:"Apollo's 210M contact database is ~65% accurate. That means 35% of your emails never arrive. Salevrix AI uses your own verified data — 100% accurate, 0% bounce." },
+  { icon:"🤖", title:"Apollo's AI feels generic?", desc:"Apollo's AI assistant writes copy that sounds like a robot. Salevrix AI's 10 agents write hyper-personalized emails referencing LinkedIn posts, funding rounds, and company news." },
+  { icon:"🔧", title:"Everything still feels manual?", desc:"Apollo creates tasks for humans to do manually. Salevrix AI's 15 automations actually execute — enriching leads, sending follow-ups, handling objections, and booking meetings." },
+  { icon:"📊", title:"No real sales intelligence?", desc:"Apollo shows you contact data. Salevrix AI's Deal Analyzer scores deal health, flags at-risk deals, and gives you exact scripts to rescue them before it's too late." },
+  { icon:"⏰", title:"Your team wastes hours on research?", desc:"Apollo reps spend 2-3 hours/day manually researching prospects. Salevrix AI's SDR Agent does that research in seconds and writes the personalized email automatically." },
 ];
 
 const TESTIMONIALS = [
@@ -36,11 +36,11 @@ const TESTIMONIALS = [
 ];
 
 const FAQS = [
-  { q:"Can I import my Apollo data into SalesForge AI?", a:"Yes — just export your Apollo contacts as CSV and import them in one click. Your data comes with you." },
+  { q:"Can I import my Apollo data into Salevrix AI?", a:"Yes — just export your Apollo contacts as CSV and import them in one click. Your data comes with you." },
   { q:"Do I need to cancel Apollo before trying SalesForge?", a:"No. Start with our free tier (no credit card) and run both in parallel. Most teams make the switch after seeing the difference in reply rates within 2 weeks." },
-  { q:"Is SalesForge AI better for small teams or enterprise?", a:"Both. Free plan works great for solo founders and small teams. Pro ($79/mo) covers teams of any size — we charge per account, not per user like Apollo." },
+  { q:"Is Salevrix AI better for small teams or enterprise?", a:"Both. Free plan works great for solo founders and small teams. Pro ($79/mo) covers teams of any size — we charge per account, not per user like Apollo." },
   { q:"How accurate is your AI compared to Apollo's?", a:"Apollo's AI writes generic copy that gets flagged as spam. Our AI references specific LinkedIn posts, recent funding rounds, and company news. Average reply rate difference: 8% (Apollo) vs 28%+ (SalesForge)." },
-  { q:"What about Apollo's 210M contact database?", a:"Apollo's database is large but 65% accurate — meaning 35% of emails bounce. SalesForge AI helps you work your own verified prospect list with 100% accuracy. Quality beats quantity every time." },
+  { q:"What about Apollo's 210M contact database?", a:"Apollo's database is large but 65% accurate — meaning 35% of emails bounce. Salevrix AI helps you work your own verified prospect list with 100% accuracy. Quality beats quantity every time." },
   { q:"How long does migration take?", a:"5 minutes. Sign up → import CSV → run your first AI agent. No onboarding calls, no training sessions, no 30-day implementation." },
 ];
 
@@ -68,7 +68,7 @@ export default function VsApolloPage() {
           <div style={{ width:30,height:30,borderRadius:8,background:S.accent,display:"grid",placeItems:"center",boxShadow:"0 0 12px rgba(200,255,0,0.3)" }}>
             <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8L6.5 11.5L13 4.5" stroke="#050505" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </div>
-          <span style={{ fontFamily:"Syne,sans-serif",fontWeight:800,fontSize:16,color:S.text }}>SalesForge AI</span>
+          <span style={{ fontFamily:"Syne,sans-serif",fontWeight:800,fontSize:16,color:S.text }}>Salevrix AI</span>
         </a>
         <div style={{ display:"flex",alignItems:"center",gap:16 }}>
           <a href="/dashboard" style={{ fontSize:13,color:S.muted,textDecoration:"none" }}>Dashboard</a>
@@ -87,7 +87,7 @@ export default function VsApolloPage() {
         <div style={{ position:"absolute",top:0,left:"50%",transform:"translateX(-50%)",width:700,height:400,background:"radial-gradient(ellipse,rgba(200,255,0,0.07) 0%,transparent 65%)",pointerEvents:"none" }}/>
 
         <div style={{ display:"inline-flex",alignItems:"center",gap:8,padding:"6px 16px",borderRadius:999,background:"rgba(200,255,0,0.08)",border:"1px solid rgba(200,255,0,0.2)",fontSize:12,fontWeight:700,color:S.accent,marginBottom:24 }}>
-          ⚡ SalesForge AI vs Apollo.io — Honest Comparison
+          ⚡ Salevrix AI vs Apollo.io — Honest Comparison
         </div>
 
         <h1 style={{ fontFamily:"Syne,sans-serif",fontSize:clamp(36,6,60),fontWeight:900,letterSpacing:"-0.04em",lineHeight:1.1,marginBottom:20 }}>
@@ -99,7 +99,7 @@ export default function VsApolloPage() {
 
         <p style={{ fontSize:18,color:S.muted,lineHeight:1.7,maxWidth:600,margin:"0 auto 36px" }}>
           Apollo.io gives you a contact database with 65% accuracy and a basic AI assistant.
-          SalesForge AI gives you <strong style={{ color:S.text }}>10 AI agents</strong>, <strong style={{ color:S.text }}>15 real automations</strong>, and reply rates that actually move the needle.
+          Salevrix AI gives you <strong style={{ color:S.text }}>10 AI agents</strong>, <strong style={{ color:S.text }}>15 real automations</strong>, and reply rates that actually move the needle.
         </p>
 
         <div style={{ display:"flex",gap:12,justifyContent:"center",flexWrap:"wrap",marginBottom:20 }}>
@@ -143,7 +143,7 @@ export default function VsApolloPage() {
           <h2 style={{ fontFamily:"Syne,sans-serif",fontSize:36,fontWeight:800,letterSpacing:"-0.03em",marginBottom:12 }}>
             Sound familiar?
           </h2>
-          <p style={{ fontSize:15,color:S.muted }}>The most common reasons Apollo customers switch to SalesForge AI</p>
+          <p style={{ fontSize:15,color:S.muted }}>The most common reasons Apollo customers switch to Salevrix AI</p>
         </div>
         <div style={{ display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:16 }}>
           {PAIN_POINTS.map((p,i)=>(
@@ -174,7 +174,7 @@ export default function VsApolloPage() {
               <div style={{ width:20,height:20,borderRadius:6,background:S.accent,display:"grid",placeItems:"center" }}>
                 <svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M3 8L6.5 11.5L13 4.5" stroke="#050505" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </div>
-              SalesForge AI
+              Salevrix AI
             </div>
             <div style={{ fontSize:13,fontWeight:700,color:S.faint }}>Apollo.io</div>
           </div>
@@ -249,7 +249,7 @@ export default function VsApolloPage() {
               <div style={{ width:24,height:24,borderRadius:7,background:S.accent,display:"grid",placeItems:"center" }}>
                 <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M3 8L6.5 11.5L13 4.5" stroke="#050505" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </div>
-              <span style={{ fontFamily:"Syne,sans-serif",fontWeight:800,fontSize:16,color:S.text }}>SalesForge AI</span>
+              <span style={{ fontFamily:"Syne,sans-serif",fontWeight:800,fontSize:16,color:S.text }}>Salevrix AI</span>
             </div>
             <div style={{ fontFamily:"Syne,sans-serif",fontSize:42,fontWeight:900,color:S.accent,letterSpacing:"-0.04em",marginBottom:4 }}>$79<span style={{ fontSize:18,color:S.muted }}>/mo</span></div>
             <div style={{ fontSize:12,color:S.faint,marginBottom:16 }}>Entire team · Not per user</div>
@@ -284,7 +284,7 @@ export default function VsApolloPage() {
       <section style={{ padding:"0 40px 80px",maxWidth:700,margin:"0 auto" }}>
         <div style={{ textAlign:"center",marginBottom:40 }}>
           <h2 style={{ fontFamily:"Syne,sans-serif",fontSize:36,fontWeight:800,letterSpacing:"-0.03em",marginBottom:12 }}>Common questions</h2>
-          <p style={{ fontSize:15,color:S.muted }}>About switching from Apollo to SalesForge AI</p>
+          <p style={{ fontSize:15,color:S.muted }}>About switching from Apollo to Salevrix AI</p>
         </div>
         {FAQS.map((faq,i)=>(
           <div key={i} style={{ marginBottom:10,background:S.panel,border:`1px solid ${openFaq===i?"rgba(200,255,0,0.2)":S.lineSoft}`,borderRadius:12,overflow:"hidden",transition:"border-color 0.2s" }}>
@@ -327,7 +327,7 @@ export default function VsApolloPage() {
           <div style={{ width:24,height:24,borderRadius:7,background:S.accent,display:"grid",placeItems:"center" }}>
             <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M3 8L6.5 11.5L13 4.5" stroke="#050505" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </div>
-          <span style={{ fontFamily:"Syne,sans-serif",fontWeight:800,fontSize:14,color:S.text }}>SalesForge AI</span>
+          <span style={{ fontFamily:"Syne,sans-serif",fontWeight:800,fontSize:14,color:S.text }}>Salevrix AI</span>
           <span style={{ fontSize:12,color:S.faint }}>— The Apollo.io alternative that actually works</span>
         </div>
         <div style={{ display:"flex",gap:20 }}>
