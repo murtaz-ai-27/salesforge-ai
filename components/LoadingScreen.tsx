@@ -82,7 +82,7 @@ export default function LoadingScreen({ text }: { text?:string }) {
 
       {/* Brand */}
       <div style={{ fontFamily:"Syne,sans-serif",fontSize:22,fontWeight:900,color:"#f4f5f7",letterSpacing:"-0.03em",marginBottom:8 }}>
-        SalesForge <span style={{ color:"#C8FF00" }}>AI</span>
+        Salevrix <span style={{ color:"#C8FF00" }}>AI</span>
       </div>
 
       {/* Rotating message */}
