@@ -371,10 +371,10 @@ footer{border-top:1px solid var(--line-soft);padding:60px 0 40px;margin-top:24px
 .hide-scrollbar::-webkit-scrollbar{display:none}
 .hide-scrollbar{scrollbar-width:none;-ms-overflow-style:none}
 ` }} />
-      <Script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" strategy="beforeInteractive"/>
-      <Script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" strategy="beforeInteractive"/>
-      <Script src="https://cdnjs.cloudflare.com/ajax/libs/lenis/1.1.13/lenis.min.js" strategy="beforeInteractive"/>
-      <Script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" strategy="beforeInteractive"/>
+      <Script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" strategy="afterInteractive"/>
+      <Script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" strategy="afterInteractive"/>
+      <Script src="https://cdnjs.cloudflare.com/ajax/libs/lenis/1.1.13/lenis.min.js" strategy="afterInteractive"/>
+      <Script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" strategy="afterInteractive"/>
       <div dangerouslySetInnerHTML={{ __html: `
 <canvas id="bgGL"></canvas>
 <div class="bg-fx"></div>
