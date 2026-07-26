@@ -69,6 +69,9 @@ export const metadata: Metadata = {
     apple: [{ url: "/icon-192.png", sizes: "192x192" }],
   },
   alternates: { canonical: "https://salevrix.ai" },
+verification: {
+  google: "LBRCFSkVWJgwR5GXwhIYq8sK3rxfQP1R7Tg3YG9oBGc",
+},
 };
 
 export const viewport: Viewport = {
