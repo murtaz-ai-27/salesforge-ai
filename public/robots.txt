@@ -1,8 +1,18 @@
 User-agent: *
 Allow: /
 Allow: /vs-apollo
+Allow: /auth/signup
+Allow: /auth/login
 Disallow: /dashboard/
 Disallow: /api/
-Disallow: /auth/
+Disallow: /onboarding/
 
-Sitemap: https://salesforge.ai/sitemap.xml
+Sitemap: https://salevrix.ai/sitemap.xml
+
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 0
+
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 1
