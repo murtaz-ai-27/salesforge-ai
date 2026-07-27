@@ -1,13 +1,6 @@
 "use client";
-import type { Metadata } from "next";
 import Link from "next/link";
 
-export const metadata: Metadata = {
-  title: "AI SDR Software: Replace Your SDR Team With AI in 2026 | Salevrix AI",
-  description: "AI SDRs are booking more meetings than human SDRs at 10% of the cost. Here's how companies are doing it — the tools, results, and exact setup in 2026.",
-  keywords: ["AI SDR software","AI SDR","AI sales development rep","replace SDR with AI","AI sales agent","automated SDR","SDR automation tool 2026","AI outbound sales"],
-  alternates: { canonical: "https://salevrix-ai-black.vercel.app/blog/ai-sdr-software" },
-};
 
 const S = { bg:"#050505",panel:"#0d1018",lineSoft:"rgba(255,255,255,0.05)",text:"#f4f5f7",muted:"#9598a3",faint:"#555a66",accent:"#C8FF00" };
 

@@ -1,12 +1,6 @@
 "use client";
-import type { Metadata } from "next";
 import Link from "next/link";
 
-export const metadata: Metadata = {
-  title: "Salevrix AI Blog — Sales Automation & Cold Email Tips 2026",
-  description: "Expert guides on cold email automation, AI sales tools, Apollo.io alternatives, and B2B outreach strategies that actually work in 2026.",
-  alternates: { canonical: "https://salevrix-ai-black.vercel.app/blog" },
-};
 
 const S = { bg:"#050505",panel:"#0d1018",lineSoft:"rgba(255,255,255,0.05)",text:"#f4f5f7",muted:"#9598a3",faint:"#555a66",accent:"#C8FF00" };
 

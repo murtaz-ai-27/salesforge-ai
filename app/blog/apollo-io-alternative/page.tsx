@@ -1,18 +1,6 @@
 "use client";
-import type { Metadata } from "next";
 import Link from "next/link";
 
-export const metadata: Metadata = {
-  title: "7 Best Apollo.io Alternatives in 2026 (Honest Review) | Salevrix AI",
-  description: "Apollo.io charges $119/user/month with 65% data accuracy. We tested 7 alternatives and ranked them by reply rates, AI features, and price. #1 pick: Salevrix AI.",
-  keywords: ["Apollo.io alternative","best Apollo.io alternative 2026","Apollo.io competitor","replace Apollo.io","Apollo.io vs","Apollo pricing too expensive","cold email software","sales outreach tool"],
-  alternates: { canonical: "https://salevrix-ai-black.vercel.app/blog/apollo-io-alternative" },
-  openGraph: {
-    title: "7 Best Apollo.io Alternatives in 2026 (Honest Review)",
-    description: "Apollo charges $119/user. We tested 7 alternatives. Here's the honest ranking.",
-    url: "https://salevrix-ai-black.vercel.app/blog/apollo-io-alternative",
-  },
-};
 
 const S = { bg:"#050505",panel:"#0d1018",lineSoft:"rgba(255,255,255,0.05)",text:"#f4f5f7",muted:"#9598a3",faint:"#555a66",accent:"#C8FF00" };
 

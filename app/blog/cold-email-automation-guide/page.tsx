@@ -1,18 +1,6 @@
 "use client";
-import type { Metadata } from "next";
 import Link from "next/link";
 
-export const metadata: Metadata = {
-  title: "Cold Email Automation: The Complete 2026 Guide | Salevrix AI",
-  description: "How to automate cold email outreach and hit 28%+ reply rates. The exact framework top SDR teams use in 2026 — with templates, tools, and step-by-step setup.",
-  keywords: ["cold email automation","cold email software 2026","cold email automation guide","best cold email tool","cold outreach automation","email outreach software","cold email reply rates","B2B cold email"],
-  alternates: { canonical: "https://salevrix-ai-black.vercel.app/blog/cold-email-automation-guide" },
-  openGraph: {
-    title: "Cold Email Automation: The Complete 2026 Guide",
-    description: "How to hit 28%+ reply rates with automated cold email. Templates, tools, and exact setup.",
-    url: "https://salevrix-ai-black.vercel.app/blog/cold-email-automation-guide",
-  },
-};
 
 const S = { bg:"#050505",panel:"#0d1018",lineSoft:"rgba(255,255,255,0.05)",text:"#f4f5f7",muted:"#9598a3",faint:"#555a66",accent:"#C8FF00" };
 
