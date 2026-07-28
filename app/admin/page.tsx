@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 const S = { bg:"#050505",panel:"#0d1018",lineSoft:"rgba(255,255,255,0.05)",text:"#f4f5f7",muted:"#9598a3",faint:"#555a66",accent:"#C8FF00" };
 
 // !! CHANGE THIS TO YOUR UID !!
-const ADMIN_PASS = "salevrix@admin2026"; // ← apna password yahan change karo
+const ADMIN_PASS = "murtaz@28admin"; // ← apna password yahan change karo
 
 type Stats = {
   totalUsers: number;
