@@ -1,10 +1,10 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 const S = { bg:"#050505", text:"#f4f5f7", muted:"#9598a3", faint:"#555a66", accent:"#C8FF00", panel:"#0d1018", lineSoft:"rgba(255,255,255,0.06)" };
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirect") ?? "/dashboard";
@@ -86,5 +86,13 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div style={{ minHeight:"100vh",background:"#050505" }}/>}>
+      <LoginContent/>
+    </Suspense>
   );
 }
