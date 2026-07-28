@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 const S = { bg:"#050505",panel:"#0d1018",lineSoft:"rgba(255,255,255,0.05)",text:"#f4f5f7",muted:"#9598a3",faint:"#555a66",accent:"#C8FF00" };
 
 // !! CHANGE THIS TO YOUR UID !!
-const ADMIN_UID = "NBb0g0QBn5bsZqq2lbEWAKnfNSXFMIGwFVHAcqrHq442";
+const ADMIN_PASS = "salevrix@admin2026"; // ← apna password yahan change karo
 
 type Stats = {
   totalUsers: number;
@@ -25,6 +25,8 @@ type Stats = {
 
 export default function AdminDashboard() {
   const [authed, setAuthed] = useState(false);
+  const [pass, setPass] = useState("");
+  const [passError, setPassError] = useState(false);
   const [checking, setChecking] = useState(true);
   const [stats, setStats] = useState<Stats|null>(null);
   const [loading, setLoading] = useState(true);
@@ -32,19 +34,13 @@ export default function AdminDashboard() {
   const [liveUsers, setLiveUsers] = useState(0);
   const intervalRef = useRef<NodeJS.Timeout|null>(null);
 
-  // Check admin auth
+  // Simple password check
   useEffect(() => {
-    import("@/lib/firebase").then(({ onAuthChange }) => {
-      onAuthChange((u) => {
-        if (u?.uid === ADMIN_UID) {
-          setAuthed(true);
-          setChecking(false);
-        } else {
-          setAuthed(false);
-          setChecking(false);
-        }
-      });
-    });
+    const saved = localStorage.getItem("salevrix_admin");
+    if (saved === ADMIN_PASS) {
+      setAuthed(true);
+    }
+    setChecking(false);
   }, []);
 
   const fetchStats = async () => {
@@ -75,13 +71,39 @@ export default function AdminDashboard() {
     </div>
   );
 
+
+
+  const handleLogin = () => {
+    if (pass === ADMIN_PASS) {
+      localStorage.setItem("salevrix_admin", pass);
+      setAuthed(true);
+      setPassError(false);
+    } else {
+      setPassError(true);
+    }
+  };
+
   if (!authed) return (
     <div style={{ minHeight:"100vh",background:S.bg,display:"grid",placeItems:"center",fontFamily:"Inter,sans-serif" }}>
-      <div style={{ textAlign:"center" }}>
-        <div style={{ fontSize:48,marginBottom:16 }}>🔒</div>
-        <div style={{ fontSize:18,fontWeight:700,color:S.text,marginBottom:8 }}>Admin Only</div>
-        <div style={{ fontSize:13,color:S.faint }}>Sign in with your admin account</div>
-        <a href="/auth/login?redirect=/admin" style={{ display:"inline-block",marginTop:20,padding:"10px 24px",borderRadius:10,background:S.accent,color:"#050505",fontSize:13,fontWeight:700,textDecoration:"none" }}>Sign In →</a>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}input:focus{outline:none}`}</style>
+      <div style={{ width:360,background:"#0d1018",border:"1px solid rgba(255,255,255,0.08)",borderRadius:18,padding:32,textAlign:"center" }}>
+        <div style={{ width:52,height:52,borderRadius:14,background:"rgba(200,255,0,0.1)",border:"1px solid rgba(200,255,0,0.2)",display:"grid",placeItems:"center",margin:"0 auto 20px",fontSize:24 }}>🔐</div>
+        <div style={{ fontFamily:"Syne,sans-serif",fontSize:22,fontWeight:800,color:S.text,marginBottom:6 }}>Admin Access</div>
+        <div style={{ fontSize:13,color:S.faint,marginBottom:28 }}>Salevrix AI — Owner Dashboard</div>
+        <input
+          type="password"
+          value={pass}
+          onChange={e=>{ setPass(e.target.value); setPassError(false); }}
+          onKeyDown={e=>e.key==="Enter"&&handleLogin()}
+          placeholder="Enter admin password"
+          autoFocus
+          style={{ width:"100%",padding:"12px 16px",borderRadius:10,background:"rgba(255,255,255,0.04)",border:`1px solid ${passError?"rgba(248,113,113,0.5)":"rgba(255,255,255,0.1)"}`,color:S.text,fontSize:14,fontFamily:"Inter,sans-serif",marginBottom:passError?8:16,textAlign:"center",letterSpacing:"0.1em" }}
+        />
+        {passError&&<div style={{ fontSize:12,color:"#f87171",marginBottom:12 }}>Wrong password. Try again.</div>}
+        <button onClick={handleLogin}
+          style={{ width:"100%",padding:"12px",borderRadius:10,background:S.accent,border:"none",color:"#050505",fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:"Syne,sans-serif" }}>
+          Enter Dashboard →
+        </button>
       </div>
     </div>
   );
