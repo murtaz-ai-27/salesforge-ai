@@ -81,7 +81,7 @@ export default function AdminDashboard() {
         <div style={{ fontSize:48,marginBottom:16 }}>🔒</div>
         <div style={{ fontSize:18,fontWeight:700,color:S.text,marginBottom:8 }}>Admin Only</div>
         <div style={{ fontSize:13,color:S.faint }}>Sign in with your admin account</div>
-        <a href="/auth/login" style={{ display:"inline-block",marginTop:20,padding:"10px 24px",borderRadius:10,background:S.accent,color:"#050505",fontSize:13,fontWeight:700,textDecoration:"none" }}>Sign In →</a>
+        <a href="/auth/login?redirect=/admin" style={{ display:"inline-block",marginTop:20,padding:"10px 24px",borderRadius:10,background:S.accent,color:"#050505",fontSize:13,fontWeight:700,textDecoration:"none" }}>Sign In →</a>
       </div>
     </div>
   );

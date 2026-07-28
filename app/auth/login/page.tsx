@@ -1,11 +1,13 @@
 "use client";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 const S = { bg:"#050505", text:"#f4f5f7", muted:"#9598a3", faint:"#555a66", accent:"#C8FF00", panel:"#0d1018", lineSoft:"rgba(255,255,255,0.06)" };
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get("redirect") ?? "/dashboard";
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -14,7 +16,7 @@ export default function LoginPage() {
     try {
       const { signInWithGoogle } = await import("@/lib/firebase");
       await signInWithGoogle();
-      router.push("/dashboard"); // existing users → dashboard directly
+      router.push(redirectTo); // ← redirects to /admin if came from there
     } catch (err: any) { setError(err.message ?? "Sign in failed"); }
     setLoading(false);
   };
@@ -24,7 +26,7 @@ export default function LoginPage() {
     try {
       const { signInWithGithub } = await import("@/lib/firebase");
       await signInWithGithub();
-      router.push("/dashboard");
+      router.push(redirectTo);
     } catch (err: any) { setError(err.message ?? "Sign in failed"); }
     setLoading(false);
   };
@@ -54,9 +56,10 @@ export default function LoginPage() {
             Welcome back
           </h1>
           <p style={{ fontSize:13,color:S.muted,textAlign:"center",marginBottom:28 }}>
-            Sign in to your Salevrix AI dashboard
+            {redirectTo==="/admin" ? "Sign in to access Admin Dashboard" : "Sign in to your Salevrix AI dashboard"}
           </p>
 
+          {/* Google */}
           <button onClick={handleGoogle} disabled={loading}
             style={{ width:"100%",padding:"13px",borderRadius:12,background:"rgba(255,255,255,0.05)",border:`1px solid ${S.lineSoft}`,color:S.text,fontSize:14,fontWeight:600,cursor:loading?"not-allowed":"pointer",fontFamily:"Inter,sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:10,marginBottom:10,transition:"all 0.2s" }}
             onMouseEnter={e=>{ if(!loading)(e.currentTarget as HTMLButtonElement).style.borderColor="rgba(200,255,0,0.3)"; }}
@@ -65,6 +68,7 @@ export default function LoginPage() {
             {loading?"Signing in...":"Continue with Google"}
           </button>
 
+          {/* GitHub */}
           <button onClick={handleGithub} disabled={loading}
             style={{ width:"100%",padding:"13px",borderRadius:12,background:"rgba(255,255,255,0.05)",border:`1px solid ${S.lineSoft}`,color:S.text,fontSize:14,fontWeight:600,cursor:loading?"not-allowed":"pointer",fontFamily:"Inter,sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:10,marginBottom:20,transition:"all 0.2s" }}
             onMouseEnter={e=>{ if(!loading)(e.currentTarget as HTMLButtonElement).style.borderColor="rgba(200,255,0,0.3)"; }}
