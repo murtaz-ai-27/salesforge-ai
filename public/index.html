@@ -377,6 +377,8 @@ footer{border-top:1px solid var(--line-soft);padding:60px 0 40px;margin-top:24px
 .hcard p{color:var(--muted);font-size:14px;line-height:1.65}
 .hide-scrollbar::-webkit-scrollbar{display:none}
 .hide-scrollbar{scrollbar-width:none;-ms-overflow-style:none}
+@keyframes slideRight{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+@keyframes slideLeft{0%{transform:translateX(-50%)}100%{transform:translateX(0)}}
 </style>
 </head>
 
@@ -1082,42 +1084,141 @@ footer{border-top:1px solid var(--line-soft);padding:60px 0 40px;margin-top:24px
       <h2>Sales teams love Salevrix</h2>
       <p>Join 12,000+ sales professionals who've replaced their entire stack.</p>
     </div>
-    <div class="quotes">
-      <div class="quote reveal">
+  </div>
+
+  <!-- Animated sliding reviews -->
+  <div style="position:relative;overflow:hidden;padding:20px 0;margin-top:40px">
+    <!-- Fade edges -->
+    <div style="position:absolute;left:0;top:0;bottom:0;width:150px;background:linear-gradient(to right,#050505,transparent);z-index:2;pointer-events:none"></div>
+    <div style="position:absolute;right:0;top:0;bottom:0;width:150px;background:linear-gradient(to left,#050505,transparent);z-index:2;pointer-events:none"></div>
+
+    <!-- Row 1 — Left to Right -->
+    <div style="display:flex;gap:20px;margin-bottom:20px;animation:slideRight 45s linear infinite;width:max-content">
+      <div class="quote" style="width:400px;flex-shrink:0;animation:none;opacity:1;transform:none">
         <div class="stars"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div>
-        <p>"We went from 4 meetings a week to 47. The AI SDR agent is unreal — it handles the entire top of funnel while my reps focus on closing. Salevrix paid for itself in week one."</p>
-        <div class="who">
-          <div class="av" style="background:linear-gradient(140deg,#C8FF00,#86efac)">JM</div>
-          <span>
-            <b>James Morrison</b>
-            <span>VP Sales, Stripe</span>
-            <div class="company">$2.4M revenue added in 90 days</div>
-          </span>
-        </div>
+        <p>"We went from 4 meetings a week to 47. The AI SDR agent handles the entire top of funnel while my reps focus on closing. Salevrix paid for itself in week one."</p>
+        <div class="who"><div class="av" style="background:linear-gradient(140deg,#C8FF00,#86efac)">JM</div><span><b>James Morrison</b><span>VP Sales, Stripe</span><div class="company">$2.4M revenue added in 90 days</div></span></div>
       </div>
-      <div class="quote reveal">
+      <div class="quote" style="width:400px;flex-shrink:0;animation:none;opacity:1;transform:none">
         <div class="stars"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div>
-        <p>"The personalization is insane. Prospects think my reps spent hours researching them. Meanwhile the AI wrote 500 emails in 3 minutes. Our reply rates tripled in the first month."</p>
-        <div class="who">
-          <div class="av" style="background:linear-gradient(140deg,#818cf8,#c084fc)">SC</div>
-          <span>
-            <b>Sarah Chen</b>
-            <span>CRO, Linear</span>
-            <div class="company">3x reply rate, 67% open rate</div>
-          </span>
-        </div>
+        <p>"The personalization is insane. Prospects think my reps spent hours researching them. Meanwhile the AI wrote 500 emails in 3 minutes. Reply rates tripled."</p>
+        <div class="who"><div class="av" style="background:linear-gradient(140deg,#818cf8,#c084fc)">SC</div><span><b>Sarah Chen</b><span>CRO, Linear</span><div class="company">3x reply rate, 67% open rate</div></span></div>
       </div>
-      <div class="quote reveal">
+      <div class="quote" style="width:400px;flex-shrink:0;animation:none;opacity:1;transform:none">
         <div class="stars"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div>
         <p>"We cancelled Apollo, Outreach, and ZoomInfo on the same day. Salevrix does everything better for 40% less cost. The intent signals alone are worth the subscription."</p>
-        <div class="who">
-          <div class="av" style="background:linear-gradient(140deg,#f59e0b,#ef4444)">RP</div>
-          <span>
-            <b>Raj Patel</b>
-            <span>Head of Sales, Notion</span>
-            <div class="company">Replaced 4 tools, saved $3,200/mo</div>
-          </span>
-        </div>
+        <div class="who"><div class="av" style="background:linear-gradient(140deg,#f59e0b,#ef4444)">RP</div><span><b>Raj Patel</b><span>Head of Sales, Notion</span><div class="company">Replaced 3 tools, saved $84K/year</div></span></div>
+      </div>
+      <div class="quote" style="width:400px;flex-shrink:0;animation:none;opacity:1;transform:none">
+        <div class="stars"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div>
+        <p>"Our SDR team of 5 now outperforms what 15 reps used to do. The Objection Handler agent alone closed deals we would have lost. ROI was immediate and undeniable."</p>
+        <div class="who"><div class="av" style="background:linear-gradient(140deg,#34d399,#059669)">MK</div><span><b>Marcus Kim</b><span>VP Revenue, Figma</span><div class="company">5 reps outperforming 15</div></span></div>
+      </div>
+      <div class="quote" style="width:400px;flex-shrink:0;animation:none;opacity:1;transform:none">
+        <div class="stars"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div>
+        <p>"I was paying Apollo $8,400/year per rep. Salevrix costs a fraction and books more meetings. The data accuracy alone saves us 35% in bounced emails."</p>
+        <div class="who"><div class="av" style="background:linear-gradient(140deg,#60a5fa,#3b82f6)">AL</div><span><b>Anna Li</b><span>Sales Director, Webflow</span><div class="company">Switched from Apollo, saved $42K</div></span></div>
+      </div>
+      <div class="quote" style="width:400px;flex-shrink:0;animation:none;opacity:1;transform:none">
+        <div class="stars"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div>
+        <p>"The Deal Analyzer flagged 3 deals that were about to go cold. We acted on the suggestions and saved all 3. That's $340K in pipeline Salevrix essentially rescued."</p>
+        <div class="who"><div class="av" style="background:linear-gradient(140deg,#a78bfa,#7c3aed)">DW</div><span><b>David Wong</b><span>AE, HubSpot</span><div class="company">$340K pipeline rescued in Q3</div></span></div>
+      </div>
+      <!-- Duplicates for seamless loop -->
+      <div class="quote" style="width:400px;flex-shrink:0;animation:none;opacity:1;transform:none">
+        <div class="stars"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div>
+        <p>"We went from 4 meetings a week to 47. The AI SDR agent handles the entire top of funnel while my reps focus on closing. Salevrix paid for itself in week one."</p>
+        <div class="who"><div class="av" style="background:linear-gradient(140deg,#C8FF00,#86efac)">JM</div><span><b>James Morrison</b><span>VP Sales, Stripe</span><div class="company">$2.4M revenue added in 90 days</div></span></div>
+      </div>
+      <div class="quote" style="width:400px;flex-shrink:0;animation:none;opacity:1;transform:none">
+        <div class="stars"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div>
+        <p>"The personalization is insane. Prospects think my reps spent hours researching them. Meanwhile the AI wrote 500 emails in 3 minutes. Reply rates tripled."</p>
+        <div class="who"><div class="av" style="background:linear-gradient(140deg,#818cf8,#c084fc)">SC</div><span><b>Sarah Chen</b><span>CRO, Linear</span><div class="company">3x reply rate, 67% open rate</div></span></div>
+      </div>
+      <div class="quote" style="width:400px;flex-shrink:0;animation:none;opacity:1;transform:none">
+        <div class="stars"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div>
+        <p>"We cancelled Apollo, Outreach, and ZoomInfo on the same day. Salevrix does everything better for 40% less cost."</p>
+        <div class="who"><div class="av" style="background:linear-gradient(140deg,#f59e0b,#ef4444)">RP</div><span><b>Raj Patel</b><span>Head of Sales, Notion</span><div class="company">Replaced 3 tools, saved $84K/year</div></span></div>
+      </div>
+      <div class="quote" style="width:400px;flex-shrink:0;animation:none;opacity:1;transform:none">
+        <div class="stars"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div>
+        <p>"Our SDR team of 5 now outperforms what 15 reps used to do. The Objection Handler agent alone closed deals we would have lost."</p>
+        <div class="who"><div class="av" style="background:linear-gradient(140deg,#34d399,#059669)">MK</div><span><b>Marcus Kim</b><span>VP Revenue, Figma</span><div class="company">5 reps outperforming 15</div></span></div>
+      </div>
+      <div class="quote" style="width:400px;flex-shrink:0;animation:none;opacity:1;transform:none">
+        <div class="stars"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div>
+        <p>"I was paying Apollo $8,400/year per rep. Salevrix costs a fraction and books more meetings."</p>
+        <div class="who"><div class="av" style="background:linear-gradient(140deg,#60a5fa,#3b82f6)">AL</div><span><b>Anna Li</b><span>Sales Director, Webflow</span><div class="company">Switched from Apollo, saved $42K</div></span></div>
+      </div>
+      <div class="quote" style="width:400px;flex-shrink:0;animation:none;opacity:1;transform:none">
+        <div class="stars"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div>
+        <p>"The Deal Analyzer flagged 3 deals that were about to go cold. We acted on the suggestions and saved all 3. That's $340K in pipeline rescued."</p>
+        <div class="who"><div class="av" style="background:linear-gradient(140deg,#a78bfa,#7c3aed)">DW</div><span><b>David Wong</b><span>AE, HubSpot</span><div class="company">$340K pipeline rescued in Q3</div></span></div>
+      </div>
+    </div>
+
+    <!-- Row 2 — Right to Left -->
+    <div style="display:flex;gap:20px;animation:slideLeft 40s linear infinite;width:max-content">
+      <div class="quote" style="width:400px;flex-shrink:0;animation:none;opacity:1;transform:none">
+        <div class="stars"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div>
+        <p>"Our cold email reply rate went from 3.2% to 31% in 6 weeks. The AI writes emails that sound like they're from my reps — because they reference real, recent intel about each prospect."</p>
+        <div class="who"><div class="av" style="background:linear-gradient(140deg,#f472b6,#e11d48)">TN</div><span><b>Tom Nguyen</b><span>SDR Manager, Salesforce</span><div class="company">31% reply rate (was 3.2%)</div></span></div>
+      </div>
+      <div class="quote" style="width:400px;flex-shrink:0;animation:none;opacity:1;transform:none">
+        <div class="stars"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div>
+        <p>"I replaced my $90K/year SDR with Salevrix. The AI books more qualified meetings, never has a bad day, and costs $79/month. This is the future of outbound sales."</p>
+        <div class="who"><div class="av" style="background:linear-gradient(140deg,#fb923c,#f59e0b)">LB</div><span><b>Lisa Brown</b><span>Founder, B2B SaaS</span><div class="company">Replaced $90K SDR with $79/mo AI</div></span></div>
+      </div>
+      <div class="quote" style="width:400px;flex-shrink:0;animation:none;opacity:1;transform:none">
+        <div class="stars"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div>
+        <p>"The Revenue Forecaster called our quarter within 2% accuracy. Our CFO asked which expensive BI tool we were using. I said it was Salevrix AI. He immediately asked for his own account."</p>
+        <div class="who"><div class="av" style="background:linear-gradient(140deg,#34d399,#10b981)">KP</div><span><b>Kevin Park</b><span>VP Sales, Intercom</span><div class="company">Forecast accuracy within 2%</div></span></div>
+      </div>
+      <div class="quote" style="width:400px;flex-shrink:0;animation:none;opacity:1;transform:none">
+        <div class="stars"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div>
+        <p>"Salevrix found a pattern in our lost deals we had been missing for 2 years. One objection was killing 40% of our pipeline. We fixed our pitch and close rates jumped 28%."</p>
+        <div class="who"><div class="av" style="background:linear-gradient(140deg,#818cf8,#6366f1)">EJ</div><span><b>Emma Johnson</b><span>RevOps Lead, Monday.com</span><div class="company">+28% close rate after AI insights</div></span></div>
+      </div>
+      <div class="quote" style="width:400px;flex-shrink:0;animation:none;opacity:1;transform:none">
+        <div class="stars"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div>
+        <p>"We tested Salevrix against Apollo for 30 days. Salevrix booked 3x more meetings, had 0% bounce rate, and cost 80% less. We switched the entire team the next day."</p>
+        <div class="who"><div class="av" style="background:linear-gradient(140deg,#C8FF00,#4ade80)">CR</div><span><b>Chris Reed</b><span>CRO, Calendly</span><div class="company">3x meetings, 0% bounce vs Apollo</div></span></div>
+      </div>
+      <div class="quote" style="width:400px;flex-shrink:0;animation:none;opacity:1;transform:none">
+        <div class="stars"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div>
+        <p>"The Meeting Summarizer alone saves my team 45 minutes per call. Multiply that by 20 calls a week and that's 15 hours of selling time we got back. It's addictive."</p>
+        <div class="who"><div class="av" style="background:linear-gradient(140deg,#a78bfa,#c084fc)">PH</div><span><b>Priya Hernandez</b><span>Enterprise AE, Zoom</span><div class="company">15 hours of selling time saved/week</div></span></div>
+      </div>
+      <!-- Duplicates -->
+      <div class="quote" style="width:400px;flex-shrink:0;animation:none;opacity:1;transform:none">
+        <div class="stars"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div>
+        <p>"Our cold email reply rate went from 3.2% to 31% in 6 weeks. The AI writes emails that sound like they're from my reps."</p>
+        <div class="who"><div class="av" style="background:linear-gradient(140deg,#f472b6,#e11d48)">TN</div><span><b>Tom Nguyen</b><span>SDR Manager, Salesforce</span><div class="company">31% reply rate (was 3.2%)</div></span></div>
+      </div>
+      <div class="quote" style="width:400px;flex-shrink:0;animation:none;opacity:1;transform:none">
+        <div class="stars"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div>
+        <p>"I replaced my $90K/year SDR with Salevrix. The AI books more qualified meetings, never has a bad day, and costs $79/month."</p>
+        <div class="who"><div class="av" style="background:linear-gradient(140deg,#fb923c,#f59e0b)">LB</div><span><b>Lisa Brown</b><span>Founder, B2B SaaS</span><div class="company">Replaced $90K SDR with $79/mo AI</div></span></div>
+      </div>
+      <div class="quote" style="width:400px;flex-shrink:0;animation:none;opacity:1;transform:none">
+        <div class="stars"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div>
+        <p>"The Revenue Forecaster called our quarter within 2% accuracy. Our CFO asked which expensive BI tool we were using."</p>
+        <div class="who"><div class="av" style="background:linear-gradient(140deg,#34d399,#10b981)">KP</div><span><b>Kevin Park</b><span>VP Sales, Intercom</span><div class="company">Forecast accuracy within 2%</div></span></div>
+      </div>
+      <div class="quote" style="width:400px;flex-shrink:0;animation:none;opacity:1;transform:none">
+        <div class="stars"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div>
+        <p>"Salevrix found a pattern in our lost deals we had been missing for 2 years. Close rates jumped 28% after we fixed our pitch."</p>
+        <div class="who"><div class="av" style="background:linear-gradient(140deg,#818cf8,#6366f1)">EJ</div><span><b>Emma Johnson</b><span>RevOps Lead, Monday.com</span><div class="company">+28% close rate after AI insights</div></span></div>
+      </div>
+      <div class="quote" style="width:400px;flex-shrink:0;animation:none;opacity:1;transform:none">
+        <div class="stars"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div>
+        <p>"We tested Salevrix against Apollo for 30 days. Salevrix booked 3x more meetings, had 0% bounce rate, and cost 80% less."</p>
+        <div class="who"><div class="av" style="background:linear-gradient(140deg,#C8FF00,#4ade80)">CR</div><span><b>Chris Reed</b><span>CRO, Calendly</span><div class="company">3x meetings, 0% bounce vs Apollo</div></span></div>
+      </div>
+      <div class="quote" style="width:400px;flex-shrink:0;animation:none;opacity:1;transform:none">
+        <div class="stars"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div>
+        <p>"The Meeting Summarizer alone saves my team 45 minutes per call. That's 15 hours of selling time we got back every week."</p>
+        <div class="who"><div class="av" style="background:linear-gradient(140deg,#a78bfa,#c084fc)">PH</div><span><b>Priya Hernandez</b><span>Enterprise AE, Zoom</span><div class="company">15 hours of selling time saved/week</div></span></div>
       </div>
     </div>
   </div>
