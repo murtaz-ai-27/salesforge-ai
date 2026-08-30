@@ -35,7 +35,7 @@ function replaceVariables(text: string, input: string): string {
   // Extract values from input
   const get = (patterns: RegExp[]): string => {
     for (const p of patterns) {
-      const m = input.match(p);
+      const m = (input||'').match(p);
       if (m?.[1]) return m[1].trim().replace(/[,.]$/, "");
     }
     return "";
@@ -85,7 +85,7 @@ export default function AgentsPage() {
   };
 
   const runAgent = async () => {
-    if (!selected||!testInput.trim()) return;
+    if (!selected||!(testInput||'').trim()) return;
     setAiLoading(true); setAiOutput("");
     try {
       const res = await fetch("/api/ai", {
@@ -225,10 +225,10 @@ export default function AgentsPage() {
                 onFocus={e=>(e.target as HTMLTextAreaElement).style.borderColor="rgba(200,255,0,0.3)"}
                 onBlur={e=>(e.target as HTMLTextAreaElement).style.borderColor=S.lineSoft}/>
 
-              <button onClick={runAgent} disabled={aiLoading||!testInput.trim()||selected.status==="paused"}
+              <button onClick={runAgent} disabled={aiLoading||!(testInput||'').trim()||selected?.status==="paused"}
                 style={{ width:"100%",padding:"13px",borderRadius:11,border:"none",display:"flex",alignItems:"center",justifyContent:"center",gap:8,fontFamily:"Inter,sans-serif",marginBottom:aiOutput?14:0,
-                  background:selected.status==="paused"?"rgba(255,255,255,0.05)":aiLoading?"rgba(200,255,0,0.6)":!testInput.trim()?"rgba(255,255,255,0.05)":S.accent,
-                  color:selected.status==="paused"||!testInput.trim()?S.faint:"#050505",
+                  background:selected?.status==="paused"?"rgba(255,255,255,0.05)":aiLoading?"rgba(200,255,0,0.6)":!(testInput||'').trim()?"rgba(255,255,255,0.05)":S.accent,
+                  color:selected?.status==="paused"||!(testInput||'').trim()?S.faint:"#050505",
                   fontSize:14,fontWeight:700,cursor:aiLoading||selected.status==="paused"||!testInput.trim()?"not-allowed":"pointer" }}>
                 {aiLoading
                   ?<><span style={{ width:16,height:16,border:"2px solid rgba(0,0,0,0.2)",borderTopColor:"#050505",borderRadius:"50%",animation:"spin 0.8s linear infinite",display:"inline-block" }}/>Agent working...</>
