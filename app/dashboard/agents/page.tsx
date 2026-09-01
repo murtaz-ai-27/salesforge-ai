@@ -1,5 +1,4 @@
 "use client";
-
 import { useState } from "react";
 import Sidebar from "@/components/Sidebar";
 import { useAuth } from "@/components/useAuth";
@@ -91,7 +90,7 @@ export default function AgentsPage() {
     try {
       const res = await fetch("/api/ai", {
         method:"POST", headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({ type:selected.prompt_type??"emailWriter", prompt:testInput, userId:user?.uid }),
+        body:JSON.stringify({ type:selected?.prompt_type??"emailWriter", prompt:testInput, userId:user?.uid }),
       });
       const data = await res.json();
       if (data.error) {
@@ -230,10 +229,10 @@ export default function AgentsPage() {
                 style={{ width:"100%",padding:"13px",borderRadius:11,border:"none",display:"flex",alignItems:"center",justifyContent:"center",gap:8,fontFamily:"Inter,sans-serif",marginBottom:aiOutput?14:0,
                   background:selected?.status==="paused"?"rgba(255,255,255,0.05)":aiLoading?"rgba(200,255,0,0.6)":!(testInput||'').trim()?"rgba(255,255,255,0.05)":S.accent,
                   color:selected?.status==="paused"||!(testInput||'').trim()?S.faint:"#050505",
-                  fontSize:14,fontWeight:700,cursor:aiLoading||selected.status==="paused"||!testInput.trim()?"not-allowed":"pointer" }}>
+                  fontSize:14,fontWeight:700,cursor:aiLoading||selected?.status==="paused"||!(testInput||'').trim()?"not-allowed":"pointer" }}>
                 {aiLoading
                   ?<><span style={{ width:16,height:16,border:"2px solid rgba(0,0,0,0.2)",borderTopColor:"#050505",borderRadius:"50%",animation:"spin 0.8s linear infinite",display:"inline-block" }}/>Agent working...</>
-                  :selected.status==="paused"?"Agent Paused — Toggle to Activate"
+                  :selected?.status==="paused"?"Agent Paused — Toggle to Activate"
                   :<><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>Run {selected.name}</>}
               </button>
 
