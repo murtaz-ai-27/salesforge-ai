@@ -305,9 +305,9 @@ Quota: $[X] | Gap: $[X]
 };
 
 const MODELS = [
-  "nvidia/nemotron-3-ultra-550b-a55b:free",
-  "nvidia/nemotron-nano-12b-v2-vl:free",
-  "openrouter/free",
+  "meta-llama/llama-3.3-70b-instruct:free",
+  "deepseek/deepseek-r1:free",
+  "mistralai/mistral-7b-instruct:free",
 ];
 
 export async function POST(req: NextRequest) {
@@ -351,8 +351,8 @@ export async function POST(req: NextRequest) {
           headers: {
             "Authorization": `Bearer ${apiKey}`,
             "Content-Type": "application/json",
-            "HTTP-Referer": "https://salesforge.ai",
-            "X-Title": "SalesForge AI",
+            "HTTP-Referer": "https://salevrix-ai-black.vercel.app",
+            "X-Title": "Salevrix AI",
           },
           body: JSON.stringify({
             model,
@@ -380,7 +380,7 @@ export async function POST(req: NextRequest) {
       try {
         await supabaseAdmin.from("agent_runs").insert({
           user_id: userId, agent_type: type ?? "general",
-          prompt: prompt.slice(0, 500), result: result.slice(0, 500), model_used: usedModel,
+          prompt: prompt.slice(0, 500), output: result.slice(0, 2000), agent_type: type ?? "general",
         });
       } catch {}
     }
