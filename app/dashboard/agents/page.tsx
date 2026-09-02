@@ -25,7 +25,7 @@ const EXTRA_AGENTS = [
 ];
 
 export default function AgentsPage() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, handleLogout } = useAuth();
   const router = useRouter();
   const [selected, setSelected] = useState<any>(null);
   const [testInput, setTestInput] = useState("");
@@ -33,12 +33,6 @@ export default function AgentsPage() {
   const [aiLoading, setAiLoading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [toast, setToast] = useState<{msg:string;color:string}>({msg:"",color:S.accent});
-
-  const handleLogout = async () => {
-    const { signOut } = await import("@/lib/firebase");
-    await signOut();
-    router.push("/auth/login");
-  };
 
   const showToast = (msg:string, color=S.accent) => {
     setToast({msg,color});
