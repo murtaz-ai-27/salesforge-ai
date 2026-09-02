@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import LoadingScreen from "@/components/LoadingScreen";
-import { useAuth } from "@/lib/useAuth";
+import { useAuth } from "@/components/useAuth";
 import { useRouter } from "next/navigation";
 
 const S = {
