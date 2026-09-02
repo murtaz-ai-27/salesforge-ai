@@ -380,7 +380,7 @@ export async function POST(req: NextRequest) {
       try {
         await supabaseAdmin.from("agent_runs").insert({
           user_id: userId, agent_type: type ?? "general",
-          prompt: prompt.slice(0, 500), output: result.slice(0, 2000), agent_type: type ?? "general",
+          prompt: prompt.slice(0, 500), output: result.slice(0, 2000),
         });
       } catch {}
     }
