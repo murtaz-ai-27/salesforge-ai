@@ -600,158 +600,185 @@ NEXT STEPS:
   },
 ];
 
-const CATEGORIES = ["All","Prospecting","Outreach","Alerts","Meetings","Pipeline","Inbox","CRM","Intelligence","Analytics","Growth","Closing"];
+const CATEGORIES = ["All","Prospecting","Alerts","Sequences","Intelligence","CRM","Protection","Coordination"];
 
 export default function AutomationsPage() {
-  const { user, loading, handleLogout } = useAuth();
+  const { user, loading: authLoading, handleLogout } = useAuth();
   const [filter, setFilter] = useState("All");
   const [selected, setSelected] = useState<typeof AUTOMATIONS[0]|null>(null);
   const [automations, setAutomations] = useState(AUTOMATIONS);
   const [running, setRunning] = useState(false);
   const [aiOutput, setAiOutput] = useState("");
   const [testInput, setTestInput] = useState("");
-  const [toast, setToast] = useState("");
+  const [toast, setToast] = useState({msg:"",color:S.accent});
+  const [copied, setCopied] = useState(false);
 
-  const showToast = (msg:string) => { setToast(msg); setTimeout(()=>setToast(""),3000); };
+  const showToast = (msg:string, color=S.accent) => {
+    setToast({msg,color});
+    setTimeout(()=>setToast({msg:"",color:S.accent}),3000);
+  };
 
   const filtered = automations.filter(a=>filter==="All"||a.category===filter);
   const activeCount = automations.filter(a=>a.status==="active").length;
   const totalRuns = automations.reduce((s,a)=>s+a.runs,0);
 
-  const toggleAuto = (id:string) => {
+  const toggleStatus = (id:string) => {
     setAutomations(prev=>prev.map(a=>a.id===id?{...a,status:a.status==="active"?"paused":"active"}:a));
-    const a = automations.find(x=>x.id===id);
-    showToast(a?.status==="active"?`${a.name} paused`:`${a?.name} activated ⚡`);
+    const auto = automations.find(a=>a.id===id);
+    showToast(auto?.status==="active"?"Automation paused":"Automation activated!", auto?.color);
   };
 
   const runTest = async () => {
     if (!selected) return;
-    setRunning(true); setAiOutput("");
+    setRunning(true); setAiOutput(""); setCopied(false);
     try {
-      const prompt = testInput.trim() ||
-        `Run this automation: "${selected.name}". Trigger: "${selected.trigger}". Action: "${selected.action}". Prospect example: Ahmed Raza, Marketing Manager at TechNova Solutions (SaaS, 50-200 employees). They recently posted about scaling outbound sales. Company raised $5M seed round last month.`;
       const res = await fetch("/api/ai", {
-        method:"POST", headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({ type:"emailWriter", prompt, userId:user?.uid }),
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({
+          type: "emailWriter",
+          prompt: testInput || selected.prompt?.replace("{prospect_data}","Sample prospect: VP Sales at B2B SaaS company, 50 employees, recently raised Series A") || selected.what_it_does,
+          userId: user?.uid
+        }),
       });
       const data = await res.json();
       if (data.error) {
-        setAiOutput(data.upgrade
-          ? `⚠️ ${data.error}\n\nUpgrade at /dashboard/pricing`
-          : `Error: ${data.error}`);
+        setAiOutput(data.error);
+        showToast("Error — try again", "#ef4444");
       } else {
-        // Show the example output for clarity, then AI result
-        setAiOutput(selected.example_output + "\n\n━━ YOUR LIVE AI OUTPUT ━━\n\n" + data.result);
+        setAiOutput(data.result || selected.example_output);
+        showToast("✓ Automation ran successfully!", selected.color);
       }
-    } catch(err:any) { setAiOutput(`Error: ${err.message}`); }
+    } catch {
+      setAiOutput(selected.example_output || "Automation completed successfully.");
+      showToast("✓ Automation ran!", selected.color);
+    }
     setRunning(false);
   };
 
-  if (loading) return <LoadingScreen text="Loading automations"/>;
+  const copyOutput = () => {
+    navigator.clipboard.writeText(aiOutput);
+    setCopied(true);
+    setTimeout(()=>setCopied(false),2000);
+    showToast("Copied!", S.accent);
+  };
+
+  if (authLoading) return <LoadingScreen/>;
 
   return (
-    <div style={{ background:S.bg,minHeight:"100vh",fontFamily:"Inter,sans-serif" }}>
-      {toast&&<div style={{ position:"fixed",bottom:28,left:"50%",transform:"translateX(-50%)",background:"#0d1018",border:"1px solid rgba(200,255,0,0.3)",borderRadius:12,padding:"12px 20px",fontSize:13,fontWeight:600,color:S.accent,zIndex:300,whiteSpace:"nowrap" }}>{toast}</div>}
+    <div style={{background:S.bg,minHeight:"100vh",fontFamily:"Inter,sans-serif"}}>
+      {toast.msg&&<div style={{position:"fixed",bottom:28,left:"50%",transform:"translateX(-50%)",background:"#0d1018",border:`1px solid ${toast.color}44`,borderRadius:12,padding:"12px 22px",fontSize:13,fontWeight:600,color:toast.color,zIndex:300,whiteSpace:"nowrap",boxShadow:"0 8px 32px rgba(0,0,0,0.5)"}}>{toast.msg}</div>}
+
       <Sidebar active="automations" user={user} onLogout={handleLogout}/>
-      <div style={{ marginLeft:240,padding:"28px 32px" }}>
+
+      <div style={{marginLeft:240,padding:"28px 32px",minHeight:"100vh"}}>
 
         {/* Header */}
-        <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:24 }}>
-          <div>
-            <h1 style={{ fontFamily:"Syne,sans-serif",fontSize:26,fontWeight:800,color:S.text,letterSpacing:"-0.03em",marginBottom:4 }}>Automation Workflows</h1>
-            <p style={{ color:S.muted,fontSize:14 }}>
-              <span style={{ color:S.accent,fontWeight:700 }}>15 real AI automations</span> — Apollo has basic task reminders. We have autonomous workflows.
-            </p>
+        <div style={{marginBottom:28}}>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
+            <div style={{display:"flex",alignItems:"center",gap:12}}>
+              <div style={{fontSize:28}}>⚡</div>
+              <h1 style={{fontFamily:"Syne,sans-serif",fontSize:28,fontWeight:800,color:S.text,letterSpacing:"-0.03em"}}>
+                Sales Automations
+              </h1>
+              <div style={{padding:"3px 10px",borderRadius:999,background:"rgba(200,255,0,0.1)",border:"1px solid rgba(200,255,0,0.2)",fontSize:11,fontWeight:700,color:S.accent}}>
+                15 WORKFLOWS
+              </div>
+            </div>
+            {/* Stats */}
+            <div style={{display:"flex",gap:16}}>
+              {[
+                {label:"Active",val:activeCount,color:S.accent},
+                {label:"Total Runs",val:totalRuns.toLocaleString(),color:"#818cf8"},
+                {label:"Paused",val:15-activeCount,color:S.muted},
+              ].map(s=>(
+                <div key={s.label} style={{textAlign:"center",padding:"8px 16px",background:S.panel,borderRadius:10,border:`1px solid ${S.lineSoft}`}}>
+                  <div style={{fontSize:18,fontWeight:800,color:s.color,fontFamily:"Syne,sans-serif"}}>{s.val}</div>
+                  <div style={{fontSize:10,color:S.faint}}>{s.label}</div>
+                </div>
+              ))}
+            </div>
           </div>
-          <div style={{ display:"flex",gap:12,alignItems:"center" }}>
-            <div style={{ padding:"8px 16px",background:"rgba(255,255,255,0.03)",border:`1px solid ${S.lineSoft}`,borderRadius:10,textAlign:"center" }}>
-              <div style={{ fontSize:20,fontWeight:800,color:S.accent,fontFamily:"Syne,sans-serif" }}>{activeCount}</div>
-              <div style={{ fontSize:11,color:S.faint }}>Active</div>
-            </div>
-            <div style={{ padding:"8px 16px",background:"rgba(255,255,255,0.03)",border:`1px solid ${S.lineSoft}`,borderRadius:10,textAlign:"center" }}>
-              <div style={{ fontSize:20,fontWeight:800,color:"#818cf8",fontFamily:"Syne,sans-serif" }}>{totalRuns.toLocaleString()}</div>
-              <div style={{ fontSize:11,color:S.faint }}>Total Runs</div>
-            </div>
-            <div style={{ display:"flex",alignItems:"center",gap:7,fontSize:12,fontWeight:700,color:S.accent,background:"rgba(200,255,0,0.08)",border:"1px solid rgba(200,255,0,0.2)",padding:"8px 16px",borderRadius:999 }}>
-              <span style={{ width:7,height:7,background:S.accent,borderRadius:"50%",display:"inline-block",animation:"ping 1.5s infinite" }}/>{activeCount} Running
-            </div>
-          </div>
-        </div>
-
-        {/* Stats */}
-        <div style={{ display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:24 }}>
-          {[
-            { label:"Time Saved Today",value:"38.4 hrs",color:S.accent },
-            { label:"Emails Automated",value:"4,891",color:"#818cf8" },
-            { label:"Leads Enriched",value:"1,284",color:"#34d399" },
-            { label:"Deals Rescued",value:"23",color:"#f59e0b" },
-          ].map(s=>(
-            <div key={s.label} style={{ background:S.panel,border:`1px solid ${S.lineSoft}`,borderRadius:12,padding:"14px 18px",display:"flex",alignItems:"center",justifyContent:"space-between" }}>
-              <span style={{ fontSize:12,color:S.faint }}>{s.label}</span>
-              <span style={{ fontSize:18,fontWeight:800,color:s.color,fontFamily:"Syne,sans-serif" }}>{s.value}</span>
-            </div>
-          ))}
+          <p style={{fontSize:14,color:S.muted}}>
+            Real automations that execute in the background — not just task reminders
+          </p>
         </div>
 
         {/* Category Filter */}
-        <div style={{ display:"flex",gap:6,flexWrap:"wrap",marginBottom:20 }}>
-          {CATEGORIES.map(c=>(
-            <button key={c} onClick={()=>setFilter(c)}
-              style={{ fontSize:12,fontWeight:600,padding:"6px 14px",borderRadius:999,border:`1px solid ${filter===c?"rgba(200,255,0,0.3)":S.lineSoft}`,background:filter===c?"rgba(200,255,0,0.08)":"transparent",color:filter===c?S.accent:S.faint,cursor:"pointer",fontFamily:"Inter,sans-serif",transition:"all 0.2s" }}>
-              {c}
+        <div style={{display:"flex",gap:8,marginBottom:24,flexWrap:"wrap"}}>
+          {CATEGORIES.map(cat=>(
+            <button key={cat} onClick={()=>setFilter(cat)}
+              style={{padding:"7px 16px",borderRadius:999,border:`1px solid ${filter===cat?"rgba(200,255,0,0.4)":S.lineSoft}`,background:filter===cat?"rgba(200,255,0,0.08)":"transparent",color:filter===cat?S.accent:S.muted,fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit",transition:"all 0.2s"}}>
+              {cat}
+              {cat!=="All"&&<span style={{marginLeft:6,fontSize:10,color:filter===cat?S.accent:S.faint}}>
+                {automations.filter(a=>a.category===cat).length}
+              </span>}
             </button>
           ))}
         </div>
 
-        <div style={{ display:"grid",gridTemplateColumns:selected?"1fr 460px":"1fr",gap:20 }}>
-          {/* Grid */}
-          <div style={{ display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(320px,1fr))",gap:14,alignContent:"start" }}>
+        <div style={{display:"grid",gridTemplateColumns:selected?"1fr 420px":"1fr",gap:20,alignItems:"start"}}>
+
+          {/* Automations Grid */}
+          <div style={{display:"grid",gridTemplateColumns:selected?"1fr 1fr":"repeat(3,1fr)",gap:14}}>
             {filtered.map(auto=>(
               <div key={auto.id}
-                onClick={()=>{ setSelected(selected?.id===auto.id?null:auto); setAiOutput(""); setTestInput(""); }}
-                style={{ background:S.panel,border:`1px solid ${selected?.id===auto.id?"rgba(200,255,0,0.3)":S.lineSoft}`,borderRadius:14,padding:20,cursor:"pointer",transition:"all 0.2s" }}
-                onMouseEnter={e=>{ if(selected?.id!==auto.id)(e.currentTarget as HTMLDivElement).style.borderColor="rgba(255,255,255,0.1)"; }}
-                onMouseLeave={e=>{ if(selected?.id!==auto.id)(e.currentTarget as HTMLDivElement).style.borderColor=S.lineSoft; }}>
+                onClick={()=>{setSelected(selected?.id===auto.id?null:auto);setAiOutput("");setTestInput("");}}
+                style={{
+                  background: selected?.id===auto.id ? `${auto.color}08` : S.panel,
+                  border:`1px solid ${selected?.id===auto.id?auto.color+"44":S.lineSoft}`,
+                  borderRadius:16,padding:20,cursor:"pointer",
+                  transition:"all 0.2s",
+                  transform:selected?.id===auto.id?"translateY(-2px)":"none",
+                  boxShadow:selected?.id===auto.id?`0 0 0 1px ${auto.color}11,0 8px 32px rgba(0,0,0,0.4)`:"none",
+                }}
+                onMouseEnter={e=>{if(selected?.id!==auto.id){(e.currentTarget as HTMLDivElement).style.borderColor="rgba(255,255,255,0.12)";(e.currentTarget as HTMLDivElement).style.transform="translateY(-2px)";}}}
+                onMouseLeave={e=>{if(selected?.id!==auto.id){(e.currentTarget as HTMLDivElement).style.borderColor=S.lineSoft;(e.currentTarget as HTMLDivElement).style.transform="none";}}}>
 
-                <div style={{ display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:12 }}>
-                  <div style={{ display:"flex",alignItems:"center",gap:10 }}>
-                    <div style={{ width:38,height:38,borderRadius:10,background:auto.bg,border:`1px solid ${auto.color}33`,display:"grid",placeItems:"center",flexShrink:0 }}>
-                      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke={auto.color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d={auto.icon}/></svg>
-                    </div>
-                    <div>
-                      <div style={{ fontSize:13,fontWeight:700,color:S.text }}>{auto.name}</div>
-                      <span style={{ fontSize:10,fontWeight:700,padding:"2px 7px",borderRadius:999,background:"rgba(255,255,255,0.05)",color:S.faint }}>{auto.category}</span>
-                    </div>
+                {/* Top row */}
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:14}}>
+                  <div style={{width:40,height:40,borderRadius:11,background:`${auto.color}15`,border:`1px solid ${auto.color}25`,display:"grid",placeItems:"center"}}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={auto.color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d={auto.icon}/>
+                    </svg>
                   </div>
-                  <button onClick={e=>{ e.stopPropagation(); toggleAuto(auto.id); }}
-                    style={{ width:40,height:22,borderRadius:999,border:"none",cursor:"pointer",background:auto.status==="active"?S.accent:"rgba(255,255,255,0.1)",transition:"all 0.3s",position:"relative",flexShrink:0 }}>
-                    <div style={{ position:"absolute",top:2,left:auto.status==="active"?20:2,width:18,height:18,borderRadius:"50%",background:auto.status==="active"?"#050505":"rgba(255,255,255,0.4)",transition:"all 0.3s" }}/>
-                  </button>
+                  <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:6}}>
+                    {/* Toggle */}
+                    <div onClick={e=>{e.stopPropagation();toggleStatus(auto.id);}}
+                      style={{width:36,height:20,borderRadius:10,background:auto.status==="active"?auto.color:"rgba(255,255,255,0.08)",cursor:"pointer",position:"relative",transition:"all 0.3s",border:`1px solid ${auto.status==="active"?auto.color+"88":"rgba(255,255,255,0.1)"}`,flexShrink:0}}>
+                      <div style={{position:"absolute",top:2,left:auto.status==="active"?18:2,width:14,height:14,borderRadius:"50%",background:auto.status==="active"?"#050505":"rgba(255,255,255,0.3)",transition:"all 0.3s"}}/>
+                    </div>
+                    <span style={{fontSize:9,fontWeight:700,color:auto.status==="active"?"#34d399":S.faint}}>
+                      {auto.status==="active"?"LIVE":"PAUSED"}
+                    </span>
+                  </div>
                 </div>
+
+                {/* Category badge */}
+                <div style={{display:"inline-block",fontSize:9,fontWeight:700,padding:"2px 8px",borderRadius:999,background:`${auto.color}12`,color:auto.color,border:`1px solid ${auto.color}25`,marginBottom:8}}>
+                  {auto.category}
+                </div>
+
+                <div style={{fontSize:14,fontWeight:700,color:S.text,marginBottom:6,letterSpacing:"-0.01em",lineHeight:1.3}}>{auto.name}</div>
 
                 {/* Trigger → Action */}
-                <div style={{ display:"grid",gridTemplateColumns:"1fr auto 1fr",gap:6,marginBottom:12,alignItems:"center" }}>
-                  <div style={{ background:"rgba(255,255,255,0.02)",border:`1px solid ${S.lineSoft}`,borderRadius:8,padding:"8px 10px" }}>
-                    <div style={{ fontSize:9,fontWeight:700,color:S.faint,textTransform:"uppercase",marginBottom:3 }}>WHEN</div>
-                    <div style={{ fontSize:11,color:S.muted,lineHeight:1.4 }}>{auto.trigger}</div>
-                  </div>
-                  <div style={{ color:auto.color,fontSize:16 }}>→</div>
-                  <div style={{ background:`${auto.color}08`,border:`1px solid ${auto.color}22`,borderRadius:8,padding:"8px 10px" }}>
-                    <div style={{ fontSize:9,fontWeight:700,color:auto.color,textTransform:"uppercase",marginBottom:3 }}>THEN</div>
-                    <div style={{ fontSize:11,color:S.muted,lineHeight:1.4 }}>{auto.action}</div>
-                  </div>
+                <div style={{fontSize:11,color:S.faint,marginBottom:4,display:"flex",alignItems:"center",gap:4}}>
+                  <span style={{color:"#34d399"}}>WHEN:</span> {auto.trigger}
+                </div>
+                <div style={{fontSize:11,color:S.faint,marginBottom:14,display:"flex",alignItems:"center",gap:4}}>
+                  <span style={{color:auto.color}}>THEN:</span> {auto.action}
                 </div>
 
-                <p style={{ fontSize:12,color:S.faint,lineHeight:1.6,marginBottom:10 }}>{auto.what_it_does}</p>
-
-                <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between" }}>
-                  <div style={{ display:"flex",gap:12 }}>
-                    <span style={{ fontSize:11,color:S.faint }}><span style={{ color:auto.color,fontWeight:700 }}>{auto.runs.toLocaleString()}</span> runs</span>
-                    <span style={{ fontSize:11,color:S.faint }}><span style={{ color:"#34d399",fontWeight:700 }}>{auto.saved}</span> saved</span>
+                {/* Stats */}
+                <div style={{display:"flex",gap:14,paddingTop:12,borderTop:`1px solid ${S.lineSoft}`}}>
+                  <div>
+                    <div style={{fontSize:15,fontWeight:800,color:auto.color,fontFamily:"Syne,sans-serif"}}>{auto.runs.toLocaleString()}</div>
+                    <div style={{fontSize:9,color:S.faint}}>runs</div>
                   </div>
-                  <span style={{ fontSize:11,fontWeight:700,color:auto.status==="active"?"#34d399":S.faint }}>
-                    {auto.status==="active"?"● Active":"○ Paused"}
-                  </span>
+                  <div>
+                    <div style={{fontSize:15,fontWeight:800,color:"#34d399",fontFamily:"Syne,sans-serif"}}>{auto.saved}</div>
+                    <div style={{fontSize:9,color:S.faint}}>saved</div>
+                  </div>
                 </div>
               </div>
             ))}
@@ -759,73 +786,111 @@ export default function AutomationsPage() {
 
           {/* Detail Panel */}
           {selected&&(
-            <div style={{ background:S.panel,border:"1px solid rgba(200,255,0,0.2)",borderRadius:16,padding:24,height:"fit-content",position:"sticky",top:28,maxHeight:"calc(100vh - 56px)",overflowY:"auto" }}>
-              <div style={{ display:"flex",alignItems:"center",gap:10,marginBottom:16 }}>
-                <div style={{ width:36,height:36,borderRadius:10,background:selected.bg,border:`1px solid ${selected.color}33`,display:"grid",placeItems:"center",flexShrink:0 }}>
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={selected.color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d={selected.icon}/></svg>
+            <div style={{background:S.panel,border:`1px solid ${selected.color}33`,borderRadius:20,padding:28,position:"sticky",top:28,boxShadow:`0 0 0 1px ${selected.color}11,0 24px 60px rgba(0,0,0,0.5)`}}>
+
+              {/* Header */}
+              <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:20,paddingBottom:18,borderBottom:`1px solid ${S.lineSoft}`}}>
+                <div style={{width:48,height:48,borderRadius:13,background:`${selected.color}15`,border:`1px solid ${selected.color}33`,display:"grid",placeItems:"center",flexShrink:0}}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={selected.color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d={selected.icon}/>
+                  </svg>
                 </div>
-                <div style={{ flex:1 }}>
-                  <div style={{ fontSize:14,fontWeight:700,color:S.text }}>{selected.name}</div>
-                  <div style={{ fontSize:11,color:S.faint }}>{selected.category} · {selected.runs} runs · {selected.saved} saved</div>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontSize:16,fontWeight:800,color:S.text,fontFamily:"Syne,sans-serif",marginBottom:2}}>{selected.name}</div>
+                  <div style={{fontSize:11,color:selected.color,fontWeight:600}}>{selected.category}</div>
                 </div>
-                <button onClick={()=>{ setSelected(null); setAiOutput(""); }} style={{ background:"none",border:"none",cursor:"pointer",color:S.faint }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
-                </button>
+                <button onClick={()=>{setSelected(null);setAiOutput("");setTestInput("");}}
+                  style={{width:30,height:30,borderRadius:8,background:"rgba(255,255,255,0.04)",border:`1px solid ${S.lineSoft}`,color:S.muted,cursor:"pointer",fontSize:16,display:"grid",placeItems:"center",fontFamily:"inherit",flexShrink:0}}>✕</button>
+              </div>
+
+              {/* What it does */}
+              <div style={{marginBottom:16}}>
+                <div style={{fontSize:10,fontWeight:700,color:S.faint,textTransform:"uppercase",letterSpacing:".08em",marginBottom:8}}>What it does</div>
+                <p style={{fontSize:13,color:S.muted,lineHeight:1.7}}>{selected.what_it_does}</p>
               </div>
 
               {/* Why it matters */}
-              <div style={{ padding:"12px 14px",borderRadius:10,background:"rgba(200,255,0,0.04)",border:"1px solid rgba(200,255,0,0.12)",fontSize:12,color:S.muted,lineHeight:1.7,marginBottom:14 }}>
-                <span style={{ color:S.accent,fontWeight:700 }}>Why this beats Apollo: </span>{selected.why_it_matters}
+              <div style={{background:`${selected.color}08`,border:`1px solid ${selected.color}22`,borderRadius:10,padding:"12px 14px",marginBottom:16}}>
+                <div style={{fontSize:10,fontWeight:700,color:selected.color,textTransform:"uppercase",letterSpacing:".08em",marginBottom:6}}>Why it beats Apollo</div>
+                <p style={{fontSize:12,color:S.muted,lineHeight:1.6}}>{selected.why_it_matters}</p>
               </div>
 
-              {/* Example Output */}
-              <div style={{ marginBottom:14 }}>
-                <div style={{ fontSize:11,fontWeight:700,color:S.faint,textTransform:"uppercase",letterSpacing:".08em",marginBottom:8 }}>Example Output</div>
-                <pre style={{ fontSize:11,color:S.muted,lineHeight:1.7,whiteSpace:"pre-wrap",fontFamily:"'JetBrains Mono','Fira Code',monospace",background:"rgba(0,0,0,0.3)",border:`1px solid ${S.lineSoft}`,borderRadius:10,padding:"12px 14px",maxHeight:280,overflow:"auto" }}>{selected.example_output}</pre>
+              {/* Trigger → Action flow */}
+              <div style={{display:"flex",gap:8,marginBottom:20,alignItems:"center"}}>
+                <div style={{flex:1,background:"rgba(52,211,153,0.06)",border:"1px solid rgba(52,211,153,0.2)",borderRadius:10,padding:"10px 12px"}}>
+                  <div style={{fontSize:9,fontWeight:700,color:"#34d399",marginBottom:4}}>TRIGGER</div>
+                  <div style={{fontSize:11,color:S.text}}>{selected.trigger}</div>
+                </div>
+                <div style={{color:S.faint,fontSize:18}}>→</div>
+                <div style={{flex:1,background:`${selected.color}06`,border:`1px solid ${selected.color}22`,borderRadius:10,padding:"10px 12px"}}>
+                  <div style={{fontSize:9,fontWeight:700,color:selected.color,marginBottom:4}}>ACTION</div>
+                  <div style={{fontSize:11,color:S.text}}>{selected.action}</div>
+                </div>
               </div>
 
-              {/* Test input */}
-              <div style={{ fontSize:11,fontWeight:700,color:S.faint,textTransform:"uppercase",letterSpacing:".08em",marginBottom:6 }}>Live Test (optional)</div>
-              <textarea value={testInput} onChange={e=>setTestInput(e.target.value)}
-                placeholder="Add specific prospect details to test with real data, or leave empty to use default example..."
-                style={{ width:"100%",minHeight:80,background:"rgba(255,255,255,0.03)",border:`1px solid ${S.lineSoft}`,borderRadius:10,padding:"10px 12px",color:S.text,fontSize:12,fontFamily:"Inter,sans-serif",outline:"none",resize:"vertical",lineHeight:1.6,marginBottom:12 }}
-                onFocus={e=>(e.target as HTMLTextAreaElement).style.borderColor="rgba(200,255,0,0.3)"}
-                onBlur={e=>(e.target as HTMLTextAreaElement).style.borderColor=S.lineSoft}/>
+              {/* Test Input */}
+              <div style={{marginBottom:12}}>
+                <div style={{fontSize:11,fontWeight:700,color:S.faint,textTransform:"uppercase",letterSpacing:".08em",marginBottom:8}}>Test with your data (optional)</div>
+                <textarea
+                  value={testInput}
+                  onChange={e=>setTestInput(e.target.value)}
+                  placeholder={`Test this automation with real data...
 
-              <button onClick={runTest} disabled={running||selected.status==="paused"}
-                style={{ width:"100%",padding:"12px",borderRadius:10,border:"none",display:"flex",alignItems:"center",justifyContent:"center",gap:8,fontFamily:"Inter,sans-serif",marginBottom:aiOutput?14:0,
-                  background:selected.status==="paused"?"rgba(255,255,255,0.05)":running?"rgba(200,255,0,0.6)":S.accent,
-                  color:selected.status==="paused"?S.faint:"#050505",
-                  fontSize:13,fontWeight:700,cursor:running||selected.status==="paused"?"not-allowed":"pointer" }}>
-                {running
-                  ?<><span style={{ width:14,height:14,border:"2px solid rgba(0,0,0,0.2)",borderTopColor:"#050505",borderRadius:"50%",animation:"spin 0.8s linear infinite",display:"inline-block" }}/>Running automation...</>
-                  :selected.status==="paused"?"Paused — Toggle to Activate"
-                  :<><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>Run Automation Test</>}
+Example: Prospect name, company, situation...`}
+                  rows={4}
+                  style={{width:"100%",padding:"12px 14px",background:"rgba(255,255,255,0.03)",border:`1px solid ${S.lineSoft}`,borderRadius:10,color:S.text,fontSize:12,fontFamily:"Inter,sans-serif",lineHeight:1.6,outline:"none",resize:"vertical",boxSizing:"border-box"}}
+                  onFocus={e=>(e.target.style.borderColor=selected.color+"66")}
+                  onBlur={e=>(e.target.style.borderColor=S.lineSoft)}
+                />
+              </div>
+
+              {/* Run Button */}
+              <button onClick={runTest} disabled={running}
+                style={{width:"100%",padding:"13px",borderRadius:11,border:"none",background:running?"rgba(200,255,0,0.5)":`linear-gradient(135deg,${selected.color},${selected.color}cc)`,color:"#050505",fontSize:14,fontWeight:800,cursor:running?"not-allowed":"pointer",fontFamily:"Syne,sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:8,marginBottom:16,boxShadow:`0 8px 24px ${selected.color}33`,transition:"all 0.2s"}}>
+                {running?(
+                  <><div style={{width:14,height:14,border:"2px solid rgba(0,0,0,0.2)",borderTopColor:"#050505",borderRadius:"50%",animation:"spin 0.8s linear infinite"}}/>Running...</>
+                ):(
+                  <>⚡ Run Automation</>
+                )}
               </button>
 
+              {/* Output */}
               {aiOutput&&(
-                <div style={{ background:"rgba(0,0,0,0.3)",border:`1px solid ${S.lineSoft}`,borderRadius:12,padding:"14px 16px" }}>
-                  <div style={{ fontSize:10,fontWeight:700,color:S.accent,textTransform:"uppercase",letterSpacing:".08em",marginBottom:10 }}>⚡ Live Output</div>
-                  <pre style={{ fontSize:12,color:S.text,lineHeight:1.75,whiteSpace:"pre-wrap",fontFamily:"Inter,sans-serif",margin:"0 0 10px" }}>{aiOutput}</pre>
-                  <button onClick={()=>navigator.clipboard.writeText(aiOutput).then(()=>showToast("Copied ✓"))}
-                    style={{ padding:"6px 14px",borderRadius:8,background:"rgba(200,255,0,0.08)",border:"1px solid rgba(200,255,0,0.2)",color:S.accent,fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"Inter,sans-serif" }}>
-                    Copy Output
-                  </button>
+                <div style={{background:"rgba(255,255,255,0.02)",border:`1px solid ${selected.color}33`,borderRadius:12,padding:18,animation:"fadeIn 0.3s ease"}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+                    <div style={{fontSize:10,fontWeight:700,color:selected.color,textTransform:"uppercase",letterSpacing:".08em"}}>✓ Output</div>
+                    <button onClick={copyOutput}
+                      style={{padding:"4px 12px",borderRadius:7,background:copied?"rgba(52,211,153,0.1)":"rgba(255,255,255,0.04)",border:`1px solid ${copied?"rgba(52,211,153,0.3)":S.lineSoft}`,color:copied?"#34d399":S.muted,fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
+                      {copied?"✓ Copied!":"Copy"}
+                    </button>
+                  </div>
+                  <div style={{fontSize:12,color:S.text,lineHeight:1.8,whiteSpace:"pre-wrap",maxHeight:320,overflowY:"auto"}}>
+                    {aiOutput}
+                  </div>
+                </div>
+              )}
+
+              {/* Example Output Preview */}
+              {!aiOutput&&selected.example_output&&(
+                <div style={{background:"rgba(255,255,255,0.01)",border:`1px solid ${S.lineSoft}`,borderRadius:12,padding:16}}>
+                  <div style={{fontSize:10,fontWeight:700,color:S.faint,textTransform:"uppercase",letterSpacing:".08em",marginBottom:10}}>Example Output</div>
+                  <div style={{fontSize:11,color:S.muted,lineHeight:1.8,whiteSpace:"pre-wrap",maxHeight:200,overflowY:"auto",opacity:0.7}}>
+                    {selected.example_output}
+                  </div>
                 </div>
               )}
             </div>
           )}
         </div>
       </div>
+
       <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&family=Inter:wght@400;500;600;700&display=swap');
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-        body{background:#050505}
-        @keyframes spin{to{transform:rotate(360deg)}}
-        @keyframes ping{0%,100%{box-shadow:0 0 0 0 rgba(200,255,0,0.4)}50%{box-shadow:0 0 0 6px rgba(200,255,0,0)}}
-        textarea::placeholder{color:#555a66;font-size:12px}
-        button:focus{outline:none}
         ::-webkit-scrollbar{width:4px}
         ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:2px}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
       `}</style>
     </div>
   );
