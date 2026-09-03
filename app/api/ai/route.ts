@@ -375,9 +375,8 @@ async function callOpenRouter(systemPrompt: string, userPrompt: string, orKey: s
       const data = await res.json();
       const text = data.choices?.[0]?.message?.content?.trim();
       if (!text || text.length < 20) continue;
-      const garbled = (text.match(/[^ -~
-	]/g) || []).length;
-      if (text.length > 0 && garbled / text.length > 0.08) continue;
+          const garbled = Array.from(text).filter(c => c.charCodeAt(0) > 127 && c.charCodeAt(0) < 8000).length;
+      if (text.length > 0 && garbled / text.length > 0.15) continue;
       return { result: text, model: `openrouter/${model}` };
     } catch { continue; }
   }
