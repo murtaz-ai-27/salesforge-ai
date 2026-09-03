@@ -304,11 +304,85 @@ Quota: $[X] | Gap: $[X]
 "Calling $[X] for Q[X] with [X]% confidence. Swing factor: [specific deal/action]."`,
 };
 
-const MODELS = [
+
+
+// ── Groq Models (Primary — Fast) ──
+const GROQ_MODELS = [
+  "llama-3.3-70b-versatile",
+  "llama-3.1-70b-versatile", 
+  "mixtral-8x7b-32768",
+  "gemma2-9b-it",
+];
+
+// ── OpenRouter Models (Fallback) ──
+const OR_MODELS = [
   "meta-llama/llama-3.3-70b-instruct:free",
   "deepseek/deepseek-r1:free",
-  "mistralai/mistral-7b-instruct:free",
+  "google/gemma-3-27b-it:free",
 ];
+
+async function callGroq(systemPrompt: string, userPrompt: string, groqKey: string): Promise<{result:string;model:string}|null> {
+  for (const model of GROQ_MODELS) {
+    try {
+      const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${groqKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userPrompt },
+          ],
+          max_tokens: 1500,
+          temperature: 0.72,
+        }),
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      const text = data.choices?.[0]?.message?.content?.trim();
+      if (!text || text.length < 20) continue;
+      return { result: text, model: `groq/${model}` };
+    } catch { continue; }
+  }
+  return null;
+}
+
+async function callOpenRouter(systemPrompt: string, userPrompt: string, orKey: string): Promise<{result:string;model:string}|null> {
+  for (const model of OR_MODELS) {
+    try {
+      const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${orKey}`,
+          "Content-Type": "application/json",
+          "HTTP-Referer": "https://salevrix-ai-black.vercel.app",
+          "X-Title": "Salevrix AI",
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userPrompt },
+          ],
+          max_tokens: 1500,
+          temperature: 0.72,
+        }),
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      const text = data.choices?.[0]?.message?.content?.trim();
+      if (!text || text.length < 20) continue;
+      const garbled = (text.match(/[^ -~
+	]/g) || []).length;
+      if (text.length > 0 && garbled / text.length > 0.08) continue;
+      return { result: text, model: `openrouter/${model}` };
+    } catch { continue; }
+  }
+  return null;
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -317,9 +391,14 @@ export async function POST(req: NextRequest) {
 
     if (!prompt) return NextResponse.json({ error: "prompt is required" }, { status: 400 });
 
-    const apiKey = process.env.OPENROUTER_API_KEY;
-    if (!apiKey) return NextResponse.json({ error: "OPENROUTER_API_KEY missing" }, { status: 500 });
+    const groqKey = process.env.GROQ_API_KEY;
+    const orKey = process.env.OPENROUTER_API_KEY;
 
+    if (!groqKey && !orKey) {
+      return NextResponse.json({ error: "No AI API keys configured" }, { status: 500 });
+    }
+
+    // ── Plan limit check ──
     if (userId) {
       try {
         const { data: planData } = await supabaseAdmin
@@ -342,50 +421,36 @@ export async function POST(req: NextRequest) {
     }
 
     const systemPrompt = customSystem || SYSTEM_PROMPTS[type] || SYSTEM_PROMPTS.emailWriter;
-    let result = "", usedModel = "", lastError = "";
+    let aiResult: {result:string;model:string} | null = null;
 
-    for (const model of MODELS) {
-      try {
-        const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${apiKey}`,
-            "Content-Type": "application/json",
-            "HTTP-Referer": "https://salevrix-ai-black.vercel.app",
-            "X-Title": "Salevrix AI",
-          },
-          body: JSON.stringify({
-            model,
-            messages: [
-              { role: "system", content: systemPrompt },
-              { role: "user", content: prompt },
-            ],
-            max_tokens: 1500,
-            temperature: 0.72,
-          }),
-        });
-        const data = await res.json();
-        if (!res.ok) { lastError = `${model}: ${res.status}`; continue; }
-        const text = data.choices?.[0]?.message?.content?.trim();
-        if (!text || text.length < 20) { lastError = `${model}: empty`; continue; }
-        const garbled = (text.match(/[^\x20-\x7E\n\r\t]/g) || []).length;
-        if (text.length > 0 && garbled / text.length > 0.08) { lastError = `${model}: garbled`; continue; }
-        result = text; usedModel = model; break;
-      } catch (err: any) { lastError = `${model}: ${err.message}`; }
+    // ── Try Groq first (fast) ──
+    if (groqKey) {
+      aiResult = await callGroq(systemPrompt, prompt, groqKey);
     }
 
-    if (!result) return NextResponse.json({ error: `All models failed. ${lastError}` }, { status: 500 });
+    // ── Fallback to OpenRouter ──
+    if (!aiResult && orKey) {
+      aiResult = await callOpenRouter(systemPrompt, prompt, orKey);
+    }
 
+    if (!aiResult) {
+      return NextResponse.json({ error: "All AI models failed. Please try again in a moment." }, { status: 500 });
+    }
+
+    // ── Log to Supabase ──
     if (userId) {
       try {
         await supabaseAdmin.from("agent_runs").insert({
-          user_id: userId, agent_type: type ?? "general",
-          prompt: prompt.slice(0, 500), output: result.slice(0, 2000),
+          user_id: userId,
+          agent_type: type ?? "general",
+          prompt: prompt.slice(0, 500),
+          output: aiResult.result.slice(0, 2000),
         });
       } catch {}
     }
 
-    return NextResponse.json({ result, model: usedModel });
+    return NextResponse.json({ result: aiResult.result, model: aiResult.model });
+
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
