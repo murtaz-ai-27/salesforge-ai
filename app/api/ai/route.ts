@@ -266,11 +266,8 @@ export async function POST(req: NextRequest) {
     // Try Groq first (fast), then OpenRouter (fallback)
     let aiResult: { result: string; model: string } | null = null;
 
-    if (groqKey) {
-      aiResult = await callGroq(systemPrompt, prompt, groqKey);
-    }
-
-    if (!aiResult && orKey) {
+    // OpenRouter only (Groq blocked by Vercel network policy)
+    if (orKey) {
       aiResult = await callOpenRouter(systemPrompt, prompt, orKey);
     }
 
