@@ -179,6 +179,32 @@ async function callGroq(system: string, prompt: string, key: string): Promise<{ 
   return null;
 }
 
+async function callGemini(system: string, prompt: string, key: string): Promise<{ result: string; model: string } | null> {
+  const models = ["gemini-1.5-flash", "gemini-1.5-flash-8b", "gemini-1.0-pro"];
+  for (const model of models) {
+    try {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: `${system}
+
+${prompt}` }] }],
+          generationConfig: { maxOutputTokens: 1500, temperature: 0.72 },
+        }),
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      const text: string = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? "";
+      if (!isCleanText(text)) continue;
+      return { result: text, model: `gemini/${model}` };
+    } catch {
+      continue;
+    }
+  }
+  return null;
+}
+
 async function callOpenRouter(system: string, prompt: string, key: string): Promise<{ result: string; model: string } | null> {
   for (const model of OR_MODELS) {
     try {
@@ -266,8 +292,12 @@ export async function POST(req: NextRequest) {
     // Try Groq first (fast), then OpenRouter (fallback)
     let aiResult: { result: string; model: string } | null = null;
 
-    // OpenRouter only (Groq blocked by Vercel network policy)
-    if (orKey) {
+    // Try Gemini first, then OpenRouter as fallback
+    const geminiKey = process.env.GEMINI_API_KEY ?? "";
+    if (geminiKey) {
+      aiResult = await callGemini(systemPrompt, prompt, geminiKey);
+    }
+    if (!aiResult && orKey) {
       aiResult = await callOpenRouter(systemPrompt, prompt, orKey);
     }
 
