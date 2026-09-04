@@ -6,152 +6,54 @@ const PLAN_LIMITS: Record<string, number> = {
 };
 
 const SYSTEM_PROMPTS: Record<string, string> = {
-  emailWriter: `You are Jordan, an elite B2B sales copywriter. Your cold emails achieve 35-45% reply rates.
+  emailWriter: `You are an elite B2B sales copywriter. Write a cold email that achieves 35%+ reply rates.
+RULES: Write ONLY the email body. Max 120 words. Start with ONE hyper-specific observation about the prospect. Lines 2-3: their current pain point. Line 4: one proof point with numbers. Final line: soft CTA. Use {{firstName}} once.
+BANNED: "I hope this finds you well" / "touching base" / "circling back" / "game-changing" / "leverage"
+OUTPUT: Just the email. Nothing else.`,
 
-RULES:
-1. Write ONLY the email body. Zero preamble.
-2. Hard limit: 120 words.
-3. Line 1: ONE hyper-specific observation about the prospect.
-4. Lines 2-3: The pain point they are hitting RIGHT NOW.
-5. Line 4: ONE proof point with a real number and timeframe.
-6. Final line: Soft CTA.
-7. Use {{firstName}} once at the start.
+  objectionHandler: `You are a senior sales professional with $50M+ in career revenue. Give 3 different responses to the objection.
+Each response under 75 words. Different angle each time: 1) Empathy + reframe 2) Data + insight 3) Curiosity question.
+Never argue. Return only the 3 numbered responses.`,
 
-BANNED: "I hope this finds you well" / "touching base" / "circling back" / "synergies" / "game-changing" / "leverage" / "utilize"
+  prospectAnalyzer: `You are a Revenue Intelligence AI. Analyze this prospect and return ONLY valid JSON, no markdown, no backticks:
+{"score":85,"buyingIntent":"high","bestChannel":"email","personalizationHooks":["hook1","hook2","hook3"],"recommendedTiming":"immediate","reasoning":"2-3 sentences","redFlags":"concerns","estimatedDealValue":"$5,000"}
+Score 90-100=Perfect ICP, 75-89=Strong, 60-74=Decent, below 60=Weak.`,
 
-OUTPUT: Just the email body. Nothing else.`,
+  dealAnalyzer: `You are a Revenue Operations expert. Analyze this deal:
+Format: DEAL HEALTH: X/100 — verdict. WHAT IS WORKING: bullet points. RISK FACTORS: RED/YELLOW/GREEN risks. THE REAL PROBLEM: 2-3 honest sentences. NEXT 3 ACTIONS: specific with deadlines. WIN PROBABILITY: X% and why.`,
 
-  subjectLine: `You are a subject line expert. Write EXACTLY 3 subject line options. Numbered list only.
-Rules: Under 7 words each. No exclamation marks. No emojis. No ALL CAPS.
-Option 1: Company + specific situation. Option 2: Pain/result only. Option 3: Pattern interrupt.`,
+  meetingSummarizer: `You are a Revenue Operations specialist. Summarize meeting notes into:
+SITUATION (2-3 sentences), PAIN POINTS (bullets), BUYING SIGNALS (bullets), OBJECTIONS (bullets), ACTION ITEMS (owner + deadline), DEAL ASSESSMENT (sentiment, close probability, estimated close date).`,
 
-  objectionHandler: `You are Marcus, a 50M+ career sales professional. Give 3 responses to the objection.
-Each response under 75 words. Different psychological angle each time.
-Framework: 1) Acknowledge 2) Reframe with data 3) Open question.
-Never argue. Never say "Great point!" Return only the 3 responses.`,
+  cold_caller: `You are a cold call coach. Write a complete script with: OPENER (8 seconds), BRIDGE (10 seconds), VALUE PROP (15 seconds), DISCOVERY QUESTION, OBJECTION SCRIPTS for 5 common objections, CLOSE with two time options. Under 250 words.`,
 
-  prospectAnalyzer: `You are a Revenue Intelligence AI. Score this prospect and return ONLY this JSON with no markdown and no backticks:
-{"score":87,"buyingIntent":"high","bestChannel":"email","personalizationHooks":["hook1","hook2","hook3"],"recommendedTiming":"immediate","reasoning":"2-3 sentences","redFlags":"any concerns","estimatedDealValue":"$X,XXX"}
+  linkedin_writer: `You are a LinkedIn outreach specialist. Write: 1) CONNECTION REQUEST (max 280 characters, peer-to-peer tone, reference their specific activity) 2) FOLLOW-UP MESSAGE (100-150 words after acceptance). Label sections clearly.`,
 
-Scoring: 90-100=Perfect ICP. 75-89=Strong fit. 60-74=Decent. 40-59=Partial. Below 40=Poor fit.`,
+  proposal_writer: `You are a Senior Enterprise AE. Write a winning proposal with: WHAT WE DISCUSSED, COST OF TODAY (calculate annual cost of inaction), WHAT WE PROPOSE, WHAT CHANGES (before/after metrics), INVESTMENT (price + ROI + payback period), IMPLEMENTATION timeline, NEXT STEP.`,
 
-  dealAnalyzer: `You are a Revenue Operations expert. Analyze this deal and use EXACTLY this format:
+  competitor_intel: `You are a Competitive Intelligence expert. Create a battle card with: CORE WEAKNESS, HOW TO SURFACE IT (question + what to listen for), HEAD-TO-HEAD comparison table (4 rows), DISPLACEMENT STRATEGY, 3 TRAP QUESTIONS, ONE-LINE CLOSER.`,
 
-**DEAL HEALTH: X/100** — [verdict]
+  revenue_forecaster: `You are a CRO with 3% forecast accuracy. Create: PIPELINE SNAPSHOT (total/weighted/commit/best case), QUARTERLY FORECAST (conservative/base/upside), TOP 3 DEALS TO CLOSE, AT-RISK DEALS needing intervention, LEADING INDICATORS, 3 ACTIONS TO HIT QUOTA, THE CALL (one sentence number).`,
 
-**WHAT IS WORKING**
-• [signal]
-• [signal]
-
-**RISK FACTORS**
-• RED [critical risk] — [how to fix]
-• YELLOW [moderate risk] — [mitigation]
-• GREEN [minor risk] — [watch for]
-
-**THE REAL PROBLEM**
-[2-3 honest sentences]
-
-**NEXT 3 ACTIONS**
-1. [exact action] — Due: [timeframe]
-2. [action] — Due: [timeframe]
-3. [action] — Due: [timeframe]
-
-**WIN PROBABILITY: X%**
-[one sentence]`,
-
-  meetingSummarizer: `You are a Revenue Operations specialist. Format EXACTLY like this:
-
-MEETING INTEL
-Prospect: [Name, Title, Company]
-
-SITUATION
-[2-3 sentences]
-
-PAIN POINTS
-• [pain with business impact]
-• [pain]
-
-BUYING SIGNALS
-• [signal]
-
-OBJECTIONS
-• [objection] — [how addressed]
-
-ACTION ITEMS
-• [action] — Owner: [name] — Due: [date]
-
-DEAL ASSESSMENT
-Sentiment: [Positive/Neutral/Negative]
-Close Probability: [X%]
-Estimated Close: [Quarter]`,
-
-  cold_caller: `You are a cold call coach. Write a complete cold call script with:
-OPENER (8 seconds), BRIDGE (10 seconds), VALUE PROP (15 seconds), DISCOVERY QUESTION,
-OBJECTION SCRIPTS for: Not interested / Send email / Have competitor / No budget / Call later,
-CLOSE with two time options. Under 250 words total.`,
-
-  linkedin_writer: `You are a LinkedIn outreach specialist. Write TWO things:
-1. CONNECTION REQUEST (max 280 characters) - peer-to-peer tone, reference their specific post or activity.
-2. FOLLOW-UP MESSAGE (100-150 words) - after acceptance, one insight, one ask.
-Label each section clearly. Show character count after connection request.`,
-
-  proposal_writer: `You are a Senior Enterprise AE. Write a proposal with these sections:
-WHAT WE DISCUSSED, COST OF TODAY (time + opportunity + risk = total annual cost),
-WHAT WE PROPOSE, WHAT CHANGES (metrics before and after), INVESTMENT (price + ROI + payback),
-IMPLEMENTATION (weekly milestones), YOUR NEXT STEP.
-Use their exact words. Make it 100% about the client.`,
-
-  competitor_intel: `You are a Competitive Intelligence Strategist. Create a battle card with:
-CORE WEAKNESS, HOW TO SURFACE IT (question + what to listen for + your response),
-HEAD-TO-HEAD (their claim vs reality vs your proof - 4 rows),
-DISPLACEMENT STRATEGY, TRAP QUESTIONS (3 questions),
-CONTRACT OBJECTION SCRIPT, ONE-LINE CLOSER.`,
-
-  revenue_forecaster: `You are a CRO. Create a board-ready forecast with:
-PIPELINE SNAPSHOT (total, weighted, commit, best case),
-FORECAST (conservative, base, upside, quota, gap),
-TOP 3 DEALS TO CLOSE (company, value, why, confidence%, close date),
-AT-RISK DEALS (company, risk, action),
-LEADING INDICATORS (2-3),
-3 ACTIONS TO HIT QUOTA,
-THE CALL (one sentence calling the number).`,
-
-  csvAnalyzer: `You are a B2B sales data expert. Extract prospect info from this CSV data.
-Return ONLY a JSON array with no markdown and no backticks:
-[{"name":"Full Name","email":"email","company":"Company","title":"Job Title","linkedin_url":"url or empty","score":75,"intent":"high|medium|low","notes":"one sentence why interesting"}]
-Scoring: VP/C-Suite + SaaS/Tech = 85-98. Director + mid-market = 70-84. Manager + SMB = 50-69. Other = 30-49.`,
-
-  subjectLineAlt: `Write 3 cold email subject lines under 7 words each. Numbered list. No punctuation at end. No emojis.`,
+  subjectLine: `Write exactly 3 cold email subject lines. Rules: under 7 words each, no punctuation, no emojis, lowercase preferred. Number them 1, 2, 3. Nothing else.`,
 };
 
-// Groq models - fast
-const GROQ_MODELS = [
-  "llama-3.3-70b-versatile",
-  "llama-3.1-70b-versatile",
-  "mixtral-8x7b-32768",
+const HF_MODELS = [
+  "meta-llama/Llama-3.2-3B-Instruct",
+  "meta-llama/Llama-3.1-8B-Instruct",
+  "mistralai/Mistral-7B-Instruct-v0.3",
 ];
 
-// OpenRouter models - fallback
 const OR_MODELS = [
   "meta-llama/llama-3.3-70b-instruct:free",
   "deepseek/deepseek-r1:free",
   "google/gemma-3-27b-it:free",
 ];
 
-function isCleanText(text: string): boolean {
-  if (!text || text.length < 20) return false;
-  let nonAscii = 0;
-  for (let i = 0; i < text.length; i++) {
-    const code = text.charCodeAt(i);
-    if (code > 127 && code < 8000) nonAscii++;
-  }
-  return nonAscii / text.length < 0.15;
-}
-
-async function callGroq(system: string, prompt: string, key: string): Promise<{ result: string; model: string } | null> {
-  for (const model of GROQ_MODELS) {
+async function callHuggingFace(system: string, prompt: string, key: string): Promise<{ result: string; model: string } | null> {
+  for (const model of HF_MODELS) {
     try {
-      const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      const res = await fetch(`https://api-inference.huggingface.co/models/${model}/v1/chat/completions`, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${key}`,
@@ -165,39 +67,14 @@ async function callGroq(system: string, prompt: string, key: string): Promise<{ 
           ],
           max_tokens: 1500,
           temperature: 0.72,
+          stream: false,
         }),
       });
       if (!res.ok) continue;
       const data = await res.json();
       const text: string = data.choices?.[0]?.message?.content?.trim() ?? "";
-      if (!isCleanText(text)) continue;
-      return { result: text, model: `groq/${model}` };
-    } catch {
-      continue;
-    }
-  }
-  return null;
-}
-
-async function callGemini(system: string, prompt: string, key: string): Promise<{ result: string; model: string } | null> {
-  const models = ["gemini-1.5-flash", "gemini-1.5-flash-8b", "gemini-1.0-pro"];
-  for (const model of models) {
-    try {
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: `${system}
-
-${prompt}` }] }],
-          generationConfig: { maxOutputTokens: 1500, temperature: 0.72 },
-        }),
-      });
-      if (!res.ok) continue;
-      const data = await res.json();
-      const text: string = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? "";
-      if (!isCleanText(text)) continue;
-      return { result: text, model: `gemini/${model}` };
+      if (!text || text.length < 20) continue;
+      return { result: text, model: `hf/${model}` };
     } catch {
       continue;
     }
@@ -229,7 +106,7 @@ async function callOpenRouter(system: string, prompt: string, key: string): Prom
       if (!res.ok) continue;
       const data = await res.json();
       const text: string = data.choices?.[0]?.message?.content?.trim() ?? "";
-      if (!isCleanText(text)) continue;
+      if (!text || text.length < 20) continue;
       return { result: text, model: `openrouter/${model}` };
     } catch {
       continue;
@@ -247,10 +124,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "prompt is required" }, { status: 400 });
     }
 
-    const groqKey = process.env.GROQ_API_KEY ?? "";
+    const hfKey = process.env.HF_TOKEN ?? "";
     const orKey = process.env.OPENROUTER_API_KEY ?? "";
 
-    if (!groqKey && !orKey) {
+    if (!hfKey && !orKey) {
       return NextResponse.json({ error: "No AI API keys configured" }, { status: 500 });
     }
 
@@ -288,14 +165,11 @@ export async function POST(req: NextRequest) {
     }
 
     const systemPrompt: string = customSystem || SYSTEM_PROMPTS[type as string] || SYSTEM_PROMPTS.emailWriter;
-
-    // Try Groq first (fast), then OpenRouter (fallback)
     let aiResult: { result: string; model: string } | null = null;
 
-    // Try Gemini first, then OpenRouter as fallback
-    const geminiKey = process.env.GEMINI_API_KEY ?? "";
-    if (geminiKey) {
-      aiResult = await callGemini(systemPrompt, prompt, geminiKey);
+    // Try HuggingFace first, then OpenRouter
+    if (hfKey) {
+      aiResult = await callHuggingFace(systemPrompt, prompt, hfKey);
     }
     if (!aiResult && orKey) {
       aiResult = await callOpenRouter(systemPrompt, prompt, orKey);
