@@ -267,11 +267,11 @@ Rules: Under 7 words each. No exclamation marks. No emojis. No ALL CAPS. Lowerca
 };
 
 const MODELS = [
-  "nvidia/llama-3.1-nemotron-ultra-253b-v1:free",
-  "nvidia/llama-3.3-nemotron-super-49b-v1:free",
-  "deepseek/deepseek-r1:free",
-  "meta-llama/llama-3.3-70b-instruct:free",
-  "liquid/lfm-3b:free",
+  "nvidia/nemotron-3-ultra-550b-a55b:free",
+  "minimax/minimax-m3:free",
+  "poolside/laguna-s-2.1:free",
+  "nvidia/nemotron-3-super-120b-a12b:free",
+  "minimax/minimax-m2.7:free",
 ];
 
 export async function POST(req: NextRequest) {
