@@ -285,11 +285,9 @@ Write ALL 5 complete touches. No placeholders. Real content based on the ICP pro
 };
 
 const MODELS = [
-  "nvidia/nemotron-3-ultra-550b-a55b:free",
-  "minimax/minimax-m3:free",
-  "poolside/laguna-s-2.1:free",
-  "nvidia/nemotron-3-super-120b-a12b:free",
-  "minimax/minimax-m2.7:free",
+  "google/gemma-4-31b-it:free",
+  "z-ai/glm-5.2:free",
+  "liquid/lfm-2.5-2.6b:free",
 ];
 
 export async function POST(req: NextRequest) {
