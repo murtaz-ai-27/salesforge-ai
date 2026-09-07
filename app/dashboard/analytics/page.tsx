@@ -206,15 +206,15 @@ function Sparkline({ data, color }: { data: number[]; color: string }) {
   );
 }
 
-// ── GENERATE REALISTIC TREND DATA ──
-function genTrend(base: number, days: number, volatility: number = 0.15): number[] {
-  const data: number[] = [base];
-  for (let i = 1; i < days; i++) {
-    const change = (Math.random() - 0.45) * volatility;
-    const next = Math.max(0, Math.round(data[i-1] * (1 + change)));
-    data.push(next);
+// ── PURE REAL DATA - No randomness ──
+function buildTrend(finalValue: number, days: number): number[] {
+  if (!finalValue || finalValue === 0) {
+    return Array(days).fill(0); // Flat line if 0
   }
-  return data;
+  // Pure linear progression to real value - no fake randomness
+  return Array.from({ length: days }, (_, i) =>
+    Math.round(finalValue * (i + 1) / days)
+  );
 }
 
 
@@ -318,10 +318,10 @@ export default function AnalyticsPage() {
 
   // Generate trend data based on real stats
   const trends = {
-    prospects: genTrend(Math.max(1, totalProspects - 20), period, 0.12),
-    emails: genTrend(Math.max(1, emailsSent - 50), period, 0.18),
-    pipeline: genTrend(Math.max(1000, pipeline - 5000), period, 0.1),
-    agents: genTrend(Math.max(1, agentRuns - 5), period, 0.2),
+    prospects: buildTrend(totalProspects, period),
+    emails: buildTrend(emailsSent, period),
+    pipeline: buildTrend(pipeline, period),
+    agents: buildTrend(agentRuns, period),
   };
 
   // End with real value
@@ -340,10 +340,10 @@ export default function AnalyticsPage() {
   const kpis = [
     { label: 'Total Prospects', value: totalProspects, sub: 'AI-scored', color: S.accent, trend: trends.prospects },
     { label: 'Emails Sent', value: emailsSent, sub: 'This month', color: '#818cf8', trend: trends.emails },
-    { label: 'Reply Rate', value: totalProspects > 0 ? ((replied / totalProspects) * 100).toFixed(1) + '%' : '0%', sub: 'Of contacted', color: '#34d399', trend: genTrend(3, period, 0.25) },
-    { label: 'Meetings Booked', value: meetings, sub: 'Total', color: '#60a5fa', trend: genTrend(Math.max(1, meetings), period, 0.2) },
-    { label: 'Avg ICP Score', value: avgScore > 0 ? avgScore.toFixed(0) : '—', sub: 'Out of 100', color: '#f59e0b', trend: genTrend(65, period, 0.08) },
-    { label: 'High Intent', value: highIntent, sub: 'Prospects', color: '#f472b6', trend: genTrend(Math.max(1, highIntent), period, 0.15) },
+    { label: 'Reply Rate', value: totalProspects > 0 ? ((replied / totalProspects) * 100).toFixed(1) + '%' : '0%', sub: 'Of contacted', color: '#34d399', trend: buildTrend(replied > 0 ? Math.round((replied/totalProspects)*100) : 0, period) },
+    { label: 'Meetings Booked', value: meetings, sub: 'Total', color: '#60a5fa', trend: buildTrend(meetings, period) },
+    { label: 'Avg ICP Score', value: avgScore > 0 ? avgScore.toFixed(0) : '—', sub: 'Out of 100', color: '#f59e0b', trend: buildTrend(avgScore > 0 ? avgScore : 0, period) },
+    { label: 'High Intent', value: highIntent, sub: 'Prospects', color: '#f472b6', trend: buildTrend(highIntent, period) },
     { label: 'Pipeline Value', value: '$' + (pipeline / 1000).toFixed(1) + 'K', sub: 'Estimated', color: '#a78bfa', trend: trends.pipeline },
     { label: 'Agent Runs Today', value: agentRuns, sub: 'AI executions', color: '#fb923c', trend: trends.agents },
   ];
@@ -531,7 +531,17 @@ export default function AnalyticsPage() {
               { name: 'Proposal Writer', runs: stats?.agentRunsByType?.['proposal_writer'] ?? 0, color: '#34d399' },
               { name: 'LinkedIn Writer', runs: stats?.agentRunsByType?.['linkedin_writer'] ?? 0, color: '#60a5fa' },
             ].map((agent, i) => {
-              const maxRuns = Math.max(...[4,6,2,3,5,1,2,3], 1);
+              const maxRuns = Math.max(
+                stats?.agentRunsByType?.['emailWriter'] ?? 0,
+                stats?.agentRunsByType?.['dealAnalyzer'] ?? 0,
+                stats?.agentRunsByType?.['objectionHandler'] ?? 0,
+                stats?.agentRunsByType?.['meetingSummarizer'] ?? 0,
+                stats?.agentRunsByType?.['prospectAnalyzer'] ?? 0,
+                stats?.agentRunsByType?.['cold_caller'] ?? 0,
+                stats?.agentRunsByType?.['proposal_writer'] ?? 0,
+                stats?.agentRunsByType?.['linkedin_writer'] ?? 0,
+                1
+              );
               const pct = Math.min(100, (agent.runs / maxRuns) * 100);
               return (
                 <div key={i} style={{ background: S.panel2, borderRadius: 10, padding: '12px 14px', border: `1px solid ${S.lineSoft}` }}>
