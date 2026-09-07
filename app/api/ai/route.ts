@@ -1,287 +1,154 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseServer";
 
-const PLAN_LIMITS: Record<string, number> = {
-  free: 5, starter: 50, pro: -1, enterprise: -1
+// ════════════════════════════════════════════════════════
+// PLAN LIMITS — Same as ChatGPT/Claude model
+// ════════════════════════════════════════════════════════
+const PLAN_LIMITS: Record<string, {
+  daily: number;        // AI runs per day
+  perMinute: number;    // Requests per minute (rate limit)
+  maxTokens: number;    // Max output tokens
+}> = {
+  free:       { daily: 5,         perMinute: 2,  maxTokens: 800  },
+  starter:    { daily: 50,        perMinute: 5,  maxTokens: 1200 },
+  pro:        { daily: 999999,    perMinute: 20, maxTokens: 2000 },
+  enterprise: { daily: 999999,    perMinute: 50, maxTokens: 2000 },
 };
 
+// ════════════════════════════════════════════════════════
+// GLOBAL RATE LIMITER — Prevents API bill explosion
+// In-memory store (resets on cold start — fine for protection)
+// ════════════════════════════════════════════════════════
+const globalRequestCount = new Map<string, { count: number; resetAt: number }>();
+const GLOBAL_LIMIT_PER_MINUTE = 100; // Max 100 total AI requests per minute globally
+
+function checkGlobalLimit(): boolean {
+  const now = Date.now();
+  const key = 'global';
+  const entry = globalRequestCount.get(key);
+
+  if (!entry || now > entry.resetAt) {
+    globalRequestCount.set(key, { count: 1, resetAt: now + 60000 });
+    return true; // OK
+  }
+
+  if (entry.count >= GLOBAL_LIMIT_PER_MINUTE) {
+    return false; // BLOCKED
+  }
+
+  entry.count++;
+  return true; // OK
+}
+
+// Per-user per-minute rate limiter
+const userRateLimit = new Map<string, { count: number; resetAt: number }>();
+
+function checkUserRateLimit(userId: string, limit: number): boolean {
+  const now = Date.now();
+  const entry = userRateLimit.get(userId);
+
+  if (!entry || now > entry.resetAt) {
+    userRateLimit.set(userId, { count: 1, resetAt: now + 60000 });
+    return true;
+  }
+
+  if (entry.count >= limit) return false;
+  entry.count++;
+  return true;
+}
+
+// ════════════════════════════════════════════════════════
+// SYSTEM PROMPTS
+// ════════════════════════════════════════════════════════
 const SYSTEM_PROMPTS: Record<string, string> = {
-  emailWriter: `You are Jordan, an elite B2B sales copywriter. Your cold emails achieve 35-45% reply rates — 10x the industry average.
+  emailWriter: `You are Jordan, an elite B2B sales copywriter. Your cold emails achieve 35-45% reply rates.
 
 ABSOLUTE RULES:
-1. Write ONLY the email body. Zero preamble. Zero explanation.
-2. Hard limit: 120 words. Count them.
-3. Line 1: ONE hyper-specific observation — reference their EXACT LinkedIn post topic, funding round, hire announcement, or company news. NOT generic.
-4. Lines 2-3: The specific pain point they are hitting RIGHT NOW at their company stage.
-5. Line 4: ONE proof point with a real number and timeframe. Format: "cut X from Y to Z in W weeks"
-6. Final line: Soft CTA. Sounds like asking a friend, not closing a deal.
-7. Use {{firstName}} exactly once at the very start.
+1. Write ONLY the email body. Zero preamble.
+2. Hard limit: 120 words.
+3. Line 1: ONE hyper-specific observation about the prospect.
+4. Lines 2-3: Their specific pain point RIGHT NOW.
+5. Line 4: ONE proof point with a real number and timeframe.
+6. Final line: Soft CTA.
+7. Use {{firstName}} once at the start.
+BANNED: "I hope this finds you well" / "touching base" / "circling back" / "game-changing" / "leverage"
+OUTPUT: Just the email body. Nothing else.`,
 
-BANNED PHRASES — never write these:
-"I hope this finds you well" / "I wanted to reach out" / "touching base" / "circling back" / "synergies" / "innovative solution" / "I'd love to" / "Would you be open to" / "revolutionize" / "game-changing" / "seamlessly" / "leverage" / "utilize" / "move the needle" / "quick question"
+  objectionHandler: `You are Marcus, a $50M+ career sales professional. Give EXACTLY 3 numbered responses to the objection.
+Each under 75 words. Different psychological angle each time.
+Never say "Great point!" Never argue. Return only the 3 responses.`,
 
-OUTPUT: Just the email body. Nothing else. No subject line. No signature.`,
+  prospectAnalyzer: `You are a Revenue Intelligence AI. Return ONLY valid JSON, no markdown, no backticks:
+{"score":85,"buyingIntent":"high","bestChannel":"email","personalizationHooks":["hook1","hook2","hook3"],"recommendedTiming":"immediate","reasoning":"2-3 sentences","redFlags":"concerns","estimatedDealValue":"$5,000"}`,
 
-  objectionHandler: `You are Marcus, a $50M+ career sales professional. You have heard every objection 10,000 times. You never argue. You turn friction into curiosity.
+  dealAnalyzer: `You are a Revenue Operations expert. Use EXACTLY this format:
 
-Write EXACTLY 3 numbered responses to the objection. Each response is a different psychological angle:
-Response 1: Empathy + unexpected reframe with specific data
-Response 2: Acknowledge their point + pivot to outcome they care about
-Response 3: Curiosity question that makes them think
-
-Each response MUST be under 75 words.
-NEVER say: "Great point!" / "I understand your concern" / "But actually..."
-NEVER mention product features.
-NEVER sound desperate.
-
-Return ONLY the 3 numbered responses. Nothing else.`,
-
-  prospectAnalyzer: `You are a Revenue Intelligence AI trained on thousands of B2B sales cycles.
-
-Analyze the prospect and return ONLY this exact JSON. No markdown. No backticks. No explanation:
-{"score":87,"buyingIntent":"high","bestChannel":"email","personalizationHooks":["Specific hook 1 based on their exact situation","Specific hook 2 referencing their role/company","Specific hook 3 referencing timely news or activity"],"recommendedTiming":"immediate","reasoning":"2-3 sentences explaining the score","redFlags":"Any concerns or missing info","estimatedDealValue":"$X,XXX"}
-
-SCORING:
-90-100: Perfect ICP + multiple strong buying signals + budget indicators
-75-89: Strong fit + clear intent signals  
-60-74: Decent fit + weak signals
-Below 60: Poor fit`,
-
-  dealAnalyzer: `You are a Revenue Operations expert who has been in the room for 2,000+ enterprise deals. You see deals dying before the rep does.
-
-Use EXACTLY this format — no deviations:
-
-**DEAL HEALTH: X/100** — [one sentence honest verdict]
+**DEAL HEALTH: X/100** — [verdict]
 
 **WHAT IS WORKING**
-• [specific positive signal from the data]
-• [specific positive signal]
+• [signal]
 
-**RISK FACTORS (ranked by severity)**
-• 🔴 [Critical risk] — [exact reason + how to address this week]
-• 🟡 [Moderate risk] — [specific mitigation]
-• 🟢 [Minor risk] — [watch for this]
+**RISK FACTORS**
+• 🔴 [Critical] — [fix]
+• 🟡 [Moderate] — [mitigation]
+• 🟢 [Minor] — [watch]
 
 **THE REAL PROBLEM**
-[2-3 sentences of brutally honest diagnosis — what is actually blocking this deal]
+[2-3 honest sentences]
 
 **NEXT 3 ACTIONS**
-1. [Specific action with EXACT language to use] — Due: [specific timeframe]
-2. [Specific action] — Due: [timeframe]
-3. [Specific action] — Due: [timeframe]
+1. [exact action] — Due: [timeframe]
+2. [action] — Due: [timeframe]
+3. [action] — Due: [timeframe]
 
-**WIN PROBABILITY: X%**
-[One sentence reasoning]`,
+**WIN PROBABILITY: X%**`,
 
-  meetingSummarizer: `You are a Revenue Operations specialist. Turn chaotic meeting notes into CRM-ready intelligence a VP of Sales can read in 90 seconds.
+  meetingSummarizer: `You are a Revenue Operations specialist. Format EXACTLY:
 
-Use EXACTLY this format:
-
-━━ MEETING INTEL ━━
+MEETING INTEL
 Prospect: [Name, Title, Company]
-Meeting length: [X minutes]
 
-━━ SITUATION ━━
-[2-3 sentences: where they are now, what is driving urgency]
+SITUATION: [2-3 sentences]
 
-━━ PAIN POINTS ━━
-• [Specific pain with business impact and numbers if mentioned]
-• [Specific pain]
+PAIN POINTS:
+• [pain with impact]
 
-━━ BUYING SIGNALS ━━
-• [Positive signal — quote exact words if possible]
+BUYING SIGNALS:
+• [signal]
 
-━━ OBJECTIONS ━━
-• [Objection] → [How addressed] → [Prospect reaction]
+ACTION ITEMS:
+• [action] — Owner: [name] — Due: [date]
 
-━━ STAKEHOLDER MAP ━━
-Champion: [Name + title] | Decision Maker: [Name] | Economic Buyer: [Name]
-
-━━ ACTION ITEMS ━━
-• [ ] [Specific action] — Owner: [Name] — Due: [Date]
-
-━━ DEAL ASSESSMENT ━━
+DEAL ASSESSMENT
 Sentiment: [Positive/Neutral/Negative]
 Close Probability: [X%]
-Estimated Close: [Month/Quarter]
-Recommended Stage: [Move to: Stage Name]`,
+Estimated Close: [Quarter]`,
 
-  cold_caller: `You are a cold call coach who has trained SDR teams at Gong, Outreach, and Salesforce. The first 8 seconds determine everything.
+  cold_caller: `Write a complete cold call script: OPENER (8 sec), BRIDGE (10 sec), VALUE PROP (15 sec), DISCOVERY QUESTION, OBJECTION SCRIPTS for 5 objections, CLOSE with two time options. Under 250 words.`,
 
-Write a COMPLETE production-ready cold call script:
-
-**OPENER** (8 seconds max):
-[Name], this is [Rep] — I will be direct: [one-line specific hook referencing something real about their company]. Worth 90 seconds?
-
-**IF YES — BRIDGE** (10 seconds):
-[Connect their specific situation to the outcome. Reference something real.]
-
-**VALUE PROP** (15 seconds):
-We help [their role] at companies like [relevant similar company] [specific outcome with number] in [timeframe]. For example, [real proof point].
-
-**DISCOVERY QUESTION:**
-[One powerful open question that reveals if they have the pain. Makes them think.]
-
-**OBJECTION SCRIPTS:**
-"Not interested" → [Under 15 words. Create curiosity, never defend.]
-"Send me an email" → [Get a time commitment before agreeing.]
-"We already have [competitor]" → [Acknowledge, do not bash, pivot to gap.]
-"No budget" → [Reframe to ROI in under 20 words.]
-"Call me next quarter" → [Create mild urgency without pressure.]
-
-**CLOSE:**
-I have [Day] at [Time] or [Day] at [Time] — which works better for a 15-minute deep dive?
-
-Total under 250 words.`,
-
-  linkedin_writer: `You are a LinkedIn outreach specialist. 45%+ connection acceptance rates.
-
-CRITICAL: Output ONLY the final messages. Never show reasoning, thinking, counting, or drafts. Jump straight to the result.
-
-OUTPUT FORMAT — use exactly this:
+  linkedin_writer: `You are a LinkedIn outreach specialist. Output ONLY the final messages.
 
 **CONNECTION REQUEST** (X characters)
-[The message — peer-to-peer tone, references their specific post or activity, under 280 characters]
+[Under 280 chars, peer-to-peer, references their specific post]
 
 **FOLLOW-UP MESSAGE** (X words)
-[The message — 100-150 words, references why connected, one insight, one ask, no generic openers]
+[100-150 words, one insight, one ask]`,
 
-RULES:
-- Connection request MUST be under 280 characters
-- Follow-up MUST be 100-150 words
-- Never say: "came across your profile" / "impressed by your work" / "I'd love to"
-- Sound like a peer, not a vendor`,
+  proposal_writer: `Write a proposal with: WHAT WE DISCUSSED (their words), COST OF TODAY (calculate annual cost of inaction), WHAT WE PROPOSE, WHAT CHANGES (before/after metrics), INVESTMENT (price + ROI + payback), IMPLEMENTATION timeline, NEXT STEP.`,
 
-  proposal_writer: `You are a Senior Enterprise AE who has closed $10M+ in career revenue. Your proposals win because they are 100% about the client, never about you.
+  competitor_intel: `Create a battle card: CORE WEAKNESS, HOW TO SURFACE IT (question + listen for + response), HEAD-TO-HEAD (4 rows), DISPLACEMENT STRATEGY, 3 TRAP QUESTIONS, ONE-LINE CLOSER.`,
 
-Write a complete proposal using EXACTLY this structure:
+  revenue_forecaster: `Create a board-ready forecast: PIPELINE SNAPSHOT, FORECAST (conservative/base/upside), TOP 3 TO CLOSE, AT-RISK DEALS, LEADING INDICATORS, 3 ACTIONS TO HIT QUOTA, THE CALL (one sentence number).`,
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-SALES PROPOSAL — [COMPANY NAME]
-Prepared for: [Name, Title] | [Date]
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  sequenceBuilder: `Write a COMPLETE 5-touch email sequence. Each touch: Day number, Subject line, Full email body (80-120 words).
+TOUCH 1 (Day 1): Personalized cold email
+TOUCH 2 (Day 3): Different angle, shorter
+TOUCH 3 (Day 7): Value add - insight or resource
+TOUCH 4 (Day 10): LinkedIn connection request text
+TOUCH 5 (Day 14): Breakup email
+Write ALL 5 complete touches.`,
 
-**WHAT WE DISCUSSED**
-[Their exact pain points in THEIR language — use their words — 3 sentences]
-
-**COST OF TODAY'S SITUATION**
-Time cost: [X people × Y hours/week × $Z/hr = $total/year]
-Opportunity cost: [What they are missing by not solving this]
-Risk: [What gets worse if nothing changes]
-**Total annual cost of doing nothing: $[X]**
-
-**WHAT WE PROPOSE**
-[2-3 sentences — how you address each pain specifically. No feature list.]
-
-**WHAT CHANGES**
-• [Metric] from [current state] → [projected state] in [timeframe]
-• [Metric] from [current] → [projected]
-• [Key qualitative outcome]
-
-**INVESTMENT**
-Plan: [Name] at [Price]
-Year 1 ROI: [Math showing return]
-Payback period: [X weeks/months]
-
-**IMPLEMENTATION TIMELINE**
-Week 1: [Milestone] | Week 2: [Milestone] | Weeks 3-4: [First results]
-
-**YOUR NEXT STEP**
-[One specific, low-friction action they take right now]
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
-
-  competitor_intel: `You are a Competitive Intelligence Strategist. 300+ enterprise reps use your battle cards to win competitive deals. You never bash competitors — you make prospects discover their own pain through questions.
-
-Write a complete battle card using EXACTLY this format:
-
-**COMPETITOR: [Name]**
-
-━━ CORE WEAKNESS ━━
-[The ONE thing prospects most complain about — be specific, use data if possible]
-
-━━ SURFACE IT WITHOUT BADMOUTHING ━━
-Ask: "[Exact question that makes them discover the weakness themselves]"
-Listen for: "[What a dissatisfied customer sounds like]"
-Your response: "[Positions your strength without attacking them]"
-
-━━ HEAD-TO-HEAD COMPARISON ━━
-| Their Claim | Reality | Your Proof Point |
-[4-5 rows of specific, defensible comparisons]
-
-━━ IF THEY ARE ALREADY USING [COMPETITOR] ━━
-[2-3 sentences: acknowledge their investment → create curiosity → offer parallel pilot]
-
-━━ DISPLACEMENT STRATEGY ━━
-[Specific approach to run a parallel pilot without rip-and-replace]
-
-━━ TRAP QUESTIONS (reveal their weaknesses) ━━
-1. "[Question that reveals data quality issues]"
-2. "[Question that reveals manual work still happening]"
-3. "[Question that reveals lack of AI/automation]"
-
-━━ ONE-LINE CLOSER ━━
-[Memorable. Reframes the comparison in their favor in one sentence.]`,
-
-  revenue_forecaster: `You are a CRO who has called quarters within 3% accuracy for 8 consecutive years. Your forecasts are board-ready.
-
-Write a complete forecast using EXACTLY this format:
-
-━━ PIPELINE SNAPSHOT ━━
-Total Pipeline: $[X] | Weighted Value: $[X] | Commit: $[X] | Best Case: $[X]
-
-━━ Q[X] FORECAST ━━
-Conservative: $[X] | Base Case: $[X] | Upside: $[X]
-Quota: $[X] | Current Gap: $[X] | % Attainment at base: [X%]
-
-━━ TOP 3 MOST LIKELY TO CLOSE ━━
-1. [Company] | $[X] | [Why they will close] | [X]% confidence | Close by: [Date]
-2. [Company] | $[X] | [Why] | [X]% | [Date]
-3. [Company] | $[X] | [Why] | [X]% | [Date]
-
-━━ AT-RISK DEALS (need action NOW) ━━
-1. [Company] | $[X] | Risk: [Specific reason] | Action: [Specific + deadline]
-2. [Company] | $[X] | Risk: [Specific] | Action: [Specific]
-
-━━ LEADING INDICATORS TO WATCH ━━
-• [Specific thing that determines hit or miss]
-• [Specific indicator]
-
-━━ 3 ACTIONS TO HIT QUOTA ━━
-1. [Specific, time-bound action with expected impact]
-2. [Specific action]
-3. [Specific action]
-
-━━ THE CALL ━━
-Calling $[X] for Q[X] with [X]% confidence. Swing factor: [specific deal or action that changes everything].`,
-
-  subjectLine: `You are a subject line expert who has A/B tested 50,000+ cold email subject lines.
-
-Write EXACTLY 3 subject line options. Numbered list only. Nothing before or after the list.
-
-Option 1: Reference their company name + specific situation
-Option 2: Reference the pain point or result (no company name)
-Option 3: Pattern interrupt — unexpected angle that makes them curious
-
-Rules: Under 7 words each. No exclamation marks. No emojis. No ALL CAPS. Lowercase preferred.`,
-
-  sequenceBuilder: `You are an expert sales sequence strategist. Build complete multi-touch sequences that convert.
-
-Write a COMPLETE 5-touch email sequence. For each touch include: Day number, Subject line, and Full email body.
-
-FORMAT for each touch:
-TOUCH [N] — Day [X]
-Subject: [subject line]
----
-[Full email body — 80-120 words]
----
-
-TOUCH 1 (Day 1): Personalized cold email — specific hook about their situation
-TOUCH 2 (Day 3): Different angle — shorter, reference different pain point
-TOUCH 3 (Day 7): Value add — share an insight, stat, or resource. Not another pitch.
-TOUCH 4 (Day 10): LinkedIn connection request text — peer-to-peer, reference the emails
-TOUCH 5 (Day 14): Breakup email — honest, short, leaves door open
-
-Write ALL 5 complete touches. No placeholders. Real content based on the ICP provided.`,
+  subjectLine: `Write EXACTLY 3 subject lines. Numbered list only. Under 7 words each. No punctuation. No emojis. Lowercase preferred.`,
 };
 
 const MODELS = [
@@ -290,6 +157,9 @@ const MODELS = [
   "liquid/lfm-2.5-2.6b:free",
 ];
 
+// ════════════════════════════════════════════════════════
+// MAIN HANDLER
+// ════════════════════════════════════════════════════════
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -301,10 +171,21 @@ export async function POST(req: NextRequest) {
 
     const apiKey = process.env.OPENROUTER_API_KEY ?? "";
     if (!apiKey) {
-      return NextResponse.json({ error: "OPENROUTER_API_KEY missing" }, { status: 500 });
+      return NextResponse.json({ error: "API key not configured" }, { status: 500 });
     }
 
-    // Plan limit check
+    // ── GLOBAL RATE LIMIT (protect against bill explosion) ──
+    if (!checkGlobalLimit()) {
+      return NextResponse.json({
+        error: "Platform is experiencing high traffic. Please try again in a moment.",
+        retryAfter: 60,
+      }, { status: 429 });
+    }
+
+    // ── USER PLAN + LIMITS ──
+    let userPlan = "free";
+    let planLimits = PLAN_LIMITS.free;
+
     if (userId) {
       try {
         const { data: planData } = await supabaseAdmin
@@ -312,9 +193,26 @@ export async function POST(req: NextRequest) {
           .select("plan")
           .eq("user_id", userId)
           .single();
-        const plan: string = planData?.plan ?? "free";
-        const limit: number = PLAN_LIMITS[plan] ?? 5;
-        if (limit !== -1) {
+
+        userPlan = planData?.plan ?? "free";
+        planLimits = PLAN_LIMITS[userPlan] ?? PLAN_LIMITS.free;
+      } catch {
+        // Default to free limits
+      }
+
+      // ── PER-USER RATE LIMIT (per minute) ──
+      if (!checkUserRateLimit(userId, planLimits.perMinute)) {
+        return NextResponse.json({
+          error: `Rate limit: max ${planLimits.perMinute} requests/minute on ${userPlan} plan. Upgrade for higher limits.`,
+          rateLimited: true,
+          plan: userPlan,
+          perMinuteLimit: planLimits.perMinute,
+        }, { status: 429 });
+      }
+
+      // ── DAILY LIMIT CHECK ──
+      if (planLimits.daily !== 999999) {
+        try {
           const startOfDay = new Date();
           startOfDay.setHours(0, 0, 0, 0);
           const { count } = await supabaseAdmin
@@ -322,22 +220,26 @@ export async function POST(req: NextRequest) {
             .select("*", { count: "exact", head: true })
             .eq("user_id", userId)
             .gte("created_at", startOfDay.toISOString());
-          if ((count ?? 0) >= limit) {
+
+          const used = count ?? 0;
+          if (used >= planLimits.daily) {
             return NextResponse.json({
-              error: `Daily AI limit reached (${count}/${limit}). Upgrade at /dashboard/pricing`,
+              error: `Daily limit reached (${used}/${planLimits.daily} runs). Resets at midnight.`,
               upgrade: true,
-              currentPlan: plan,
-              used: count,
-              limit,
+              currentPlan: userPlan,
+              used,
+              limit: planLimits.daily,
+              usagePercent: Math.round((used / planLimits.daily) * 100),
             }, { status: 429 });
           }
+        } catch {
+          // Continue even if count fails
         }
-      } catch {
-        // continue even if plan check fails
       }
     }
 
-    const systemPrompt: string = customSystem || SYSTEM_PROMPTS[type as string] || SYSTEM_PROMPTS.emailWriter;
+    // ── AI CALL ──
+    const systemPrompt = customSystem || SYSTEM_PROMPTS[type as string] || SYSTEM_PROMPTS.emailWriter;
     let result = "";
     let usedModel = "";
     let lastError = "";
@@ -358,28 +260,18 @@ export async function POST(req: NextRequest) {
               { role: "system", content: systemPrompt },
               { role: "user", content: prompt },
             ],
-            max_tokens: 2000,
+            max_tokens: planLimits.maxTokens,
             temperature: 0.7,
           }),
         });
 
-        if (!res.ok) {
-          lastError = `${model}: HTTP ${res.status}`;
-          continue;
-        }
-
+        if (!res.ok) { lastError = `${model}: ${res.status}`; continue; }
         const data = await res.json();
         const text: string = data.choices?.[0]?.message?.content?.trim() ?? "";
-
-        if (!text || text.length < 20) {
-          lastError = `${model}: empty response`;
-          continue;
-        }
-
+        if (!text || text.length < 20) { lastError = `${model}: empty`; continue; }
         result = text;
         usedModel = model;
         break;
-
       } catch (err: unknown) {
         lastError = `${model}: ${err instanceof Error ? err.message : "unknown"}`;
         continue;
@@ -387,13 +279,10 @@ export async function POST(req: NextRequest) {
     }
 
     if (!result) {
-      return NextResponse.json(
-        { error: `AI unavailable. ${lastError}` },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: `AI unavailable. ${lastError}` }, { status: 500 });
     }
 
-    // Log to Supabase
+    // ── LOG TO SUPABASE ──
     if (userId) {
       try {
         await supabaseAdmin.from("agent_runs").insert({
@@ -402,15 +291,57 @@ export async function POST(req: NextRequest) {
           prompt: prompt.slice(0, 500),
           output: result.slice(0, 2000),
         });
-      } catch {
-        // non-critical
-      }
+      } catch { /* non-critical */ }
     }
 
-    return NextResponse.json({ result, model: usedModel });
+    return NextResponse.json({ result, model: usedModel, plan: userPlan });
 
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Unknown error";
     return NextResponse.json({ error: message }, { status: 500 });
+  }
+}
+
+// ════════════════════════════════════════════════════════
+// USAGE ENDPOINT — GET /api/ai?userId=xxx
+// Returns real-time usage for dashboard display
+// ════════════════════════════════════════════════════════
+export async function GET(req: NextRequest) {
+  try {
+    const userId = req.nextUrl.searchParams.get("userId");
+    if (!userId) return NextResponse.json({ error: "userId required" }, { status: 400 });
+
+    const { data: planData } = await supabaseAdmin
+      .from("user_plans").select("plan").eq("user_id", userId).single();
+
+    const userPlan = planData?.plan ?? "free";
+    const planLimits = PLAN_LIMITS[userPlan] ?? PLAN_LIMITS.free;
+
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const { count } = await supabaseAdmin
+      .from("agent_runs")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .gte("created_at", startOfDay.toISOString());
+
+    const used = count ?? 0;
+    const limit = planLimits.daily;
+    const remaining = limit === 999999 ? 999999 : Math.max(0, limit - used);
+    const usagePercent = limit === 999999 ? 0 : Math.round((used / limit) * 100);
+
+    return NextResponse.json({
+      plan: userPlan,
+      used,
+      limit: limit === 999999 ? "Unlimited" : limit,
+      remaining: remaining === 999999 ? "Unlimited" : remaining,
+      usagePercent,
+      perMinuteLimit: planLimits.perMinute,
+      resetsAt: new Date(new Date().setHours(24, 0, 0, 0)).toISOString(),
+    });
+
+  } catch (err: unknown) {
+    return NextResponse.json({ error: "Failed to fetch usage" }, { status: 500 });
   }
 }
