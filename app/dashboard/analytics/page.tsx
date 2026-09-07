@@ -224,9 +224,8 @@ export default function AnalyticsPage() {
   const [activeChart, setActiveChart] = useState<'prospects' | 'emails' | 'pipeline' | 'agents'>('prospects');
   const [period, setPeriod] = useState<7 | 14 | 30>(30);
 
-  useEffect(() => {
+  const fetchStats = () => {
     if (!user?.uid) return;
-    setLoading(true);
     const end = new Date().toISOString().split('T')[0];
     const start = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0];
     fetch(`/api/stats?userId=${user.uid}&start=${start}&end=${end}`)
@@ -234,6 +233,15 @@ export default function AnalyticsPage() {
       .then(d => { if (!d.error) setStats(d); })
       .catch(() => {})
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    if (!user?.uid) return;
+    setLoading(true);
+    fetchStats();
+    // Auto-refresh every 30 seconds
+    const interval = setInterval(fetchStats, 30000);
+    return () => clearInterval(interval);
   }, [user?.uid]);
 
   if (authLoading) return <LoadingScreen />;
@@ -291,7 +299,10 @@ export default function AnalyticsPage() {
             <h1 style={{ fontFamily: 'Syne,sans-serif', fontSize: 28, fontWeight: 900, color: S.text, letterSpacing: '-0.03em', marginBottom: 4 }}>
               Analytics
             </h1>
-            <p style={{ fontSize: 13, color: S.muted }}>Real-time performance data — live from your pipeline</p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
+              <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#34d399', boxShadow: '0 0 8px rgba(52,211,153,0.8)', animation: 'pulse 2s infinite' }} />
+              <p style={{ fontSize: 13, color: S.muted }}>Live — auto-refreshes every 30 seconds</p>
+            </div>
           </div>
           {/* Period selector */}
           <div style={{ display: 'flex', gap: 6, background: S.panel, border: `1px solid ${S.lineSoft}`, borderRadius: 10, padding: 4 }}>
@@ -441,6 +452,7 @@ export default function AnalyticsPage() {
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
         ::-webkit-scrollbar{width:4px}
         ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.07);border-radius:2px}
+        @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(52,211,153,0.4)}50%{box-shadow:0 0 0 6px rgba(52,211,153,0)}}
       `}</style>
     </div>
   );
