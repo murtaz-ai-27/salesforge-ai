@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import { useAuth } from "@/components/useAuth";
 import LoadingScreen from "@/components/LoadingScreen";
@@ -131,6 +131,35 @@ export default function AgentsPage() {
   const [aiLoading, setAiLoading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [toast, setToast] = useState({msg:"",color:S.accent});
+  const [usage, setUsage] = useState<{plan:string;used:number;limit:number|string;remaining:number|string;usagePercent:number;resetsAt:string}|null>(null);
+  const [usage, setUsage] = useState<{plan:string;used:number;limit:number|string;remaining:number|string;usagePercent:number;perMinuteLimit:number;resetsAt:string}|null>(null);
+
+  // Fetch real-time usage
+  useEffect(() => {
+    if (!user?.uid) return;
+    const fetchUsage = () => {
+      fetch(`/api/ai?userId=${user.uid}`)
+        .then(r => r.json())
+        .then(d => { if (!d.error) setUsage(d); })
+        .catch(() => {});
+    };
+    fetchUsage();
+    const interval = setInterval(fetchUsage, 30000);
+    return () => clearInterval(interval);
+  }, [user?.uid]);
+
+  useEffect(() => {
+    if (!user?.uid) return;
+    const fetch_ = () => {
+      fetch(`/api/ai?userId=${user.uid}`)
+        .then(r => r.json())
+        .then(d => { if (!d.error) setUsage(d); })
+        .catch(() => {});
+    };
+    fetch_();
+    const iv = setInterval(fetch_, 30000);
+    return () => clearInterval(iv);
+  }, [user?.uid]);
 
   const showToast = (msg:string, color=S.accent) => {
     setToast({msg,color});
@@ -214,6 +243,44 @@ export default function AgentsPage() {
             ))}
           </div>
         </div>
+
+        {/* ── Usage Widget ── */}
+        {usage && (
+          <div style={{marginBottom:20,background:S.panel,border:`1px solid ${S.lineSoft}`,borderRadius:14,padding:"14px 20px",display:"flex",alignItems:"center",gap:24}}>
+            <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
+              <div style={{width:7,height:7,borderRadius:"50%",background:"#34d399",boxShadow:"0 0 8px rgba(52,211,153,0.8)"}}/>
+              <span style={{fontSize:11,fontWeight:700,color:S.muted,textTransform:"uppercase",letterSpacing:".07em"}}>AI Usage Today</span>
+              <span style={{padding:"2px 8px",borderRadius:999,background:"rgba(200,255,0,0.08)",border:"1px solid rgba(200,255,0,0.2)",fontSize:9,fontWeight:800,color:S.accent}}>{usage.plan.toUpperCase()}</span>
+            </div>
+            <div style={{flex:1}}>
+              <div style={{display:"flex",justifyContent:"space-between",marginBottom:5}}>
+                <span style={{fontSize:12,color:S.text,fontWeight:700}}>{usage.used} / {usage.limit} runs used today</span>
+                <span style={{fontSize:12,fontWeight:800,color:
+                  usage.usagePercent>=90?"#ef4444":usage.usagePercent>=70?"#f59e0b":"#34d399"
+                }}>{usage.limit==="Unlimited"?"∞ Unlimited":`${usage.usagePercent}% used`}</span>
+              </div>
+              <div style={{height:8,background:"rgba(255,255,255,0.05)",borderRadius:999,overflow:"hidden"}}>
+                <div style={{
+                  height:"100%",borderRadius:999,
+                  width:usage.limit==="Unlimited"?"10%":`${Math.min(100,usage.usagePercent)}%`,
+                  background:usage.usagePercent>=90?"linear-gradient(90deg,#ef4444,#dc2626)":usage.usagePercent>=70?"linear-gradient(90deg,#f59e0b,#d97706)":"linear-gradient(90deg,#C8FF00,#86efac)",
+                  transition:"width 0.6s ease",
+                  boxShadow:usage.usagePercent<90?"0 0 10px rgba(200,255,0,0.4)":"0 0 10px rgba(239,68,68,0.4)",
+                }}/>
+              </div>
+            </div>
+            <div style={{flexShrink:0,fontSize:10,color:S.faint,textAlign:"right"}}>
+              <div>{usage.remaining==="Unlimited"?"Unlimited remaining":`${usage.remaining} runs left`}</div>
+              <div>Resets at midnight</div>
+            </div>
+            {usage.usagePercent>=80&&usage.plan==="free"&&(
+              <button onClick={()=>window.location.href="/dashboard/pricing"}
+                style={{flexShrink:0,padding:"8px 14px",borderRadius:10,border:"none",background:S.accent,color:"#050505",fontSize:11,fontWeight:800,cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap"}}>
+                ⚡ Upgrade →
+              </button>
+            )}
+          </div>
+        )}
 
         {/* ── Main Layout ── */}
         <div style={{display:"grid",gridTemplateColumns:selected?"1fr 440px":"1fr",gap:20,alignItems:"start",transition:"all 0.3s"}}>
