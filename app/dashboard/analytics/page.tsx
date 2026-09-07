@@ -217,18 +217,79 @@ function genTrend(base: number, days: number, volatility: number = 0.15): number
   return data;
 }
 
+
+// ── CALENDAR COMPONENT ──
+function Calendar({ value, onSelect, label }: { value: string; onSelect: (d: string) => void; label: string }) {
+  const [month, setMonth] = useState(new Date(value));
+  const year = month.getFullYear();
+  const mon = month.getMonth();
+  const firstDay = new Date(year, mon, 1).getDay();
+  const daysInMonth = new Date(year, mon + 1, 0).getDate();
+  const today = new Date().toISOString().split('T')[0];
+
+  return (
+    <div style={{ background: '#0d1018', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: 16, minWidth: 240 }}>
+      <div style={{ fontSize: 10, fontWeight: 700, color: '#C8FF00', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 12 }}>{label}</div>
+      {/* Month nav */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+        <button onClick={() => setMonth(new Date(year, mon - 1, 1))}
+          style={{ background: 'none', border: 'none', color: '#9598a3', cursor: 'pointer', fontSize: 18, padding: '0 4px' }}>‹</button>
+        <span style={{ fontSize: 13, fontWeight: 700, color: '#f4f5f7' }}>
+          {month.toLocaleDateString('en', { month: 'long', year: 'numeric' })}
+        </span>
+        <button onClick={() => setMonth(new Date(year, mon + 1, 1))}
+          style={{ background: 'none', border: 'none', color: '#9598a3', cursor: 'pointer', fontSize: 18, padding: '0 4px' }}>›</button>
+      </div>
+      {/* Day headers */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2, marginBottom: 6 }}>
+        {['Su','Mo','Tu','We','Th','Fr','Sa'].map(d => (
+          <div key={d} style={{ textAlign: 'center', fontSize: 9, color: '#3d4455', fontWeight: 700 }}>{d}</div>
+        ))}
+      </div>
+      {/* Days grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2 }}>
+        {Array.from({ length: firstDay }).map((_, i) => <div key={'e'+i} />)}
+        {Array.from({ length: daysInMonth }, (_, i) => {
+          const day = i + 1;
+          const dateStr = `${year}-${String(mon+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+          const isSelected = dateStr === value;
+          const isToday = dateStr === today;
+          const isFuture = dateStr > today;
+          return (
+            <button key={day} onClick={() => !isFuture && onSelect(dateStr)}
+              style={{
+                padding: '5px 2px', borderRadius: 6, border: 'none', cursor: isFuture ? 'not-allowed' : 'pointer',
+                background: isSelected ? '#C8FF00' : isToday ? 'rgba(200,255,0,0.1)' : 'transparent',
+                color: isSelected ? '#050505' : isFuture ? '#2a2f3d' : isToday ? '#C8FF00' : '#9598a3',
+                fontSize: 11, fontWeight: isSelected ? 800 : 400, fontFamily: 'inherit',
+                transition: 'all 0.15s',
+              }}>
+              {day}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function AnalyticsPage() {
   const { user, loading: authLoading, handleLogout } = useAuth();
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeChart, setActiveChart] = useState<'prospects' | 'emails' | 'pipeline' | 'agents'>('prospects');
   const [period, setPeriod] = useState<7 | 14 | 30>(30);
+  const [showCal, setShowCal] = useState(false);
+  const [dateRange, setDateRange] = useState({
+    start: new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0],
+    end: new Date().toISOString().split('T')[0],
+  });
+  const [selecting, setSelecting] = useState<'start' | 'end' | null>(null);
+  const [calMonth, setCalMonth] = useState(new Date());
 
   const fetchStats = () => {
     if (!user?.uid) return;
-    const end = new Date().toISOString().split('T')[0];
-    const start = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0];
-    fetch(`/api/stats?userId=${user.uid}&start=${start}&end=${end}`)
+    fetch(`/api/stats?userId=${user.uid}&start=${dateRange.start}&end=${dateRange.end}`)
       .then(r => r.json())
       .then(d => { if (!d.error) setStats(d); })
       .catch(() => {})
@@ -242,7 +303,7 @@ export default function AnalyticsPage() {
     // Auto-refresh every 30 seconds
     const interval = setInterval(fetchStats, 30000);
     return () => clearInterval(interval);
-  }, [user?.uid]);
+  }, [user?.uid, dateRange]);
 
   if (authLoading) return <LoadingScreen />;
 
@@ -304,20 +365,68 @@ export default function AnalyticsPage() {
               <p style={{ fontSize: 13, color: S.muted }}>Live — auto-refreshes every 30 seconds</p>
             </div>
           </div>
-          {/* Period selector */}
-          <div style={{ display: 'flex', gap: 6, background: S.panel, border: `1px solid ${S.lineSoft}`, borderRadius: 10, padding: 4 }}>
-            {([7, 14, 30] as const).map(p => (
-              <button key={p} onClick={() => setPeriod(p)}
+          {/* Date Range Picker */}
+          <div style={{ position: 'relative' }}>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              {/* Quick periods */}
+              <div style={{ display: 'flex', gap: 4, background: S.panel, border: `1px solid ${S.lineSoft}`, borderRadius: 10, padding: 3 }}>
+                {([7, 14, 30] as const).map(p => (
+                  <button key={p} onClick={() => {
+                    setPeriod(p);
+                    setDateRange({
+                      start: new Date(Date.now() - p * 86400000).toISOString().split('T')[0],
+                      end: new Date().toISOString().split('T')[0],
+                    });
+                    setShowCal(false);
+                  }}
+                    style={{
+                      padding: '5px 14px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                      background: period === p && !showCal ? S.accent : 'transparent',
+                      color: period === p && !showCal ? '#050505' : S.muted,
+                      fontSize: 11, fontWeight: 700, fontFamily: 'inherit', transition: 'all 0.2s',
+                    }}>
+                    {p}D
+                  </button>
+                ))}
+              </div>
+              {/* Custom date button */}
+              <button onClick={() => setShowCal(!showCal)}
                 style={{
-                  padding: '6px 16px', borderRadius: 8, border: 'none', cursor: 'pointer',
-                  background: period === p ? S.accent : 'transparent',
-                  color: period === p ? '#050505' : S.muted,
-                  fontSize: 12, fontWeight: 700, fontFamily: 'inherit',
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  padding: '7px 14px', borderRadius: 10,
+                  border: `1px solid ${showCal ? S.accent + '66' : S.lineSoft}`,
+                  background: showCal ? 'rgba(200,255,0,0.08)' : S.panel,
+                  color: showCal ? S.accent : S.muted,
+                  fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
                   transition: 'all 0.2s',
                 }}>
-                {p}D
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+                {dateRange.start} → {dateRange.end}
               </button>
-            ))}
+            </div>
+
+            {/* Calendar dropdown */}
+            {showCal && (
+              <div style={{
+                position: 'absolute', right: 0, top: '110%', zIndex: 100,
+                display: 'flex', gap: 12, padding: 16,
+                background: '#0a0d14', border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: 16, boxShadow: '0 24px 60px rgba(0,0,0,0.6)',
+              }}>
+                <Calendar value={dateRange.start} label="Start Date" onSelect={d => {
+                  setDateRange(prev => ({ ...prev, start: d }));
+                  setPeriod(30);
+                }} />
+                <div style={{ width: 1, background: 'rgba(255,255,255,0.06)' }} />
+                <Calendar value={dateRange.end} label="End Date" onSelect={d => {
+                  setDateRange(prev => ({ ...prev, end: d }));
+                  setPeriod(30);
+                  setShowCal(false);
+                }} />
+              </div>
+            )}
           </div>
         </div>
 
