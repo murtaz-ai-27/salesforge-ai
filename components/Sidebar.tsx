@@ -8,8 +8,10 @@ const NAV = [
   { id:"dashboard",   label:"Dashboard",   href:"/dashboard",             icon:"M3 13l2-2 7-7 7 7M5 11v9a1 1 0 001 1h3V15h4v5h3a1 1 0 001-1v-9", badge:null },
   { id:"prospects",   label:"Prospects",   href:"/dashboard/prospects",   icon:"M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z", badge:null },
   { id:"sequences",   label:"Sequences",   href:"/dashboard/sequences",   icon:"M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z", badge:null },
-  { id:"agents",      label:"AI Agents",   href:"/dashboard/agents",      icon:"M13 10V3L4 14h7v7l9-11h-7z", badge:"11" },
+  { id:"templates",   label:"Templates",   href:"/dashboard/templates",   icon:"M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z", badge:"12" },
+  { id:"agents",      label:"AI Agents",   href:"/dashboard/agents",      icon:"M13 10V3L4 14h7v7l9-11h-7z", badge:"10" },
   { id:"automations", label:"Automations", href:"/dashboard/automations", icon:"M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15", badge:"15" },
+  { id:"inbox",       label:"Inbox",       href:"/dashboard/inbox",       icon:"M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4", badge:null },
   { id:"analytics",   label:"Analytics",   href:"/dashboard/analytics",   icon:"M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z", badge:null },
 ];
 
@@ -23,6 +25,8 @@ export default function Sidebar({ active, user, onLogout }: { active:string; use
   const [open, setOpen] = useState(false);
   // Real avatar from Supabase profile
   const [avatarUrl, setAvatarUrl] = useState<string|null>(user?.photoURL ?? null);
+  const [usage, setUsage] = useState<{plan:string;used:number;limit:number|string;remaining:number|string;usagePercent:number}|null>(null);
+  const [countdown, setCountdown] = useState("");
 
   // Load profile avatar from Supabase
   useEffect(() => {
@@ -48,6 +52,37 @@ export default function Sidebar({ active, user, onLogout }: { active:string; use
     window.addEventListener("avatar-updated", handler);
     return () => window.removeEventListener("avatar-updated", handler);
   }, [user?.uid]);
+
+  // Real-time usage fetch
+  useEffect(() => {
+    if (!user?.uid) return;
+    const fetchUsage = () => {
+      fetch(`/api/ai?userId=${user.uid}`)
+        .then(r => r.json())
+        .then(d => { if (!d.error) setUsage(d); })
+        .catch(() => {});
+    };
+    fetchUsage();
+    const iv = setInterval(fetchUsage, 30000);
+    return () => clearInterval(iv);
+  }, [user?.uid]);
+
+  // Midnight countdown
+  useEffect(() => {
+    const tick = () => {
+      const now = new Date();
+      const midnight = new Date();
+      midnight.setHours(24, 0, 0, 0);
+      const diff = midnight.getTime() - now.getTime();
+      const h = Math.floor(diff / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const sec = Math.floor((diff % 60000) / 1000);
+      setCountdown(`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`);
+    };
+    tick();
+    const iv = setInterval(tick, 1000);
+    return () => clearInterval(iv);
+  }, []);
 
   useEffect(() => { setOpen(false); }, [active]);
   useEffect(() => {
@@ -130,6 +165,77 @@ export default function Sidebar({ active, user, onLogout }: { active:string; use
           </div>
         </div>
 
+        {/* Usage Bar */}
+        {usage && (
+          <div style={{ padding:"10px",borderTop:"1px solid rgba(255,255,255,0.05)",flexShrink:0 }}>
+            <div style={{ padding:"10px 12px",background:"rgba(255,255,255,0.02)",borderRadius:10,border:"1px solid rgba(255,255,255,0.04)" }}>
+              {/* Header */}
+              <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6 }}>
+                <div style={{ display:"flex",alignItems:"center",gap:5 }}>
+                  <div style={{ width:5,height:5,borderRadius:"50%",background:"#34d399",boxShadow:"0 0 6px rgba(52,211,153,0.8)" }}/>
+                  <span style={{ fontSize:9,fontWeight:700,color:"#555a66",textTransform:"uppercase",letterSpacing:".08em" }}>AI Usage</span>
+                </div>
+                <span style={{ fontSize:9,fontWeight:700,color:
+                  usage.plan==="pro"||usage.plan==="enterprise" ? "#C8FF00" :
+                  usage.usagePercent>=90 ? "#ef4444" :
+                  usage.usagePercent>=70 ? "#f59e0b" : "#9598a3"
+                }}>
+                  {usage.plan.toUpperCase()}
+                </span>
+              </div>
+
+              {/* Numbers */}
+              <div style={{ display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:5 }}>
+                <span style={{ fontSize:11,fontWeight:700,color:"#f4f5f7" }}>
+                  {usage.used}
+                  <span style={{ color:"#3d4455",fontSize:10 }}> / {usage.limit}</span>
+                </span>
+                <span style={{ fontSize:10,fontWeight:800,color:
+                  usage.limit==="Unlimited" ? "#C8FF00" :
+                  usage.usagePercent>=90 ? "#ef4444" :
+                  usage.usagePercent>=70 ? "#f59e0b" : "#34d399"
+                }}>
+                  {usage.limit==="Unlimited" ? "∞" : usage.usagePercent+"%"}
+                </span>
+              </div>
+
+              {/* Bar */}
+              <div style={{ height:5,background:"rgba(255,255,255,0.04)",borderRadius:999,overflow:"hidden",marginBottom:5,position:"relative" }}>
+                <div style={{
+                  height:"100%",borderRadius:999,
+                  width: usage.limit==="Unlimited" ? "8%" : `${Math.min(100,usage.usagePercent)}%`,
+                  background:
+                    usage.usagePercent>=90 ? "linear-gradient(90deg,#ef4444,#dc2626)" :
+                    usage.usagePercent>=70 ? "linear-gradient(90deg,#f59e0b,#d97706)" :
+                    "linear-gradient(90deg,#C8FF00,#86efac)",
+                  boxShadow:
+                    usage.usagePercent>=90 ? "0 0 8px rgba(239,68,68,0.6)" :
+                    "0 0 8px rgba(200,255,0,0.4)",
+                  transition:"width 0.6s ease",
+                }}/>
+              </div>
+
+              {/* Countdown */}
+              <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center" }}>
+                <span style={{ fontSize:9,color:"#3d4455" }}>
+                  {usage.remaining==="Unlimited" ? "Unlimited" : `${usage.remaining} left`}
+                </span>
+                <span style={{ fontSize:9,color:"#3d4455",fontFamily:"monospace" }}>
+                  🔄 {countdown}
+                </span>
+              </div>
+
+              {/* Upgrade nudge */}
+              {usage.usagePercent>=80&&usage.plan==="free"&&(
+                <button onClick={()=>navigate("/dashboard/pricing")}
+                  style={{ width:"100%",marginTop:7,padding:"5px",borderRadius:7,border:"none",background:"linear-gradient(135deg,#C8FF00,#86efac)",color:"#050505",fontSize:9,fontWeight:800,cursor:"pointer",fontFamily:"inherit" }}>
+                  ⚡ Upgrade Plan
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* User section - NOW WITH REAL AVATAR */}
         <div style={{ padding:"12px 10px",borderTop:"1px solid rgba(255,255,255,0.06)",flexShrink:0 }}>
           <div style={{ display:"flex",alignItems:"center",gap:10,padding:"10px 12px",borderRadius:10,background:"rgba(255,255,255,0.03)",cursor:"pointer",transition:"background 0.2s" }}
@@ -160,7 +266,7 @@ export default function Sidebar({ active, user, onLogout }: { active:string; use
           { id:"dashboard", href:"/dashboard", icon:"M3 13l2-2 7-7 7 7M5 11v9a1 1 0 001 1h3V15h4v5h3a1 1 0 001-1v-9", label:"Home" },
           { id:"prospects", href:"/dashboard/prospects", icon:"M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z", label:"Prospects" },
           { id:"agents",    href:"/dashboard/agents",    icon:"M13 10V3L4 14h7v7l9-11h-7z",  label:"Agents" },
-          { id:"sequences", href:"/dashboard/sequences", icon:"M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z", label:"Sequences" },
+          { id:"inbox",     href:"/dashboard/inbox",     icon:"M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4", label:"Inbox" },
         ].map(item=>{
           const isActive = active===item.id;
           return (
