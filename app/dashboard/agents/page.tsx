@@ -123,6 +123,175 @@ const AGENTS = [
   },
 ];
 
+
+// ── ANIMATED USAGE BAR COMPONENT ──
+function UsageBar({ usage }: { usage: any }) {
+  const [displayPct, setDisplayPct] = useState(0);
+  const [displayUsed, setDisplayUsed] = useState(0);
+  const isUnlimited = usage.limit === "Unlimited";
+  const pct = isUnlimited ? 5 : Math.min(100, usage.usagePercent);
+  const barColor = pct >= 90 ? "#ef4444" : pct >= 70 ? "#f59e0b" : "#C8FF00";
+  const glowColor = pct >= 90 ? "rgba(239,68,68,0.5)" : pct >= 70 ? "rgba(245,158,11,0.5)" : "rgba(200,255,0,0.5)";
+
+  // Animate bar on mount + when usage changes
+  useEffect(() => {
+    setDisplayPct(0);
+    setDisplayUsed(0);
+    const steps = 40;
+    let step = 0;
+    const timer = setInterval(() => {
+      step++;
+      const progress = 1 - Math.pow(1 - step / steps, 3); // ease-out cubic
+      setDisplayPct(Math.round(pct * progress));
+      setDisplayUsed(Math.round(usage.used * progress));
+      if (step >= steps) clearInterval(timer);
+    }, 16);
+    return () => clearInterval(timer);
+  }, [usage.used, usage.usagePercent]);
+
+  // Midnight countdown
+  const [timeLeft, setTimeLeft] = useState("");
+  useEffect(() => {
+    const tick = () => {
+      const now = new Date();
+      const midnight = new Date();
+      midnight.setHours(24, 0, 0, 0);
+      const diff = midnight.getTime() - now.getTime();
+      const h = Math.floor(diff / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const sec = Math.floor((diff % 60000) / 1000);
+      setTimeLeft(`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`);
+    };
+    tick();
+    const iv = setInterval(tick, 1000);
+    return () => clearInterval(iv);
+  }, []);
+
+  return (
+    <div style={{
+      marginBottom:20,background:"#0d1018",
+      border:`1px solid ${pct>=90?"rgba(239,68,68,0.3)":pct>=70?"rgba(245,158,11,0.3)":"rgba(255,255,255,0.06)"}`,
+      borderRadius:16,padding:"16px 22px",
+      boxShadow:pct>=80?`0 0 30px ${glowColor.replace('0.5','0.08')}`:"none",
+      transition:"border-color 0.5s, box-shadow 0.5s",
+    }}>
+      <div style={{display:"flex",alignItems:"center",gap:20}}>
+
+        {/* Left — label + plan */}
+        <div style={{flexShrink:0}}>
+          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
+            <div style={{
+              width:8,height:8,borderRadius:"50%",background:"#34d399",
+              boxShadow:"0 0 8px rgba(52,211,153,0.9)",
+              animation:"usagePulse 2s ease-in-out infinite",
+            }}/>
+            <span style={{fontSize:10,fontWeight:800,color:"#9598a3",textTransform:"uppercase",letterSpacing:".08em"}}>
+              AI Usage
+            </span>
+          </div>
+          <div style={{
+            padding:"3px 10px",borderRadius:999,
+            background:`${barColor}12`,border:`1px solid ${barColor}30`,
+            fontSize:10,fontWeight:800,color:barColor,
+            textAlign:"center",letterSpacing:".05em",
+          }}>
+            {usage.plan.toUpperCase()}
+          </div>
+        </div>
+
+        {/* Center — bar + numbers */}
+        <div style={{flex:1}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:6}}>
+            <span style={{fontSize:13,color:"#f4f5f7",fontWeight:700,fontFamily:"Syne,sans-serif"}}>
+              <span style={{fontSize:20,color:barColor,fontWeight:900}}>{displayUsed}</span>
+              <span style={{color:"#3d4455"}}> / {isUnlimited?"∞":usage.limit}</span>
+              <span style={{fontSize:11,color:"#9598a3",fontWeight:400,marginLeft:6}}>runs today</span>
+            </span>
+            <span style={{fontSize:13,fontWeight:800,color:barColor}}>
+              {isUnlimited?"Unlimited":displayPct+"%"}
+            </span>
+          </div>
+
+          {/* Animated progress bar */}
+          <div style={{height:10,background:"rgba(255,255,255,0.04)",borderRadius:999,overflow:"hidden",position:"relative"}}>
+            {/* Shimmer animation on bar */}
+            <div style={{
+              position:"absolute",inset:0,
+              background:`linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent)`,
+              animation:"barShimmer 2s linear infinite",
+              borderRadius:999,
+            }}/>
+            <div style={{
+              height:"100%",borderRadius:999,
+              width:isUnlimited?"8%":`${displayPct}%`,
+              background:pct>=90
+                ?`linear-gradient(90deg,#ef4444,#dc2626)`
+                :pct>=70
+                ?`linear-gradient(90deg,#f59e0b,#d97706)`
+                :`linear-gradient(90deg,#C8FF00,#86efac)`,
+              boxShadow:`0 0 12px ${glowColor}`,
+              transition:"width 0.05s linear, background 0.5s",
+              position:"relative",
+            }}>
+              {/* Moving glow dot at end of bar */}
+              {!isUnlimited && displayPct > 5 && (
+                <div style={{
+                  position:"absolute",right:-4,top:"50%",transform:"translateY(-50%)",
+                  width:12,height:12,borderRadius:"50%",
+                  background:barColor,
+                  boxShadow:`0 0 10px ${glowColor}, 0 0 20px ${glowColor}`,
+                }}/>
+              )}
+            </div>
+          </div>
+
+          {/* Segment markers for free plan */}
+          {!isUnlimited && (
+            <div style={{display:"flex",justifyContent:"space-between",marginTop:5}}>
+              {Array.from({length:usage.limit+1},(_,i)=>(
+                <div key={i} style={{
+                  width:1,height:4,
+                  background:i<=usage.used?"rgba(200,255,0,0.4)":"rgba(255,255,255,0.06)",
+                  borderRadius:999,transition:"background 0.3s",
+                }}/>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Right — remaining + countdown */}
+        <div style={{flexShrink:0,textAlign:"right"}}>
+          <div style={{fontSize:18,fontWeight:900,color:barColor,fontFamily:"Syne,sans-serif",letterSpacing:"-0.02em"}}>
+            {isUnlimited?"∞":usage.remaining}
+          </div>
+          <div style={{fontSize:10,color:"#3d4455",marginBottom:6}}>
+            {isUnlimited?"unlimited":"runs left"}
+          </div>
+          <div style={{fontSize:10,color:"#555a66",fontFamily:"monospace",letterSpacing:"0.05em"}}>
+            🔄 {timeLeft}
+          </div>
+          <div style={{fontSize:8,color:"#3d4455"}}>until reset</div>
+        </div>
+
+        {/* Upgrade button */}
+        {pct>=80&&usage.plan==="free"&&(
+          <button onClick={()=>window.location.href="/dashboard/pricing"}
+            style={{
+              flexShrink:0,padding:"10px 16px",borderRadius:12,border:"none",
+              background:"linear-gradient(135deg,#C8FF00,#86efac)",
+              color:"#050505",fontSize:11,fontWeight:800,
+              cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap",
+              boxShadow:"0 4px 20px rgba(200,255,0,0.3)",
+              animation:"upgradeGlow 2s ease-in-out infinite",
+            }}>
+            ⚡ Upgrade
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function AgentsPage() {
   const { user, loading: authLoading, handleLogout } = useAuth();
   const [selected, setSelected] = useState<typeof AGENTS[0]|null>(null);
@@ -132,8 +301,7 @@ export default function AgentsPage() {
   const [copied, setCopied] = useState(false);
   const [toast, setToast] = useState({msg:"",color:S.accent});
   const [usage, setUsage] = useState<{plan:string;used:number;limit:number|string;remaining:number|string;usagePercent:number;resetsAt:string}|null>(null);
-  const [usage, setUsage] = useState<{plan:string;used:number;limit:number|string;remaining:number|string;usagePercent:number;perMinuteLimit:number;resetsAt:string}|null>(null);
-
+  
   // Fetch real-time usage
   useEffect(() => {
     if (!user?.uid) return;
@@ -244,43 +412,8 @@ export default function AgentsPage() {
           </div>
         </div>
 
-        {/* ── Usage Widget ── */}
-        {usage && (
-          <div style={{marginBottom:20,background:S.panel,border:`1px solid ${S.lineSoft}`,borderRadius:14,padding:"14px 20px",display:"flex",alignItems:"center",gap:24}}>
-            <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
-              <div style={{width:7,height:7,borderRadius:"50%",background:"#34d399",boxShadow:"0 0 8px rgba(52,211,153,0.8)"}}/>
-              <span style={{fontSize:11,fontWeight:700,color:S.muted,textTransform:"uppercase",letterSpacing:".07em"}}>AI Usage Today</span>
-              <span style={{padding:"2px 8px",borderRadius:999,background:"rgba(200,255,0,0.08)",border:"1px solid rgba(200,255,0,0.2)",fontSize:9,fontWeight:800,color:S.accent}}>{usage.plan.toUpperCase()}</span>
-            </div>
-            <div style={{flex:1}}>
-              <div style={{display:"flex",justifyContent:"space-between",marginBottom:5}}>
-                <span style={{fontSize:12,color:S.text,fontWeight:700}}>{usage.used} / {usage.limit} runs used today</span>
-                <span style={{fontSize:12,fontWeight:800,color:
-                  usage.usagePercent>=90?"#ef4444":usage.usagePercent>=70?"#f59e0b":"#34d399"
-                }}>{usage.limit==="Unlimited"?"∞ Unlimited":`${usage.usagePercent}% used`}</span>
-              </div>
-              <div style={{height:8,background:"rgba(255,255,255,0.05)",borderRadius:999,overflow:"hidden"}}>
-                <div style={{
-                  height:"100%",borderRadius:999,
-                  width:usage.limit==="Unlimited"?"10%":`${Math.min(100,usage.usagePercent)}%`,
-                  background:usage.usagePercent>=90?"linear-gradient(90deg,#ef4444,#dc2626)":usage.usagePercent>=70?"linear-gradient(90deg,#f59e0b,#d97706)":"linear-gradient(90deg,#C8FF00,#86efac)",
-                  transition:"width 0.6s ease",
-                  boxShadow:usage.usagePercent<90?"0 0 10px rgba(200,255,0,0.4)":"0 0 10px rgba(239,68,68,0.4)",
-                }}/>
-              </div>
-            </div>
-            <div style={{flexShrink:0,fontSize:10,color:S.faint,textAlign:"right"}}>
-              <div>{usage.remaining==="Unlimited"?"Unlimited remaining":`${usage.remaining} runs left`}</div>
-              <div>Resets at midnight</div>
-            </div>
-            {usage.usagePercent>=80&&usage.plan==="free"&&(
-              <button onClick={()=>window.location.href="/dashboard/pricing"}
-                style={{flexShrink:0,padding:"8px 14px",borderRadius:10,border:"none",background:S.accent,color:"#050505",fontSize:11,fontWeight:800,cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap"}}>
-                ⚡ Upgrade →
-              </button>
-            )}
-          </div>
-        )}
+        {/* ── Animated Usage Widget ── */}
+        {usage && <UsageBar usage={usage} />}
 
         {/* ── Main Layout ── */}
         <div style={{display:"grid",gridTemplateColumns:selected?"1fr 440px":"1fr",gap:20,alignItems:"start",transition:"all 0.3s"}}>
@@ -498,6 +631,9 @@ export default function AgentsPage() {
         ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.07);border-radius:2px}
         ::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,0.12)}
         @keyframes spin{to{transform:rotate(360deg)}}
+        @keyframes usagePulse{0%,100%{box-shadow:0 0 4px rgba(52,211,153,0.4)}50%{box-shadow:0 0 12px rgba(52,211,153,0.9)}}
+        @keyframes barShimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+        @keyframes upgradeGlow{0%,100%{box-shadow:0 4px 20px rgba(200,255,0,0.3)}50%{box-shadow:0 4px 30px rgba(200,255,0,0.6)}}
         @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
         @keyframes slideIn{from{opacity:0;transform:translateX(12px)}to{opacity:1;transform:translateX(0)}}
       `}</style>
