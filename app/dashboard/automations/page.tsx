@@ -628,30 +628,121 @@ export default function AutomationsPage() {
     showToast(auto?.status==="active"?"Automation paused":"Automation activated!", auto?.color);
   };
 
+  const getAutoPrompt = (auto: typeof AUTOMATIONS[0], input: string): {type: string; prompt: string} => {
+    const sampleProspect = input || "Prospect: Sarah Chen, CRO at Linear (B2B SaaS, 200 employees). Recently posted on LinkedIn about hiring 15 new SDRs. Company raised Series B $35M. Using HubSpot + Apollo. Pain: low reply rates (4-6%), manual prospecting taking 3hrs/day per rep.";
+    const id = auto.id;
+    if (id==="1") return { type:"prospectAnalyzer", prompt:`You are a sales intelligence AI. A new prospect has been added. Research and enrich this prospect:
+
+${sampleProspect}
+
+Provide: ICP Score (0-100), Buying Intent (high/medium/low), Best Channel, 3 Personalization Hooks, Recommended Timing, Reasoning, Red Flags, Estimated Deal Value. Format as a clear report.` };
+    if (id==="2") return { type:"prospectAnalyzer", prompt:`Hot lead alert triggered! This prospect just showed strong buying signals:
+
+${sampleProspect}
+
+Generate an urgent alert with: Why this is hot, Recommended immediate action (exact script), Best time to reach out, Suggested opening line, Priority score, Risk of waiting.` };
+    if (id==="3") return { type:"emailWriter", prompt:`Auto follow-up needed. Original email got no reply after 3 days.
+
+Prospect: ${sampleProspect}
+
+Write a follow-up email that: Takes a completely different angle, References something new (company news/LinkedIn), Is shorter than the original, Has a different CTA. Max 80 words.` };
+    if (id==="4") return { type:"meetingSummarizer", prompt:`Meeting prep briefing needed in 30 minutes.
+
+Prospect: ${sampleProspect}
+
+Generate a briefing with: Key talking points, Likely objections + responses, Opening question, Their pain points to address, Proof points to mention, One-line rapport opener.` };
+    if (id==="5") return { type:"dealAnalyzer", prompt:`Deal risk monitor triggered. This deal needs analysis:
+
+${sampleProspect}
+
+Deal: $18,000/year, Proposal sent 22 days ago, No response from CFO, Champion says "looks good". Analyze risk level, what's really happening, and exact next 3 actions with deadlines.` };
+    if (id==="6") return { type:"prospectAnalyzer", prompt:`LinkedIn intent signal detected. Prospect activity:
+
+${sampleProspect}
+
+They just liked 3 posts about "Apollo alternatives" and commented "we're evaluating options". Generate: Urgency score, Recommended outreach timing, Personalized LinkedIn message to send NOW, Follow-up sequence suggestion.` };
+    if (id==="7") return { type:"objectionHandler", prompt:`Reply sentiment analysis needed. Prospect replied:
+
+"Thanks for reaching out. We're currently happy with Apollo and don't see a need to switch right now. Maybe reach out next quarter."
+
+Analyze sentiment, classify objection type, and provide 3 response frameworks to re-engage this prospect.` };
+    if (id==="8") return { type:"prospectAnalyzer", prompt:`CRM auto-update needed after meeting.
+
+Prospect: ${sampleProspect}
+
+Meeting notes: 45-min call, very positive, budget confirmed under $500/mo, wants implementation before Q4, champion is VP Revenue, needs IT security review. Generate structured CRM update with all fields populated.` };
+    if (id==="9") return { type:"competitor_intel", prompt:`Competitor mention detected in email reply:
+
+"We're actually deep in evaluation with Apollo right now and they're offering us a good deal."
+
+Prospect: ${sampleProspect}
+
+Generate instant battle card: Apollo weakness to surface, trap question to ask, pivot strategy, one-line closer.` };
+    if (id==="10") return { type:"dealAnalyzer", prompt:`Win/Loss analysis triggered. Deal outcome: LOST to Apollo.
+
+Prospect: ${sampleProspect}, Deal: $22,000/year. Lost reason: "Apollo is cheaper and our team knows it."
+
+Analyze: Real loss reason vs stated reason, What we could have done differently, Pattern this reveals, Playbook update for similar deals.` };
+    if (id==="11") return { type:"emailWriter", prompt:`Email deliverability issue detected. Recent emails showing 28% bounce rate.
+
+Affected domain: prospect-company.com. Generate: Deliverability diagnostic checklist, Subject line alternatives that avoid spam filters, Send time optimization recommendation, List hygiene action items.` };
+    if (id==="12") return { type:"prospectAnalyzer", prompt:`ICP drift detected. New prospects being added don't match original ICP.
+
+Original ICP: VP Sales/CRO at B2B SaaS, 50-500 employees, US/UK, using Apollo or Outreach.
+New prospects being added: Marketing managers at e-commerce companies.
+
+Generate: Drift analysis, ICP realignment recommendations, Prospect quality score for the new batch, Warning for the sales team.` };
+    if (id==="13") return { type:"sequenceBuilder", prompt:`Multi-channel sequence needed.
+
+Prospect: ${sampleProspect}
+
+Build a 5-touch sequence across email + LinkedIn + call:
+Touch 1 (Day 1): Cold email
+Touch 2 (Day 3): LinkedIn connection
+Touch 3 (Day 5): Email follow-up
+Touch 4 (Day 8): Call script
+Touch 5 (Day 12): Breakup email
+
+Each touch personalized to their specific situation.` };
+    if (id==="14") return { type:"emailWriter", prompt:`Referral request automation triggered. Deal just closed successfully with: ${sampleProspect}
+
+Generate a referral request email that: Thanks them genuinely, Mentions the specific result achieved, Asks for 1-2 specific referrals by role/company type, Makes it easy to refer (provides template), Offers something in return.` };
+    if (id==="15") return { type:"proposal_writer", prompt:`AI proposal auto-generation triggered.
+
+Discovery call notes: ${sampleProspect}
+
+Additional context: Budget confirmed under $500/mo, wants 30-day implementation, current tool spend $1,400/mo on Apollo for 12 reps, reply rates 4-6%, goal is 20%+ reply rates before Q4.
+
+Generate complete winning proposal.` };
+    // Default
+    return { type:"emailWriter", prompt:`${auto.what_it_does}
+
+Context: ${sampleProspect}
+
+Execute this automation and show the output.` };
+  };
+
   const runTest = async () => {
     if (!selected) return;
     setRunning(true); setAiOutput(""); setCopied(false);
     try {
+      const { type, prompt } = getAutoPrompt(selected, testInput);
       const res = await fetch("/api/ai", {
         method:"POST",
         headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({
-          type: "emailWriter",
-          prompt: testInput || selected.prompt?.replace("{prospect_data}","Sample prospect: VP Sales at B2B SaaS company, 50 employees, recently raised Series A") || selected.what_it_does,
-          userId: user?.uid
-        }),
+        body: JSON.stringify({ type, prompt, userId: user?.uid }),
       });
       const data = await res.json();
       if (data.error) {
-        setAiOutput(data.error);
+        setAiOutput(data.upgrade ? `⚠️ ${data.error}` : `❌ ${data.error}`);
         showToast("Error — try again", "#ef4444");
       } else {
-        setAiOutput(data.result || selected.example_output);
-        showToast("✓ Automation ran successfully!", selected.color);
+        setAiOutput(data.result);
+        showToast("✓ Automation executed!", selected.color);
       }
     } catch {
-      setAiOutput(selected.example_output || "Automation completed successfully.");
-      showToast("✓ Automation ran!", selected.color);
+      setAiOutput("Connection error. Try again.");
+      showToast("Connection error", "#ef4444");
     }
     setRunning(false);
   };
