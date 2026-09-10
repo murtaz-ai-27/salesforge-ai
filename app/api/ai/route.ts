@@ -213,23 +213,41 @@ export async function POST(req: NextRequest) {
       // ── DAILY LIMIT CHECK ──
       if (planLimits.daily !== 999999) {
         try {
-          const startOfDay = new Date();
-          startOfDay.setHours(0, 0, 0, 0);
-          const { count } = await supabaseAdmin
+          // 24-hour ROLLING window (like ChatGPT/Claude)
+          const rollingStart = new Date(Date.now() - 24 * 60 * 60 * 1000);
+          const { count, data: lastRun } = await supabaseAdmin
             .from("agent_runs")
             .select("*", { count: "exact", head: true })
             .eq("user_id", userId)
-            .gte("created_at", startOfDay.toISOString());
+            .gte("created_at", rollingStart.toISOString());
 
           const used = count ?? 0;
           if (used >= planLimits.daily) {
+            // Find when first run in window was — that's when limit resets
+            const { data: firstRun } = await supabaseAdmin
+              .from("agent_runs")
+              .select("created_at")
+              .eq("user_id", userId)
+              .gte("created_at", rollingStart.toISOString())
+              .order("created_at", { ascending: true })
+              .limit(1);
+
+            const resetAt = firstRun?.[0]?.created_at
+              ? new Date(new Date(firstRun[0].created_at).getTime() + 24 * 60 * 60 * 1000)
+              : new Date(Date.now() + 60 * 60 * 1000);
+
+            const hoursLeft = Math.ceil((resetAt.getTime() - Date.now()) / 3600000);
+            const minsLeft = Math.ceil((resetAt.getTime() - Date.now()) / 60000);
+
             return NextResponse.json({
-              error: `Daily limit reached (${used}/${planLimits.daily} runs). Resets at midnight.`,
+              error: `Daily limit reached (${used}/${planLimits.daily} runs). Resets in ${hoursLeft > 1 ? hoursLeft + ' hours' : minsLeft + ' minutes'}.`,
               upgrade: true,
               currentPlan: userPlan,
               used,
               limit: planLimits.daily,
               usagePercent: Math.round((used / planLimits.daily) * 100),
+              resetsAt: resetAt.toISOString(),
+              resetsIn: hoursLeft > 1 ? `${hoursLeft} hours` : `${minsLeft} minutes`,
             }, { status: 429 });
           }
         } catch {
@@ -317,19 +335,37 @@ export async function GET(req: NextRequest) {
     const userPlan = planData?.plan ?? "free";
     const planLimits = PLAN_LIMITS[userPlan] ?? PLAN_LIMITS.free;
 
-    const startOfDay = new Date();
-    startOfDay.setHours(0, 0, 0, 0);
-
+    // 24-hour rolling window
+    const rollingStart = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const { count } = await supabaseAdmin
       .from("agent_runs")
       .select("*", { count: "exact", head: true })
       .eq("user_id", userId)
-      .gte("created_at", startOfDay.toISOString());
+      .gte("created_at", rollingStart.toISOString());
 
     const used = count ?? 0;
     const limit = planLimits.daily;
     const remaining = limit === 999999 ? 999999 : Math.max(0, limit - used);
     const usagePercent = limit === 999999 ? 0 : Math.round((used / limit) * 100);
+
+    // Find when limit resets (when oldest run in window expires)
+    let resetsAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+    if (used > 0 && used >= limit && limit !== 999999) {
+      const { data: firstRun } = await supabaseAdmin
+        .from("agent_runs")
+        .select("created_at")
+        .eq("user_id", userId)
+        .gte("created_at", rollingStart.toISOString())
+        .order("created_at", { ascending: true })
+        .limit(1);
+      if (firstRun?.[0]?.created_at) {
+        resetsAt = new Date(new Date(firstRun[0].created_at).getTime() + 24 * 60 * 60 * 1000).toISOString();
+      }
+    }
+
+    const msLeft = new Date(resetsAt).getTime() - Date.now();
+    const hoursLeft = Math.floor(msLeft / 3600000);
+    const minsLeft = Math.floor((msLeft % 3600000) / 60000);
 
     return NextResponse.json({
       plan: userPlan,
@@ -338,7 +374,8 @@ export async function GET(req: NextRequest) {
       remaining: remaining === 999999 ? "Unlimited" : remaining,
       usagePercent,
       perMinuteLimit: planLimits.perMinute,
-      resetsAt: new Date(new Date().setHours(24, 0, 0, 0)).toISOString(),
+      resetsAt,
+      resetsIn: hoursLeft > 0 ? `${hoursLeft}h ${minsLeft}m` : `${minsLeft}m`,
     });
 
   } catch (err: unknown) {

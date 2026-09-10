@@ -67,13 +67,12 @@ export default function Sidebar({ active, user, onLogout }: { active:string; use
     return () => clearInterval(iv);
   }, [user?.uid]);
 
-  // Midnight countdown
+  // Rolling 24hr countdown - based on actual reset time from API
   useEffect(() => {
+    if (!usage?.resetsAt) return;
     const tick = () => {
-      const now = new Date();
-      const midnight = new Date();
-      midnight.setHours(24, 0, 0, 0);
-      const diff = midnight.getTime() - now.getTime();
+      const diff = new Date(usage.resetsAt).getTime() - Date.now();
+      if (diff <= 0) { setCountdown("Resetting..."); return; }
       const h = Math.floor(diff / 3600000);
       const m = Math.floor((diff % 3600000) / 60000);
       const sec = Math.floor((diff % 60000) / 1000);
@@ -82,7 +81,7 @@ export default function Sidebar({ active, user, onLogout }: { active:string; use
     tick();
     const iv = setInterval(tick, 1000);
     return () => clearInterval(iv);
-  }, []);
+  }, [usage?.resetsAt]);
 
   useEffect(() => { setOpen(false); }, [active]);
   useEffect(() => {
