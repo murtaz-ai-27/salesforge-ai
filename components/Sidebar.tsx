@@ -25,7 +25,7 @@ export default function Sidebar({ active, user, onLogout }: { active:string; use
   const [open, setOpen] = useState(false);
   // Real avatar from Supabase profile
   const [avatarUrl, setAvatarUrl] = useState<string|null>(user?.photoURL ?? null);
-  const [usage, setUsage] = useState<{plan:string;used:number;limit:number|string;remaining:number|string;usagePercent:number}|null>(null);
+  const [usage, setUsage] = useState<{plan:string;used:number;limit:number|string;remaining:number|string;usagePercent:number;resetsAt?:string;resetsIn?:string}|null>(null);
   const [countdown, setCountdown] = useState("");
 
   // Load profile avatar from Supabase
