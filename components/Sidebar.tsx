@@ -71,7 +71,7 @@ export default function Sidebar({ active, user, onLogout }: { active:string; use
   useEffect(() => {
     if (!usage?.resetsAt) return;
     const tick = () => {
-      const diff = new Date(usage.resetsAt).getTime() - Date.now();
+      const diff = new Date(usage.resetsAt!).getTime() - Date.now();
       if (diff <= 0) { setCountdown("Resetting..."); return; }
       const h = Math.floor(diff / 3600000);
       const m = Math.floor((diff % 3600000) / 60000);
