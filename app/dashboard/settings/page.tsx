@@ -76,7 +76,7 @@ export default function ProspectsPage() {
         buying_intent: "medium" as const, // Default — AI will enrich later
         status:"new",
         avatar_init: form.name.split(" ").map((n:string)=>n[0]).join("").slice(0,2).toUpperCase(),
-        avatar_bg: av.bg, avatar_color: av.color,
+        avatar_bg: "#1a2035", avatar_color: "#C8FF00",
       });
       setForm({ name:"",email:"",role:"",company:"",industry:"",company_size:"",notes:"" });
       setShowAdd(false);
