@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
       .replace(/\{\{firstName\}\}/g, firstName)
       .replace(/\{\{company\}\}/g, prospect.company ?? "")
       .replace(/\{\{role\}\}/g, prospect.role ?? "")
-      .replace(/\{\{sender\}\}/g, "The SalesForge Team");
+      .replace(/\{\{sender\}\}/g, "The Salevrix Team");
 
     // Use AI to personalize if step has aiWritten flag
     if (currentStep.aiWritten || !emailBody.trim()) {
@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
     const htmlBody = `<!DOCTYPE html><html><body style="font-family:Georgia,serif;max-width:600px;margin:0 auto;padding:20px;color:#1a1a1a;line-height:1.7;font-size:15px;">
 ${emailBody.split('\n').map((l: string) => l.trim() ? `<p style="margin:0 0 12px">${l}</p>` : '<br>').join('')}
 <hr style="border:none;border-top:1px solid #e5e5e5;margin:28px 0 16px">
-<p style="color:#888;font-size:12px">Sent via <a href="https://salesforge.ai" style="color:#888">SalesForge AI</a> · <a href="#unsubscribe" style="color:#888">Unsubscribe</a></p>
+<p style="color:#888;font-size:12px">Sent via <a href="https://salevrix.com" style="color:#888">Salevrix</a> · <a href="#unsubscribe" style="color:#888">Unsubscribe</a></p>
 </body></html>`;
 
     // Send email
@@ -83,7 +83,7 @@ ${emailBody.split('\n').map((l: string) => l.trim() ? `<p style="margin:0 0 12px
       method: "POST",
       headers: { "Authorization": `Bearer ${resendKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        from: process.env.RESEND_FROM_EMAIL ?? "SalesForge AI <onboarding@resend.dev>",
+        from: process.env.RESEND_FROM_EMAIL ?? "Salevrix <onboarding@resend.dev>",
         to: [prospect.email],
         subject: subject || `Following up — ${prospect.company}`,
         html: htmlBody,
