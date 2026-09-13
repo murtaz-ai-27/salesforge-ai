@@ -1,48 +1,54 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
+import { auth } from "@/lib/firebase";
+import { onAuthStateChanged, signOut, User } from "firebase/auth";
 import { useRouter } from "next/navigation";
 
-export type User = {
-  displayName: string | null;
-  email: string | null;
-  photoURL: string | null;
-  uid: string;
-};
-
-export function useAuth(redirectOnLogout = true) {
-  const router = useRouter();
+export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
-    let unsub: (() => void) | undefined;
-    import("@/lib/firebase")
-      .then(({ onAuthChange }) => {
-        unsub = onAuthChange((u) => {
-          if (u) {
-            setUser({
-              displayName: u.displayName,
-              email: u.email,
-              photoURL: u.photoURL,
-              uid: u.uid,
-            });
-          } else {
-            setUser(null);
-            if (redirectOnLogout) router.push("/auth/login");
-          }
+    // Auth state listener with error handling
+    let unsubscribe: () => void;
+    
+    try {
+      unsubscribe = onAuthStateChanged(
+        auth,
+        (u) => {
+          setUser(u);
           setLoading(false);
-        });
-      })
-      .catch(() => setLoading(false));
-    return () => unsub?.();
-  }, [router, redirectOnLogout]);
+          // Redirect to login if not authenticated
+          if (!u && typeof window !== "undefined") {
+            const path = window.location.pathname;
+            if (path.startsWith("/dashboard")) {
+              router.push("/login");
+            }
+          }
+        },
+        (error) => {
+          console.error("[Auth Error]", error.message);
+          setLoading(false);
+        }
+      );
+    } catch (error) {
+      console.error("[Auth Init Error]", error);
+      setLoading(false);
+    }
+
+    return () => { if (unsubscribe) unsubscribe(); };
+  }, [router]);
 
   const handleLogout = async () => {
     try {
-      const { logOut } = await import("@/lib/firebase");
-      await logOut();
-    } catch {}
-    router.push("/");
+      await signOut(auth);
+      router.push("/login");
+    } catch (error) {
+      console.error("[Logout Error]", error);
+      // Force redirect even if signOut fails
+      router.push("/login");
+    }
   };
 
   return { user, loading, handleLogout };
