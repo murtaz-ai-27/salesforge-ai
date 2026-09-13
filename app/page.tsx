@@ -381,7 +381,43 @@ footer{border-top:1px solid var(--line-soft);padding:60px 0 40px;margin-top:24px
 .hcard p{color:var(--muted);font-size:14px;line-height:1.65}
 .hide-scrollbar::-webkit-scrollbar{display:none}
 .hide-scrollbar{scrollbar-width:none;-ms-overflow-style:none}
-</style>
+
+    /* ── MARQUEE / INFINITE SCROLL ── */
+    .marquee-wrap { overflow: hidden; margin: 0 -20px; padding: 0; position: relative; }
+    .marquee-wrap::before, .marquee-wrap::after {
+      content: ""; position: absolute; top: 0; bottom: 0; width: 120px; z-index: 2; pointer-events: none;
+    }
+    .marquee-wrap::before { left: 0; background: linear-gradient(to right, #050505, transparent); }
+    .marquee-wrap::after  { right: 0; background: linear-gradient(to left,  #050505, transparent); }
+    .marquee { display: flex; margin-bottom: 16px; }
+    .marquee-inner {
+      display: flex; gap: 16px; animation: scrollLeft 40s linear infinite;
+      width: max-content;
+    }
+    .marquee-right .marquee-inner { animation: scrollRight 45s linear infinite; }
+    .marquee-wrap:hover .marquee-inner { animation-play-state: paused; }
+    @keyframes scrollLeft  { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+    @keyframes scrollRight { 0% { transform: translateX(-50%); } 100% { transform: translateX(0); } }
+    .quote-card {
+      background: #0d1018; border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px; padding: 24px; min-width: 320px; max-width: 340px;
+      flex-shrink: 0; transition: border-color 0.3s, transform 0.3s;
+    }
+    .quote-card:hover { border-color: rgba(200,255,0,0.25); transform: translateY(-3px); }
+    .quote-card .stars { color: #C8FF00; font-size: 14px; margin-bottom: 12px; letter-spacing: 2px; }
+    .quote-card p { font-size: 13px; line-height: 1.65; color: #9598a3; margin: 0 0 16px; }
+    .quote-card .who { display: flex; align-items: center; gap: 10px; }
+    .quote-card .av {
+      width: 36px; height: 36px; border-radius: 50%; display: flex;
+      align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 800; color: #050505; flex-shrink: 0;
+    }
+    .quote-card .who span { display: flex; flex-direction: column; }
+    .quote-card .who b { font-size: 12px; color: #f4f5f7; font-weight: 700; }
+    .quote-card .who span span { font-size: 11px; color: #555a66; }
+    .quotes { display: none; } /* hide old 3 quotes */
+
+    </style>
 </head>
 
 <body>
@@ -441,7 +477,10 @@ footer{border-top:1px solid var(--line-soft);padding:60px 0 40px;margin-top:24px
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
         Start Free Trial
       </a>
-      
+      <a href="#demo" class="btn btn-ghost" style="font-size:16px;padding:14px 28px">
+        Watch Demo
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polygon points="10,8 16,12 10,16" fill="currentColor"/></svg>
+      </a>
     </div>
 
     <div class="hero-note reveal">
@@ -1083,44 +1122,143 @@ footer{border-top:1px solid var(--line-soft);padding:60px 0 40px;margin-top:24px
       <h2>Sales teams love Salevrix</h2>
       <p>Join 12,000+ sales professionals who've replaced their entire stack.</p>
     </div>
-    <div class="quotes">
-      <div class="quote reveal">
-        <div class="stars"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div>
-        <p>"We went from 4 meetings a week to 47. The AI SDR agent is unreal — it handles the entire top of funnel while my reps focus on closing. Salevrix paid for itself in week one."</p>
-        <div class="who">
-          <div class="av" style="background:linear-gradient(140deg,#C8FF00,#86efac)">JM</div>
-          <span>
-            <b>James Morrison</b>
-            <span>VP Sales, Stripe</span>
-            <div class="company">$2.4M revenue added in 90 days</div>
-          </span>
-        </div>
-      </div>
-      <div class="quote reveal">
-        <div class="stars"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div>
-        <p>"The personalization is insane. Prospects think my reps spent hours researching them. Meanwhile the AI wrote 500 emails in 3 minutes. Our reply rates tripled in the first month."</p>
-        <div class="who">
-          <div class="av" style="background:linear-gradient(140deg,#818cf8,#c084fc)">SC</div>
-          <span>
-            <b>Sarah Chen</b>
-            <span>CRO, Linear</span>
-            <div class="company">3x reply rate, 67% open rate</div>
-          </span>
-        </div>
-      </div>
-      <div class="quote reveal">
-        <div class="stars"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div>
-        <p>"We cancelled Apollo, Outreach, and ZoomInfo on the same day. Salevrix does everything better for 40% less cost. The intent signals alone are worth the subscription."</p>
-        <div class="who">
-          <div class="av" style="background:linear-gradient(140deg,#f59e0b,#ef4444)">RP</div>
-          <span>
-            <b>Raj Patel</b>
-            <span>Head of Sales, Notion</span>
-            <div class="company">Replaced 4 tools, saved $3,200/mo</div>
-          </span>
+
+    <!-- ROW 1 — scrolls left -->
+    <div class="marquee-wrap">
+      <div class="marquee marquee-left">
+        <div class="marquee-inner">
+
+          <div class="quote-card">
+            <div class="stars">★★★★★</div>
+            <p>"We went from 4 meetings a week to 47. The AI SDR handles our entire top of funnel."</p>
+            <div class="who"><div class="av" style="background:linear-gradient(140deg,#C8FF00,#86efac)">JM</div><span><b>James Morrison</b><span>VP Sales, Stripe</span></span></div>
+          </div>
+
+          <div class="quote-card">
+            <div class="stars">★★★★★</div>
+            <p>"Cancelled Apollo, Outreach, and ZoomInfo same day. Salevrix does all 3 better for 40% less."</p>
+            <div class="who"><div class="av" style="background:linear-gradient(140deg,#818cf8,#a78bfa)">SK</div><span><b>Sarah Kim</b><span>CRO, Linear</span></span></div>
+          </div>
+
+          <div class="quote-card">
+            <div class="stars">★★★★★</div>
+            <p>"Reply rates went from 6% to 31% in the first month. ROI was immediate and undeniable."</p>
+            <div class="who"><div class="av" style="background:linear-gradient(140deg,#f97316,#fbbf24)">RT</div><span><b>Ryan Torres</b><span>Head of Sales, Figma</span></span></div>
+          </div>
+
+          <div class="quote-card">
+            <div class="stars">★★★★★</div>
+            <p>"The Deal Analyzer caught 3 dying deals we had no idea about. Saved $180K in one quarter."</p>
+            <div class="who"><div class="av" style="background:linear-gradient(140deg,#34d399,#059669)">AL</div><span><b>Anna Lee</b><span>VP Revenue, Webflow</span></span></div>
+          </div>
+
+          <div class="quote-card">
+            <div class="stars">★★★★★</div>
+            <p>"My reps were drowning in manual work. Salevrix gave them 3 hours a day back — immediately."</p>
+            <div class="who"><div class="av" style="background:linear-gradient(140deg,#60a5fa,#3b82f6)">DW</div><span><b>David Wong</b><span>AE Manager, HubSpot</span></span></div>
+          </div>
+
+          <div class="quote-card">
+            <div class="stars">★★★★★</div>
+            <p>"Best Apollo alternative I've tested. The AI agents are 10x more useful than anything else out there."</p>
+            <div class="who"><div class="av" style="background:linear-gradient(140deg,#ec4899,#a855f7)">MR</div><span><b>Maya Reeves</b><span>Sales Director, Notion</span></span></div>
+          </div>
+
+          <div class="quote-card">
+            <div class="stars">★★★★★</div>
+            <p>"Setup took 5 minutes. Had our first AI-written email out within 10 minutes. This is the future."</p>
+            <div class="who"><div class="av" style="background:linear-gradient(140deg,#C8FF00,#34d399)">CP</div><span><b>Chris Park</b><span>Founder, B2B SaaS</span></span></div>
+          </div>
+
+          <!-- Duplicate for seamless loop -->
+          <div class="quote-card">
+            <div class="stars">★★★★★</div>
+            <p>"We went from 4 meetings a week to 47. The AI SDR handles our entire top of funnel."</p>
+            <div class="who"><div class="av" style="background:linear-gradient(140deg,#C8FF00,#86efac)">JM</div><span><b>James Morrison</b><span>VP Sales, Stripe</span></span></div>
+          </div>
+          <div class="quote-card">
+            <div class="stars">★★★★★</div>
+            <p>"Cancelled Apollo, Outreach, and ZoomInfo same day. Salevrix does all 3 better for 40% less."</p>
+            <div class="who"><div class="av" style="background:linear-gradient(140deg,#818cf8,#a78bfa)">SK</div><span><b>Sarah Kim</b><span>CRO, Linear</span></span></div>
+          </div>
+          <div class="quote-card">
+            <div class="stars">★★★★★</div>
+            <p>"Reply rates went from 6% to 31% in the first month. ROI was immediate and undeniable."</p>
+            <div class="who"><div class="av" style="background:linear-gradient(140deg,#f97316,#fbbf24)">RT</div><span><b>Ryan Torres</b><span>Head of Sales, Figma</span></span></div>
+          </div>
+
         </div>
       </div>
     </div>
+
+    <!-- ROW 2 — scrolls right -->
+    <div class="marquee-wrap">
+      <div class="marquee marquee-right">
+        <div class="marquee-inner">
+
+          <div class="quote-card">
+            <div class="stars">★★★★★</div>
+            <p>"Cold call scripts from Salevrix are better than anything our $10K sales coach wrote. Unbelievable."</p>
+            <div class="who"><div class="av" style="background:linear-gradient(140deg,#a78bfa,#7c3aed)">TJ</div><span><b>Tom Jackson</b><span>SDR Manager, Calendly</span></span></div>
+          </div>
+
+          <div class="quote-card">
+            <div class="stars">★★★★★</div>
+            <p>"Our bounce rate dropped from 28% to 4% after switching. Deliverability is a game changer."</p>
+            <div class="who"><div class="av" style="background:linear-gradient(140deg,#f472b6,#ec4899)">PN</div><span><b>Priya Nair</b><span>RevOps Lead, Intercom</span></span></div>
+          </div>
+
+          <div class="quote-card">
+            <div class="stars">★★★★★</div>
+            <p>"The Revenue Forecaster called our Q3 number within 2%. Our CFO is obsessed with it."</p>
+            <div class="who"><div class="av" style="background:linear-gradient(140deg,#34d399,#0d9488)">BH</div><span><b>Ben Harris</b><span>VP Sales, Rippling</span></span></div>
+          </div>
+
+          <div class="quote-card">
+            <div class="stars">★★★★★</div>
+            <p>"Switched from Apollo in 48 hours. Our reps were delighted — they finally feel supported by AI."</p>
+            <div class="who"><div class="av" style="background:linear-gradient(140deg,#fbbf24,#f59e0b)">LB</div><span><b>Lisa Brown</b><span>CRO, Loom</span></span></div>
+          </div>
+
+          <div class="quote-card">
+            <div class="stars">★★★★★</div>
+            <p>"Meeting Summarizer alone is worth the price. I haven't written meeting notes in 3 months."</p>
+            <div class="who"><div class="av" style="background:linear-gradient(140deg,#60a5fa,#818cf8)">KC</div><span><b>Kevin Chen</b><span>Enterprise AE, Zoom</span></span></div>
+          </div>
+
+          <div class="quote-card">
+            <div class="stars">★★★★★</div>
+            <p>"Objection Handler is scary good. It gave us a response to 'we use Apollo' that closed the deal."</p>
+            <div class="who"><div class="av" style="background:linear-gradient(140deg,#C8FF00,#86efac)">NP</div><span><b>Nina Patel</b><span>Sales Lead, Asana</span></span></div>
+          </div>
+
+          <div class="quote-card">
+            <div class="stars">★★★★★</div>
+            <p>"$79/month for the whole team vs $35,000/year for Apollo. I had to pinch myself. This is real."</p>
+            <div class="who"><div class="av" style="background:linear-gradient(140deg,#f97316,#ef4444)">MK</div><span><b>Marcus Kim</b><span>VP Revenue, Figma</span></span></div>
+          </div>
+
+          <!-- Duplicates for loop -->
+          <div class="quote-card">
+            <div class="stars">★★★★★</div>
+            <p>"Cold call scripts from Salevrix are better than anything our $10K sales coach wrote. Unbelievable."</p>
+            <div class="who"><div class="av" style="background:linear-gradient(140deg,#a78bfa,#7c3aed)">TJ</div><span><b>Tom Jackson</b><span>SDR Manager, Calendly</span></span></div>
+          </div>
+          <div class="quote-card">
+            <div class="stars">★★★★★</div>
+            <p>"Our bounce rate dropped from 28% to 4% after switching. Deliverability is a game changer."</p>
+            <div class="who"><div class="av" style="background:linear-gradient(140deg,#f472b6,#ec4899)">PN</div><span><b>Priya Nair</b><span>RevOps Lead, Intercom</span></span></div>
+          </div>
+          <div class="quote-card">
+            <div class="stars">★★★★★</div>
+            <p>"The Revenue Forecaster called our Q3 number within 2%. Our CFO is obsessed with it."</p>
+            <div class="who"><div class="av" style="background:linear-gradient(140deg,#34d399,#0d9488)">BH</div><span><b>Ben Harris</b><span>VP Sales, Rippling</span></span></div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
   </div>
 </section>
 
@@ -1606,7 +1744,43 @@ document.querySelectorAll('#faqList .qa').forEach(item=>{
   </a>
   <p style="text-align:center;font-size:12px;color:#555a66;margin-top:8px;font-family:Inter,sans-serif;">No credit card · 5 min setup · 10 AI Agents free</p>
 </div>
-<style>@media(max-width:860px){#sfMobileCTA{display:block!important}body{padding-bottom:100px!important}}</style>
+<style>@media(max-width:860px){#sfMobileCTA{display:block!important}body{padding-bottom:100px!important}}
+    /* ── MARQUEE / INFINITE SCROLL ── */
+    .marquee-wrap { overflow: hidden; margin: 0 -20px; padding: 0; position: relative; }
+    .marquee-wrap::before, .marquee-wrap::after {
+      content: ""; position: absolute; top: 0; bottom: 0; width: 120px; z-index: 2; pointer-events: none;
+    }
+    .marquee-wrap::before { left: 0; background: linear-gradient(to right, #050505, transparent); }
+    .marquee-wrap::after  { right: 0; background: linear-gradient(to left,  #050505, transparent); }
+    .marquee { display: flex; margin-bottom: 16px; }
+    .marquee-inner {
+      display: flex; gap: 16px; animation: scrollLeft 40s linear infinite;
+      width: max-content;
+    }
+    .marquee-right .marquee-inner { animation: scrollRight 45s linear infinite; }
+    .marquee-wrap:hover .marquee-inner { animation-play-state: paused; }
+    @keyframes scrollLeft  { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+    @keyframes scrollRight { 0% { transform: translateX(-50%); } 100% { transform: translateX(0); } }
+    .quote-card {
+      background: #0d1018; border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px; padding: 24px; min-width: 320px; max-width: 340px;
+      flex-shrink: 0; transition: border-color 0.3s, transform 0.3s;
+    }
+    .quote-card:hover { border-color: rgba(200,255,0,0.25); transform: translateY(-3px); }
+    .quote-card .stars { color: #C8FF00; font-size: 14px; margin-bottom: 12px; letter-spacing: 2px; }
+    .quote-card p { font-size: 13px; line-height: 1.65; color: #9598a3; margin: 0 0 16px; }
+    .quote-card .who { display: flex; align-items: center; gap: 10px; }
+    .quote-card .av {
+      width: 36px; height: 36px; border-radius: 50%; display: flex;
+      align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 800; color: #050505; flex-shrink: 0;
+    }
+    .quote-card .who span { display: flex; flex-direction: column; }
+    .quote-card .who b { font-size: 12px; color: #f4f5f7; font-weight: 700; }
+    .quote-card .who span span { font-size: 11px; color: #555a66; }
+    .quotes { display: none; } /* hide old 3 quotes */
+
+    </style>
 <script>
 document.addEventListener('DOMContentLoaded',function(){
   document.querySelectorAll('.btn-primary,.btn-violet').forEach(function(btn){
