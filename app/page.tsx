@@ -441,10 +441,7 @@ footer{border-top:1px solid var(--line-soft);padding:60px 0 40px;margin-top:24px
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
         Start Free Trial
       </a>
-      <a href="#demo" class="btn btn-ghost" style="font-size:16px;padding:14px 28px">
-        Watch Demo
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polygon points="10,8 16,12 10,16" fill="currentColor"/></svg>
-      </a>
+      
     </div>
 
     <div class="hero-note reveal">
