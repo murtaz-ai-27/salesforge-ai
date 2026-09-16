@@ -1,5 +1,5 @@
 import { initializeApp, getApps } from "firebase/app";
-import { getAuth, setPersistence, browserLocalStorage } from "firebase/auth";
+import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -10,14 +10,8 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Prevent duplicate initialization
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 const auth = getAuth(app);
-
-// Set LOCAL persistence at init — works on mobile browsers
-if (typeof window !== "undefined") {
-  setPersistence(auth, browserLocalStorage).catch(() => {});
-}
 
 export { auth };
 export default app;
