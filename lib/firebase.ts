@@ -1,5 +1,5 @@
 import { initializeApp, getApps } from "firebase/app";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
+import { getAuth, GoogleAuthProvider, GithubAuthProvider, signInWithPopup, signOut } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -12,15 +12,20 @@ const firebaseConfig = {
 
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 const auth = getAuth(app);
-const googleProvider = new GoogleAuthProvider();
 
-// Google sign in
+const googleProvider = new GoogleAuthProvider();
+const githubProvider = new GithubAuthProvider();
+
 export const signInWithGoogle = async () => {
   const result = await signInWithPopup(auth, googleProvider);
   return result.user;
 };
 
-// Sign out
+export const signInWithGithub = async () => {
+  const result = await signInWithPopup(auth, githubProvider);
+  return result.user;
+};
+
 export const logout = async () => {
   await signOut(auth);
 };

@@ -153,8 +153,10 @@ Write ALL 5 complete touches.`,
 
 const MODELS = [
   "google/gemma-4-31b-it:free",
+  "nvidia/nemotron-3.5-lightning:free",
+  "poolside/laguna-s-2.1:free",
+  "dots-studio/dots-3-note-preview:free",
   "z-ai/glm-5.2:free",
-  "liquid/lfm-2.5-2.6b:free",
 ];
 
 // ════════════════════════════════════════════════════════
@@ -286,8 +288,13 @@ export async function POST(req: NextRequest) {
         if (!res.ok) { lastError = `${model}: ${res.status}`; continue; }
         const data = await res.json();
         const text: string = data.choices?.[0]?.message?.content?.trim() ?? "";
-        if (!text || text.length < 20) { lastError = `${model}: empty`; continue; }
-        result = text;
+        // Filter out thinking/reasoning artifacts from some models
+        const cleaned = text
+          .replace(/<think>[\s\S]*?<\/think>/gi, '')
+          .replace(/^(Let me|I need to|First,|The user wants)[^\n]*\n/gim, '')
+          .trim();
+        if (!cleaned || cleaned.length < 20) { lastError = `${model}: empty`; continue; }
+        result = cleaned;
         usedModel = model;
         break;
       } catch (err: unknown) {
@@ -297,7 +304,10 @@ export async function POST(req: NextRequest) {
     }
 
     if (!result) {
-      return NextResponse.json({ error: `AI unavailable. ${lastError}` }, { status: 500 });
+      return NextResponse.json({ 
+        error: "AI temporarily unavailable. Please try again in a moment.",
+        technical: lastError // hidden from users, visible in logs only
+      }, { status: 500 });
     }
 
     // ── LOG TO SUPABASE ──
