@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { auth } from "@/lib/firebase";
-import { onAuthStateChanged, signOut, User } from "firebase/auth";
+import { onAuthStateChanged, signOut, setPersistence, browserLocalPersistence, User } from "firebase/auth";
 import { useRouter } from "next/navigation";
 
 export function useAuth() {
@@ -13,12 +13,11 @@ export function useAuth() {
     let unsubscribe: () => void;
 
     const init = async () => {
-      // Set localStorage persistence only on client
+      // browserLocalPersistence — survives mobile tab close/refresh
       try {
-        const { setPersistence, browserLocalStorage } = await import("firebase/auth");
-        await setPersistence(auth, browserLocalStorage);
+        await setPersistence(auth, browserLocalPersistence);
       } catch {
-        // Ignore
+        // Ignore if already set
       }
 
       unsubscribe = onAuthStateChanged(
@@ -29,7 +28,7 @@ export function useAuth() {
           if (!u && typeof window !== "undefined") {
             const path = window.location.pathname;
             if (path.startsWith("/dashboard")) {
-              router.push("/login");
+              router.push("/auth/login");
             }
           }
         },
@@ -43,7 +42,7 @@ export function useAuth() {
 
   const handleLogout = async () => {
     try { await signOut(auth); } catch {}
-    router.push("/login");
+    router.push("/auth/login");
   };
 
   return { user, loading, handleLogout };
