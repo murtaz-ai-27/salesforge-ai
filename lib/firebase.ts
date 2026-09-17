@@ -1,5 +1,13 @@
 import { initializeApp, getApps } from "firebase/app";
-import { getAuth, GoogleAuthProvider, GithubAuthProvider, signInWithPopup, signOut } from "firebase/auth";
+import { 
+  getAuth, 
+  GoogleAuthProvider, 
+  GithubAuthProvider, 
+  signInWithPopup, 
+  signOut,
+  onAuthStateChanged,
+  User
+} from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -28,6 +36,11 @@ export const signInWithGithub = async () => {
 
 export const logout = async () => {
   await signOut(auth);
+};
+
+// onAuthChange — used by onboarding and other pages
+export const onAuthChange = (callback: (user: User | null) => void) => {
+  return onAuthStateChanged(auth, callback);
 };
 
 export { auth };
