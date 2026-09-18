@@ -18,7 +18,7 @@ const AVATARS = [
   { bg:"linear-gradient(140deg,#14b8a6,#0d9488)",color:"#fff" },
 ];
 
-// Prospect type imported from useProspects
+
 
 type Toast = { msg:string; type:"success"|"error"|"warning" };
 
@@ -64,7 +64,7 @@ export default function ProspectsPage() {
 
   const handleAdd = async () => {
     if (!form.name||!form.email) { showToast("Name and email required","error"); return; }
-    const av = AVATARS[form.name.charCodeAt(0) % AVATARS.length] ?? AVATARS[0];
+    const av = AVATARS[form.name?.charCodeAt(0) % AVATARS.length] ?? AVATARS[0];
     try {
       await addProspect({
         ...form,
