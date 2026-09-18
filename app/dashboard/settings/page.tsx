@@ -2,7 +2,7 @@
 import { useState, useRef } from "react";
 import Sidebar from "@/components/Sidebar";
 import { useAuth } from "@/components/useAuth";
-import { useProspects } from "@/components/useProspects";
+import { useProspects, Prospect } from "@/components/useProspects";
 import LoadingScreen from "@/components/LoadingScreen";
 
 const S = { bg:"#050505",panel:"#0d1018",lineSoft:"rgba(255,255,255,0.05)",text:"#f4f5f7",muted:"#9598a3",faint:"#555a66",accent:"#C8FF00" };
@@ -18,11 +18,7 @@ const AVATARS = [
   { bg:"linear-gradient(140deg,#14b8a6,#0d9488)",color:"#fff" },
 ];
 
-type Prospect = {
-  id:string; name:string; email:string; role:string; company:string;
-  industry:string; company_size:string; ai_score:number; buying_intent:"high"|"medium"|"low";
-  status:"new"|"contacted"|"replied"|"meeting"|"closed"|"lost"; notes:string; avatar_init:string; avatar_bg:string; avatar_color:string;
-};
+
 
 type Toast = { msg:string; type:"success"|"error"|"warning" };
 
@@ -195,7 +191,9 @@ export default function ProspectsPage() {
 
   const toastColor = toast.type==="error"?"#f87171":toast.type==="warning"?"#f59e0b":S.accent;
 
-  if (authLoading || dataLoading) return <LoadingScreen text="Loading your prospects"/>;
+  if (authLoading) return <LoadingScreen text="Loading..."/>;
+  if (!user) return <LoadingScreen text="Redirecting..."/>;
+  if (dataLoading) return <LoadingScreen text="Loading your prospects"/>;
 
   return (
     <div style={{ background:S.bg,minHeight:"100vh",fontFamily:"Inter,sans-serif" }}>
