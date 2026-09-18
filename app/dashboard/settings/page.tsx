@@ -413,8 +413,8 @@ export default function ProspectsPage() {
 
                 {/* Score */}
                 <div>
-                  <span style={{ fontSize:13,fontWeight:700,padding:"3px 9px",borderRadius:999,color:p.ai_score>=85?S.accent:p.ai_score>=70?"#f59e0b":"#9598a3",background:p.ai_score>=85?"rgba(200,255,0,0.08)":p.ai_score>=70?"rgba(245,158,11,0.08)":"rgba(255,255,255,0.04)" }}>
-                    {p.ai_score}
+                  <span style={{ fontSize:13,fontWeight:700,padding:"3px 9px",borderRadius:999,color:(p.ai_score??0)>=85?S.accent:(p.ai_score??0)>=70?"#f59e0b":"#9598a3",background:(p.ai_score??0)>=85?"rgba(200,255,0,0.08)":(p.ai_score??0)>=70?"rgba(245,158,11,0.08)":"rgba(255,255,255,0.04)" }}>
+                    {p.ai_score??0}
                   </span>
                 </div>
 
