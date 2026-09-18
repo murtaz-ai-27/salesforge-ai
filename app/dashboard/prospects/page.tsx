@@ -2,7 +2,7 @@
 import { useState, useRef } from "react";
 import Sidebar from "@/components/Sidebar";
 import { useAuth } from "@/components/useAuth";
-import { useProspects } from "@/components/useProspects";
+import { useProspects, Prospect } from "@/components/useProspects";
 import LoadingScreen from "@/components/LoadingScreen";
 
 const S = { bg:"#050505",panel:"#0d1018",lineSoft:"rgba(255,255,255,0.05)",text:"#f4f5f7",muted:"#9598a3",faint:"#555a66",accent:"#C8FF00" };
@@ -18,11 +18,7 @@ const AVATARS = [
   { bg:"linear-gradient(140deg,#14b8a6,#0d9488)",color:"#fff" },
 ];
 
-type Prospect = {
-  id:string; name:string; email:string; role:string; company:string;
-  industry:string; company_size:string; ai_score:number; buying_intent:"high"|"medium"|"low";
-  status:"new"|"contacted"|"replied"|"meeting"|"closed"|"lost"; notes:string; avatar_init:string; avatar_bg:string; avatar_color:string;
-};
+// Prospect type imported from useProspects
 
 type Toast = { msg:string; type:"success"|"error"|"warning" };
 
@@ -70,52 +66,14 @@ export default function ProspectsPage() {
     if (!form.name||!form.email) { showToast("Name and email required","error"); return; }
     const av = AVATARS[form.name.charCodeAt(0) % AVATARS.length] ?? AVATARS[0];
     try {
-      // Add prospect first with neutral defaults
-      const newProspect = await addProspect({
+      await addProspect({
         ...form,
-        ai_score: 0,
-        buying_intent: "pending",
+        ai_score: 50,
+        buying_intent: "medium" as const,
         status:"new",
         avatar_init: form.name.split(" ").map((n:string)=>n[0]).join("").slice(0,2).toUpperCase(),
-        avatar_bg: av?.bg ?? "#1a2035",
-        avatar_color: av?.color ?? "#C8FF00",
+        avatar_bg: av?.bg ?? "#1a2035", avatar_color: av?.color ?? "#C8FF00",
       });
-
-      // Auto-run AI enrichment to get real score
-      if (user?.uid) {
-        try {
-          const aiRes = await fetch("/api/ai", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              type: "prospectAnalyzer",
-              userId: user.uid,
-              prompt: `Analyze this prospect and return JSON only:
-Name: ${form.name}
-Title: ${form.role || "Unknown"}
-Company: ${form.company || "Unknown"}
-Industry: ${form.industry || "Unknown"}
-Company Size: ${form.company_size || "Unknown"}
-Notes: ${form.notes || "None"}
-
-Return ONLY valid JSON: {"score":85,"buyingIntent":"high","reasoning":"2 sentences","redFlags":"any concerns"}`
-            }),
-          });
-          const aiData = await aiRes.json();
-          if (aiData.result) {
-            try {
-              const parsed = JSON.parse(aiData.result.replace(/```json|```/g, "").trim());
-              if (newProspect?.id && parsed.score) {
-                await updateProspect(newProspect.id, {
-                  ai_score: parsed.score,
-                  buying_intent: parsed.buyingIntent ?? "medium",
-                  notes: form.notes ? (form.notes + " | AI: " + parsed.reasoning) : ("AI: " + parsed.reasoning),
-                });
-              }
-            } catch {}
-          }
-        } catch {}
-      }
       setForm({ name:"",email:"",role:"",company:"",industry:"",company_size:"",notes:"" });
       setShowAdd(false);
       showToast(`✓ ${form.name} added successfully`);
