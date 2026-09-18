@@ -5,21 +5,26 @@ export type Prospect = {
   id: string;
   name: string;
   email: string;
-  company: string;
-  title: string;
+  company?: string;
+  title?: string;
+  role?: string;
+  industry?: string;
+  company_size?: string;
   linkedin_url?: string;
   score?: number;
-  intent?: string;
+  intent?: "high" | "medium" | "low" | string;
   ai_score?: number;
-  buying_intent?: string;
+  buying_intent?: "high" | "medium" | "low" | string;
   status?: string;
   notes?: string;
   avatar_init?: string;
   avatar_bg?: string;
   avatar_color?: string;
   sequence_id?: string;
+  user_id?: string;
   created_at?: string;
   updated_at?: string;
+  [key: string]: unknown;
 };
 
 export function useProspects(userId: string | undefined) {
@@ -40,8 +45,8 @@ export function useProspects(userId: string | undefined) {
     fetchProspects();
   }, [fetchProspects]);
 
-  const addProspect = async (prospect: Omit<Prospect, 'id'>) => {
-    if (!userId) return;
+  const addProspect = async (prospect: Omit<Prospect, 'id'>): Promise<Prospect | null> => {
+    if (!userId) return null;
     try {
       const res = await fetch('/api/prospects', {
         method: 'POST',
@@ -49,8 +54,12 @@ export function useProspects(userId: string | undefined) {
         body: JSON.stringify({ userId, ...prospect }),
       });
       const data = await res.json();
-      if (data.prospect) setProspects(prev => [data.prospect, ...prev]);
-    } catch {}
+      if (data.prospect) {
+        setProspects(prev => [data.prospect, ...prev]);
+        return data.prospect;
+      }
+      return null;
+    } catch { return null; }
   };
 
   const updateProspect = async (id: string, updates: Partial<Prospect>) => {

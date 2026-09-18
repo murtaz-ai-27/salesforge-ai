@@ -68,16 +68,56 @@ export default function ProspectsPage() {
 
   const handleAdd = async () => {
     if (!form.name||!form.email) { showToast("Name and email required","error"); return; }
-    const av = AVATARS[Math.floor(Math.random()*AVATARS.length)];
+    const av = AVATARS[form.name.charCodeAt(0) % AVATARS.length] ?? AVATARS[0];
     try {
-      await addProspect({
+      // Add prospect first with neutral defaults
+      const newProspect = await addProspect({
         ...form,
-        ai_score: Math.floor(Math.random()*30)+65,
-        buying_intent: (["high","medium","low"] as const)[Math.floor(Math.random()*3)],
+        ai_score: 0,
+        buying_intent: "pending",
         status:"new",
         avatar_init: form.name.split(" ").map((n:string)=>n[0]).join("").slice(0,2).toUpperCase(),
-        avatar_bg: av.bg, avatar_color: av.color,
+        avatar_bg: av?.bg ?? "#1a2035",
+        avatar_color: av?.color ?? "#C8FF00",
       });
+
+      // Auto-run AI enrichment to get real score
+      if (user?.uid) {
+        try {
+          const aiRes = await fetch("/api/ai", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              type: "prospectAnalyzer",
+              userId: user.uid,
+              prompt: `Analyze this prospect and return JSON only:
+Name: ${form.name}
+Title: ${form.role || "Unknown"}
+Company: ${form.company || "Unknown"}
+Industry: ${form.industry || "Unknown"}
+Company Size: ${form.company_size || "Unknown"}
+Notes: ${form.notes || "None"}
+
+Return ONLY valid JSON: {"score":85,"buyingIntent":"high","reasoning":"2 sentences","redFlags":"any concerns"}`
+            }),
+          });
+          const aiData = await aiRes.json();
+          if (aiData.result) {
+            try {
+              const parsed = JSON.parse(aiData.result.replace(/```json|```/g, "").trim());
+              if (newProspect?.id && parsed.score) {
+                await updateProspect(newProspect.id, {
+                  ai_score: parsed.score,
+                  buying_intent: parsed.buyingIntent ?? "medium",
+                  notes: form.notes ? form.notes + "
+
+AI: " + parsed.reasoning : "AI: " + parsed.reasoning,
+                });
+              }
+            } catch {}
+          }
+        } catch {}
+      }
       setForm({ name:"",email:"",role:"",company:"",industry:"",company_size:"",notes:"" });
       setShowAdd(false);
       showToast(`✓ ${form.name} added successfully`);
@@ -195,8 +235,8 @@ export default function ProspectsPage() {
 
   const toastColor = toast.type==="error"?"#f87171":toast.type==="warning"?"#f59e0b":S.accent;
 
-  if (authLoading) return <LoadingScreen text="Loading your prospects"/>;
-  if (!user) { return <LoadingScreen text="Redirecting..."/>; }
+  if (authLoading) return <LoadingScreen text="Loading..."/>;
+  if (!user) return <LoadingScreen text="Redirecting..."/>;
   if (dataLoading) return <LoadingScreen text="Loading your prospects"/>;
 
   return (
