@@ -10,9 +10,16 @@ export type Prospect = {
   linkedin_url?: string;
   score?: number;
   intent?: string;
+  ai_score?: number;
+  buying_intent?: string;
   status?: string;
   notes?: string;
+  avatar_init?: string;
+  avatar_bg?: string;
+  avatar_color?: string;
+  sequence_id?: string;
   created_at?: string;
+  updated_at?: string;
 };
 
 export function useProspects(userId: string | undefined) {
