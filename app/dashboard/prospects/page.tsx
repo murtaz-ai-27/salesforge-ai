@@ -109,7 +109,9 @@ Return ONLY valid JSON: {"score":85,"buyingIntent":"high","reasoning":"2 sentenc
                 await updateProspect(newProspect.id, {
                   ai_score: parsed.score,
                   buying_intent: parsed.buyingIntent ?? "medium",
-                  notes: form.notes ? (form.notes + " | AI: " + parsed.reasoning) : ("AI: " + parsed.reasoning),
+                  notes: form.notes ? form.notes + "
+
+AI: " + parsed.reasoning : "AI: " + parsed.reasoning,
                 });
               }
             } catch {}
