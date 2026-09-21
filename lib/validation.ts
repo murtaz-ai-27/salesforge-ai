@@ -54,7 +54,7 @@ export const ProfileUpdateSchema = z.object({
   timezone:      z.string().max(100).optional(),
   phone:         z.string().max(20).optional(),
   linkedin:      z.string().url().max(300).optional().or(z.literal("")),
-  notifications: z.record(z.boolean()).optional(),
+  notifications: z.record(z.string(), z.boolean()).optional(),
   avatar_url:    z.string().url().max(500).optional(),
 });
 
