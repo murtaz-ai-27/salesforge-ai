@@ -44,7 +44,7 @@ export function useAuth() {
           handleRedirect(u);
         },
         (error) => {
-          console.error("[useAuth] Auth error:", error.code);
+          console.error("[useAuth] Auth error:", (error as any).code ?? error.message);
           setLoading(false);
         }
       );
