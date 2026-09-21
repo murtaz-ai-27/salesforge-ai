@@ -78,6 +78,6 @@ export function validate<T>(
 ): { success: true; data: T } | { success: false; error: string } {
   const result = schema.safeParse(data);
   if (result.success) return { success: true, data: result.data };
-  const errors = result.error.issues.map((e: { path: (string|number)[]; message: string }) => `${e.path.join(".")}: ${e.message}`).join(", ");
+  const errors = result.error.issues.map(e => `${String(e.path.join("."))}: ${e.message}`).join(", ");
   return { success: false, error: `Validation failed: ${errors}` };
 }
