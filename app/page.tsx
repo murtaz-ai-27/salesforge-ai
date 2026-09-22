@@ -1,5 +1,5 @@
-/* eslint-disable @next/next/no-sync-scripts */
 "use client";
+import { useEffect, useRef } from "react";
 
 const HTML = String.raw`<!DOCTYPE html>
 <html lang="en">
@@ -1793,10 +1793,40 @@ document.addEventListener('DOMContentLoaded',function(){
 </html>
 `;
 
+
 export default function Home() {
+  const ref = useRef<HTMLIFrameElement>(null);
+
+  useEffect(() => {
+    const iframe = ref.current;
+    if (!iframe) return;
+
+    // Wait for iframe to be ready
+    const write = () => {
+      try {
+        const doc = iframe.contentDocument || iframe.contentWindow?.document;
+        if (!doc) return;
+        doc.open("text/html", "replace");
+        doc.write(HTML);
+        doc.close();
+      } catch(e) {
+        // Fallback: use srcdoc
+        iframe.srcdoc = HTML;
+      }
+    };
+
+    if (iframe.contentDocument?.readyState === "complete") {
+      write();
+    } else {
+      iframe.onload = write;
+      write();
+    }
+  }, []);
+
   return (
     <iframe
-      srcDoc={HTML}
+      ref={ref}
+      sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-top-navigation"
       style={{
         position: "fixed",
         top: 0, left: 0,
@@ -1807,6 +1837,7 @@ export default function Home() {
         padding: 0,
         overflow: "hidden",
         zIndex: 9999,
+        display: "block",
       }}
       title="Salevrix AI"
     />

@@ -4,7 +4,7 @@ import type { NextConfig } from "next";
 const CSP = [
   "default-src 'self'",
   // Scripts — only our domain + Google Fonts + CDN
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://accounts.google.com https://*.firebaseapp.com https://*.googleapis.com",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://accounts.google.com https://*.firebaseapp.com https://*.googleapis.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net",
   // Styles
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   // Fonts
@@ -14,7 +14,7 @@ const CSP = [
   // API connections
   "connect-src 'self' https://*.supabase.co https://openrouter.ai https://api.anthropic.com https://accounts.google.com https://*.googleapis.com https://*.firebaseio.com https://*.firebase.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com",
   // Frames — Google OAuth popup needs this
-  "frame-src 'self' https://accounts.google.com https://*.firebaseapp.com",
+  "frame-src 'self' https://accounts.google.com https://*.firebaseapp.com blob: data:",
   // No plugins
   "object-src 'none'",
   // Upgrade HTTP to HTTPS
