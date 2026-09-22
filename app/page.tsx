@@ -1,6 +1,5 @@
 /* eslint-disable @next/next/no-sync-scripts */
 "use client";
-import { useEffect, useRef } from "react";
 
 const HTML = String.raw`<!DOCTYPE html>
 <html lang="en">
@@ -1795,21 +1794,9 @@ document.addEventListener('DOMContentLoaded',function(){
 `;
 
 export default function Home() {
-  const ref = useRef<HTMLIFrameElement>(null);
-
-  useEffect(() => {
-    const iframe = ref.current;
-    if (!iframe) return;
-    const doc = iframe.contentDocument || iframe.contentWindow?.document;
-    if (!doc) return;
-    doc.open();
-    doc.write(HTML);
-    doc.close();
-  }, []);
-
   return (
     <iframe
-      ref={ref}
+      srcDoc={HTML}
       style={{
         position: "fixed",
         top: 0, left: 0,
