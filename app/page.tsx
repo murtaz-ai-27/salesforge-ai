@@ -442,11 +442,11 @@ footer{border-top:1px solid var(--line-soft);padding:60px 0 40px;margin-top:24px
         <a href="#integrations">Integrations</a>
         <a href="#pricing">Pricing</a>
         <a href="#testimonials">Reviews</a>
-        <a href="/security" style="color:var(--accent);font-weight:700">Security</a>
+        <a href="/security" target="_top" style="color:var(--accent);font-weight:700">Security</a>
       </div>
       <div class="nav-cta">
-        <a href="/auth/login" class="btn btn-ghost ghost-hide">Sign in</a>
-        <a href="/auth/signup" class="btn btn-primary">Start Free →</a>
+        <a href="/auth/login" target="_top" class="btn btn-ghost ghost-hide">Sign in</a>
+        <a href="/auth/signup" target="_top" class="btn btn-primary">Start Free →</a>
       </div>
     </nav>
   </div>
@@ -473,7 +473,7 @@ footer{border-top:1px solid var(--line-soft);padding:60px 0 40px;margin-top:24px
     </p>
 
     <div class="hero-cta reveal">
-      <a href="/auth/signup" class="btn btn-primary" style="font-size:16px;padding:14px 28px">
+      <a href="/auth/signup" target="_top" class="btn btn-primary" style="font-size:16px;padding:14px 28px">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
         Start Free Trial
       </a>
@@ -861,7 +861,7 @@ footer{border-top:1px solid var(--line-soft);padding:60px 0 40px;margin-top:24px
             <span><b>Meeting Summarizer.</b> Auto-generates CRM notes post-call.</span>
           </li>
         </ul>
-        <a href="/auth/signup" class="btn btn-violet" style="margin-top:8px">
+        <a href="/auth/signup" target="_top" class="btn btn-violet" style="margin-top:8px">
           Deploy Your AI Agent →
         </a>
       </div>
@@ -1284,7 +1284,7 @@ footer{border-top:1px solid var(--line-soft);padding:60px 0 40px;margin-top:24px
           <li class="off"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg> Intent signals</li>
           <li class="off"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg> CRM sync</li>
         </ul>
-        <a href="/auth/signup" class="btn btn-ghost" style="width:100%;justify-content:center">Get Started Free</a>
+        <a href="/auth/signup" target="_top" class="btn btn-ghost" style="width:100%;justify-content:center">Get Started Free</a>
       </div>
 
       <!-- GROWTH (FEATURED) -->
@@ -1304,7 +1304,7 @@ footer{border-top:1px solid var(--line-soft);padding:60px 0 40px;margin-top:24px
           <li><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg> LinkedIn automation</li>
           <li><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg> Priority support</li>
         </ul>
-        <a href="/auth/signup" class="btn btn-primary" style="width:100%;justify-content:center;font-size:15px;padding:14px">
+        <a href="/auth/signup" target="_top" class="btn btn-primary" style="width:100%;justify-content:center;font-size:15px;padding:14px">
           Start 14-Day Free Trial →
         </a>
         <p style="font-size:12px;color:var(--faint);text-align:center;margin-top:10px">No credit card required</p>
@@ -1325,7 +1325,7 @@ footer{border-top:1px solid var(--line-soft);padding:60px 0 40px;margin-top:24px
           <li><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg> Dedicated success engineer</li>
           <li><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg> SLA guarantee</li>
         </ul>
-        <a href="/auth/signup" class="btn btn-ghost" style="width:100%;justify-content:center">Talk to Sales</a>
+        <a href="/auth/signup" target="_top" class="btn btn-ghost" style="width:100%;justify-content:center">Talk to Sales</a>
       </div>
     </div>
   </div>
@@ -1374,11 +1374,11 @@ footer{border-top:1px solid var(--line-soft);padding:60px 0 40px;margin-top:24px
       <h2 class="grad-text">Start Closing More Deals Today</h2>
       <p>Join 12,000+ sales teams using AI to 3x their pipeline. Free trial, no credit card, setup in 5 minutes.</p>
       <div class="hero-cta">
-        <a href="/auth/signup" class="btn btn-primary" style="font-size:16px;padding:15px 32px">
+        <a href="/auth/signup" target="_top" class="btn btn-primary" style="font-size:16px;padding:15px 32px">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
           Start Free Trial
         </a>
-        <a href="/auth/signup" class="btn btn-ghost" style="font-size:16px;padding:15px 32px">Book a Demo</a>
+        <a href="/auth/signup" target="_top" class="btn btn-ghost" style="font-size:16px;padding:15px 32px">Book a Demo</a>
       </div>
       <p style="font-size:13px;color:var(--faint);margin-top:18px;position:relative">
         ✓ No credit card &nbsp;·&nbsp; ✓ 14-day free trial &nbsp;·&nbsp; ✓ Cancel anytime
@@ -1736,7 +1736,7 @@ document.querySelectorAll('#faqList .qa').forEach(item=>{
 </script>
 
 <div id="sfMobileCTA" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:9999;padding:12px 16px 28px;background:linear-gradient(to top,rgba(5,5,5,1) 60%,rgba(5,5,5,0.9));border-top:1px solid rgba(200,255,0,0.2);">
-  <a href="/auth/signup" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:16px;border-radius:14px;background:#C8FF00;color:#050505;font-size:16px;font-weight:700;text-decoration:none;font-family:Inter,sans-serif;box-shadow:0 8px 28px rgba(200,255,0,0.4);">
+  <a href="/auth/signup" target="_top" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:16px;border-radius:14px;background:#C8FF00;color:#050505;font-size:16px;font-weight:700;text-decoration:none;font-family:Inter,sans-serif;box-shadow:0 8px 28px rgba(200,255,0,0.4);">
     ⚡ Start Free — Beat Apollo Today
   </a>
   <p style="text-align:center;font-size:12px;color:#555a66;margin-top:8px;font-family:Inter,sans-serif;">No credit card · 5 min setup · 10 AI Agents free</p>
