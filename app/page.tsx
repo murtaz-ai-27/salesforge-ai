@@ -442,6 +442,7 @@ footer{border-top:1px solid var(--line-soft);padding:60px 0 40px;margin-top:24px
         <a href="#integrations">Integrations</a>
         <a href="#pricing">Pricing</a>
         <a href="#testimonials">Reviews</a>
+        <a href="/security" style="color:var(--accent);font-weight:700">Security</a>
       </div>
       <div class="nav-cta">
         <a href="/auth/login" class="btn btn-ghost ghost-hide">Sign in</a>
