@@ -204,7 +204,6 @@ export default function ProspectsPage() {
         </div>
       )}
 
-      {/* AI Email Modal */}
       {aiModal && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "grid", placeItems: "center", zIndex: 200, padding: 20 }}>
           <div style={{ background: "#0d1018", border: "1px solid rgba(200,255,0,0.2)", borderRadius: 18, padding: 28, width: "100%", maxWidth: 600, maxHeight: "90vh", overflowY: "auto" }}>
@@ -245,7 +244,6 @@ export default function ProspectsPage() {
       <Sidebar active="prospects" user={user} onLogout={handleLogout} />
       <div style={{ marginLeft: 240, padding: "28px 32px" }}>
 
-        {/* Header */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
           <div>
             <h1 style={{ fontSize: 26, fontWeight: 800, color: S.text, marginBottom: 4 }}>Prospects</h1>
@@ -257,7 +255,6 @@ export default function ProspectsPage() {
           </div>
         </div>
 
-        {/* Search & Filter */}
         <div style={{ display: "flex", gap: 10, marginBottom: 18, flexWrap: "wrap" }}>
           <div style={{ flex: 1, minWidth: 200, position: "relative" }}>
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search prospects, companies..." style={{ width: "100%", padding: "9px 12px 9px 16px", borderRadius: 10, background: "rgba(255,255,255,0.04)", border: `1px solid ${S.lineSoft}`, color: S.text, fontSize: 13, outline: "none" }} />
@@ -269,7 +266,6 @@ export default function ProspectsPage() {
           </div>
         </div>
 
-        {/* Stats Row */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 10, marginBottom: 18 }}>
           {[
             { label: "Total", value: prospects.length, color: S.text },
@@ -285,7 +281,6 @@ export default function ProspectsPage() {
           ))}
         </div>
 
-        {/* Table Layout Preserved */}
         <div style={{ background: S.panel, border: `1px solid ${S.lineSoft}`, borderRadius: 16, overflow: "hidden" }}>
           <div style={{ display: "grid", gridTemplateColumns: "2fr 1.2fr 80px 90px 110px 220px", padding: "12px 20px", borderBottom: `1px solid ${S.lineSoft}`, background: "rgba(255,255,255,0.02)" }}>
             {["PROSPECT", "COMPANY", "SCORE", "INTENT", "STATUS", "ACTIONS"].map(h => (
