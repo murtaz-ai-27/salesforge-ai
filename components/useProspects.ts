@@ -10,6 +10,7 @@ export type Prospect = {
   role?: string;
   industry?: string;
   company_size?: string;
+  phone?: string;
   linkedin_url?: string;
   score?: number;
   intent?: "high" | "medium" | "low" | string;
