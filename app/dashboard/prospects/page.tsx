@@ -1,18 +1,24 @@
 "use client";
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import { useAuth } from "@/components/useAuth";
 import { useProspects, Prospect } from "@/components/useProspects";
 import LoadingScreen from "@/components/LoadingScreen";
 
-const S = { 
-  bg: "#050505", 
-  panel: "#0d1018", 
-  lineSoft: "rgba(255,255,255,0.05)", 
-  text: "#f4f5f7", 
-  muted: "#9598a3", 
-  faint: "#555a66", 
-  accent: "#C8FF00" 
+// ─── Design tokens ────────────────────────────────────────────────────────────
+const S = {
+  bg:        "#050505",
+  panel:     "#0d1018",
+  panelHov:  "#131820",
+  lineSoft:  "rgba(255,255,255,0.07)",
+  text:      "#ffffff",           // bright white — was too dim
+  muted:     "#c4c7d0",           // much brighter — was #9598a3
+  faint:     "#8891a4",           // was #555a66 (unreadable)
+  accent:    "#C8FF00",
+  red:       "#f87171",
+  green:     "#34d399",
+  blue:      "#818cf8",
+  amber:     "#f59e0b",
 };
 
 const AVATARS = [
@@ -26,149 +32,256 @@ const AVATARS = [
   { bg: "linear-gradient(140deg,#14b8a6,#0d9488)", color: "#fff" },
 ];
 
-type Toast = { msg: string; type: "success" | "error" | "warning" };
-type StatusType = "new" | "contacted" | "replied" | "meeting" | "closed" | "lost";
+const STATUS_COLORS: Record<string, string> = {
+  new:       S.accent,
+  contacted: S.blue,
+  replied:   S.green,
+  meeting:   S.amber,
+  closed:    "#22d3ee",
+  lost:      S.red,
+};
 
-function replaceVars(text: string, prospect: Prospect): string {
-  const firstName = prospect.name?.split(" ")[0] ?? prospect.name;
+const ALL_STATUSES = ["new", "contacted", "replied", "meeting", "closed", "lost"];
+const FILTER_TABS  = ["all", "new", "contacted", "replied", "meeting", "high"];
+
+type Toast       = { msg: string; type: "success" | "error" | "warning" };
+type StatusType  = "new" | "contacted" | "replied" | "meeting" | "closed" | "lost";
+type ConfirmDel  = { id: string; name: string } | null;
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function replaceVars(text: string, p: Prospect, sender = "The SalesForge Team"): string {
+  const name      = p.name      ?? "";
+  const firstName = name.split(" ")[0] || name;
   return text
     .replace(/\{\{firstName\}\}/g, firstName)
-    .replace(/\{\{name\}\}/g, prospect.name)
-    .replace(/\{\{company\}\}/g, prospect.company ?? "")
-    .replace(/\{\{role\}\}/g, prospect.role ?? "")
-    .replace(/\{\{industry\}\}/g, prospect.industry ?? "")
-    .replace(/\{\{sender\}\}/g, "The SalesForge Team")
-    .replace(/\{\{icebreaker\}\}/g, `their work at ${prospect.company}`)
+    .replace(/\{\{name\}\}/g,      name)
+    .replace(/\{\{company\}\}/g,   p.company  ?? "")
+    .replace(/\{\{role\}\}/g,      p.role     ?? "")
+    .replace(/\{\{industry\}\}/g,  p.industry ?? "")
+    .replace(/\{\{sender\}\}/g,    sender)
+    .replace(/\{\{icebreaker\}\}/g, p.company ? `their work at ${p.company}` : "their recent work")
     .replace(/\{\{topic\}\}/g, "sales automation");
 }
 
+function isValidEmail(v: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
+}
+
+// ─── Component ────────────────────────────────────────────────────────────────
 export default function ProspectsPage() {
   const { user, loading: authLoading, handleLogout } = useAuth();
-  const { prospects, loading: dataLoading, addProspect, updateProspect, deleteProspect, bulkAddProspects } = useProspects(user?.uid);
+  const {
+    prospects, loading: dataLoading,
+    addProspect, updateProspect, deleteProspect, bulkAddProspects,
+  } = useProspects(user?.uid);
 
+  // ── Search / filter
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
-  const [showAdd, setShowAdd] = useState(false);
+
+  // ── Add form
+  const [showAdd,   setShowAdd]   = useState(false);
+  const [formLoading, setFormLoading] = useState(false);
+  const [formErrors,  setFormErrors]  = useState<Record<string,string>>({});
+  const [form, setForm] = useState({
+    name: "", email: "", role: "", company: "",
+    industry: "", company_size: "", notes: "", phone: "",
+  });
+
+  // ── Toast
   const [toast, setToast] = useState<Toast>({ msg: "", type: "success" });
-  const fileRef = useRef<HTMLInputElement>(null);
 
-  const [form, setForm] = useState({ name: "", email: "", role: "", company: "", industry: "", company_size: "", notes: "", phone: "" });
+  // ── Custom confirm-delete modal
+  const [confirmDel, setConfirmDel] = useState<ConfirmDel>(null);
 
-  const [aiModal, setAiModal] = useState<Prospect | null>(null);
-  const [aiSubject, setAiSubject] = useState("");
-  const [aiBody, setAiBody] = useState("");
+  // ── CSV
+  const fileRef    = useRef<HTMLInputElement>(null);
+  const [csvLoading, setCsvLoading] = useState(false);
+
+  // ── Status update loading map
+  const [statusLoading, setStatusLoading] = useState<Record<string,boolean>>({});
+
+  // ── AI email modal
+  const abortRef       = useRef<AbortController | null>(null);
+  const [aiModal,      setAiModal]      = useState<Prospect | null>(null);
+  const [aiSubject,    setAiSubject]    = useState("");
+  const [aiBody,       setAiBody]       = useState("");
   const [aiGenerating, setAiGenerating] = useState(false);
-  const [sending, setSending] = useState(false);
+  const [sending,      setSending]      = useState(false);
 
-  const showToast = (msg: string, type: Toast["type"] = "success") => {
-    setToast({ msg, type }); 
+  // ── Toast helper
+  const showToast = useCallback((msg: string, type: Toast["type"] = "success") => {
+    setToast({ msg, type });
     setTimeout(() => setToast({ msg: "", type: "success" }), 4000);
-  };
+  }, []);
 
+  // ── Add prospect ────────────────────────────────────────────────────────────
   const handleAdd = async () => {
-    if (!form.name || !form.email) { showToast("Name and email required", "error"); return; }
-    const av = AVATARS[form.name?.charCodeAt(0) % AVATARS.length] ?? AVATARS[0];
+    const errs: Record<string,string> = {};
+    if (!form.name.trim())              errs.name  = "Name is required";
+    if (!form.email.trim())             errs.email = "Email is required";
+    else if (!isValidEmail(form.email)) errs.email = "Enter a valid email address";
+    if (Object.keys(errs).length) { setFormErrors(errs); return; }
+    setFormErrors({});
+    setFormLoading(true);
     try {
+      const code = form.name.charCodeAt(0);
+      const av   = AVATARS[isNaN(code) ? 0 : code % AVATARS.length] ?? AVATARS[0];
       await addProspect({
         ...form,
-        ai_score: 50,
+        name:         form.name.trim(),
+        email:        form.email.trim().toLowerCase(),
+        ai_score:     50,
         buying_intent: "medium" as const,
-        status: "new",
-        avatar_init: form.name.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase(),
-        avatar_bg: av?.bg ?? "#1a2035", 
-        avatar_color: av?.color ?? "#C8FF00",
+        status:        "new",
+        avatar_init:  form.name.trim().split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase(),
+        avatar_bg:    av.bg,
+        avatar_color: av.color,
       });
       setForm({ name: "", email: "", role: "", company: "", industry: "", company_size: "", notes: "", phone: "" });
       setShowAdd(false);
-      showToast(`✓ ${form.name} added successfully`);
-    } catch (err: any) { showToast(err.message, "error"); }
-  };
-
-  const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Delete ${name}?`)) return;
-    try { await deleteProspect(id); showToast(`${name} deleted`); }
-    catch (err: any) { showToast(err.message, "error"); }
-  };
-
-  const handleAutomaticStatus = async (id: string, newStatus: StatusType) => {
-    try { 
-      await updateProspect(id, { status: newStatus }); 
-      showToast(`Status updated to: ${newStatus}`); 
+      showToast(`✓ ${form.name.trim()} added`);
+    } catch (err: any) {
+      showToast(err?.message ?? "Failed to add prospect", "error");
+    } finally {
+      setFormLoading(false);
     }
-    catch (err: any) { showToast(err.message, "error"); }
   };
 
-  const handleCSV = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]; if (!file) return;
+  // ── Delete ──────────────────────────────────────────────────────────────────
+  const confirmDelete = (id: string, name: string) => setConfirmDel({ id, name });
+  const handleDelete  = async () => {
+    if (!confirmDel) return;
     try {
-      const text = await file.text();
-      const lines = text.split("\n").filter(Boolean);
-      const headers = lines[0].split(",").map((h: string) => h.trim().toLowerCase().replace(/['"]/g, ""));
-      const rows = lines.slice(1).map((line: string) => {
-        const vals = line.split(",").map((v: string) => v.trim().replace(/['"]/g, ""));
+      await deleteProspect(confirmDel.id);
+      showToast(`${confirmDel.name} deleted`);
+    } catch (err: any) {
+      showToast(err?.message ?? "Delete failed", "error");
+    } finally {
+      setConfirmDel(null);
+    }
+  };
+
+  // ── Status update ───────────────────────────────────────────────────────────
+  const handleStatus = async (id: string, newStatus: StatusType) => {
+    setStatusLoading(p => ({ ...p, [id]: true }));
+    try {
+      await updateProspect(id, { status: newStatus });
+    } catch (err: any) {
+      showToast(err?.message ?? "Status update failed", "error");
+    } finally {
+      setStatusLoading(p => ({ ...p, [id]: false }));
+    }
+  };
+
+  // ── CSV import ──────────────────────────────────────────────────────────────
+  const handleCSV = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setCsvLoading(true);
+    try {
+      const text    = await file.text();
+      const lines   = text.split("\n").filter(Boolean);
+      if (lines.length < 2) { showToast("CSV is empty or has no data rows", "error"); return; }
+      const raw     = lines[0].split(",");
+      const headers = raw.map((h) => h.trim().toLowerCase().replace(/['"]/g, "").replace(/\s+/g, "_"));
+
+      const rows = lines.slice(1).map((line) => {
+        // Respect quoted fields containing commas
+        const vals: string[] = [];
+        let cur = "", inQuote = false;
+        for (const ch of line) {
+          if (ch === '"') { inQuote = !inQuote; continue; }
+          if (ch === "," && !inQuote) { vals.push(cur.trim()); cur = ""; continue; }
+          cur += ch;
+        }
+        vals.push(cur.trim());
         const row: any = {};
-        headers.forEach((h: string, i: number) => { row[h] = vals[i] ?? ""; });
+        headers.forEach((h, i) => { row[h] = (vals[i] ?? "").replace(/['"]/g, ""); });
         row.status = "new";
         return row;
-      }).filter((r: any) => r.email || r.name);
+      }).filter((r) => r.email || r.name);
+
       await bulkAddProspects(rows);
       showToast(`✓ ${rows.length} prospects imported`);
-    } catch (err: any) { showToast(err.message, "error"); }
-    e.target.value = "";
+    } catch (err: any) {
+      showToast(err?.message ?? "CSV import failed", "error");
+    } finally {
+      setCsvLoading(false);
+      e.target.value = "";
+    }
   };
 
+  // ── AI email modal ──────────────────────────────────────────────────────────
   const openAiModal = async (prospect: Prospect) => {
+    abortRef.current?.abort();
+    abortRef.current = new AbortController();
+    const { signal } = abortRef.current;
+
     setAiModal(prospect);
-    setAiBody(""); 
+    setAiBody("");
     setAiSubject("");
     setAiGenerating(true);
     try {
       const [subjectRes, bodyRes] = await Promise.all([
         fetch("/api/ai", {
-          method: "POST", headers: { "Content-Type": "application/json" },
+          method: "POST", signal,
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             type: "subjectLine",
-            prompt: `Write 3 subject lines for a cold email to ${prospect.name}, ${prospect.role} at ${prospect.company} (${prospect.industry}).`,
-            userId: user?.uid,
+            prompt: `Write 3 subject lines for a cold email to ${prospect.name ?? ""}, ${prospect.role ?? ""} at ${prospect.company ?? ""} (${prospect.industry ?? ""}).`,
           }),
         }),
         fetch("/api/ai", {
-          method: "POST", headers: { "Content-Type": "application/json" },
+          method: "POST", signal,
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             type: "emailWriter",
-            prompt: `Write a cold email to ${prospect.name}, ${prospect.role} at ${prospect.company} in the ${prospect.industry} industry. Notes: ${prospect.notes || "none"}.`,
-            userId: user?.uid,
+            prompt: `Write a cold email to ${prospect.name ?? ""}, ${prospect.role ?? ""} at ${prospect.company ?? ""} in the ${prospect.industry ?? ""} industry. Notes: ${prospect.notes || "none"}.`,
           }),
         }),
       ]);
 
+      if (signal.aborted) return;
+
       const [subjectData, bodyData] = await Promise.all([subjectRes.json(), bodyRes.json()]);
 
-      if (bodyData.error) {
-        showToast(bodyData.upgrade ? "⚠️ Daily AI limit reached." : bodyData.error, "warning");
-        setAiModal(null); setAiGenerating(false); return;
+      if (bodyData.error || subjectData.error) {
+        const msg = bodyData.error ?? subjectData.error;
+        showToast(bodyData.upgrade ? "⚠️ Daily AI limit reached — upgrade your plan" : msg, "warning");
+        setAiModal(null);
+        return;
       }
 
-      const subjectLines = subjectData.result?.split("\n").filter((l: string) => l.trim()) ?? [];
-      const firstSubject = subjectLines[0]?.replace(/^[0-9]+\.\s*/, "").trim() ?? `Quick note for ${prospect.name}`;
+      const lines       = (subjectData.result ?? "").split("\n").filter((l: string) => l.trim());
+      const firstSubject = lines[0]?.replace(/^[0-9]+\.\s*/, "").trim() ?? `Quick note for ${prospect.name ?? "you"}`;
 
       setAiSubject(replaceVars(firstSubject, prospect));
       setAiBody(replaceVars(bodyData.result ?? "", prospect));
-    } catch (err: any) { 
-      showToast(err.message, "error"); 
-      setAiModal(null); 
+    } catch (err: any) {
+      if (err?.name === "AbortError") return;
+      showToast(err?.message ?? "Generation failed", "error");
+      setAiModal(null);
+    } finally {
+      if (!signal.aborted) setAiGenerating(false);
     }
+  };
+
+  const closeAiModal = () => {
+    abortRef.current?.abort();
+    setAiModal(null);
     setAiGenerating(false);
   };
 
   const sendEmail = async () => {
-    if (!aiModal || !aiBody || !aiSubject || !user?.uid) return;
+    if (!aiModal || !aiBody.trim() || !aiSubject.trim() || !user?.uid) return;
     setSending(true);
     try {
-      const res = await fetch("/api/send-email", {
-        method: "POST", headers: { "Content-Type": "application/json" },
+      const res  = await fetch("/api/send-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          userId: user.uid, to: aiModal.email, toName: aiModal.name,
+          to: aiModal.email, toName: aiModal.name,
           subject: aiSubject, emailBody: aiBody, prospectId: aiModal.id,
         }),
       });
@@ -176,62 +289,142 @@ export default function ProspectsPage() {
       if (!res.ok) {
         showToast(data.error ?? "Failed to send", "error");
       } else {
-        showToast(`✓ Real email sent to ${aiModal.email}!`);
-        await handleAutomaticStatus(aiModal.id, "contacted");
-        setAiModal(null);
+        showToast(`✓ Email sent to ${aiModal.email}`);
+        await handleStatus(aiModal.id, "contacted");
+        closeAiModal();
       }
-    } catch (err: any) { showToast(err.message, "error"); }
-    setSending(false);
+    } catch (err: any) {
+      showToast(err?.message ?? "Send failed", "error");
+    } finally {
+      setSending(false);
+    }
   };
 
-  const filtered = prospects.filter(p => {
-    const matchSearch = !search || p.name?.toLowerCase().includes(search.toLowerCase()) || p.company?.toLowerCase().includes(search.toLowerCase()) || p.email?.toLowerCase().includes(search.toLowerCase());
-    const matchFilter = filter === "all" || p.status === filter || (filter === "high" && p.buying_intent === "high");
+  // ── Filtering ───────────────────────────────────────────────────────────────
+  const filtered = prospects.filter((p) => {
+    const q = search.toLowerCase();
+    const matchSearch = !search
+      || (p.name?.toLowerCase().includes(q))
+      || (p.company?.toLowerCase().includes(q))
+      || (p.email?.toLowerCase().includes(q));
+    const matchFilter =
+      filter === "all"  ? true :
+      filter === "high" ? p.buying_intent === "high" :
+      p.status === filter;
     return matchSearch && matchFilter;
   });
 
-  const toastColor = toast.type === "error" ? "#f87171" : toast.type === "warning" ? "#f59e0b" : S.accent;
+  const toastColor =
+    toast.type === "error"   ? S.red  :
+    toast.type === "warning" ? S.amber : S.accent;
 
+  // ─────────────────────────────────────────────────────────────────────────
   if (authLoading || dataLoading) return <LoadingScreen text="Loading platform data..." />;
   if (!user) return <LoadingScreen text="Redirecting..." />;
 
   return (
     <div style={{ background: S.bg, minHeight: "100vh", fontFamily: "Inter,sans-serif" }}>
+
+      {/* ── Keyframes for spinner ── */}
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+        .btn-smooth {
+          transition: opacity 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+          cursor: pointer;
+        }
+        .btn-smooth:hover:not(:disabled) { opacity: 0.88; transform: translateY(-1px); }
+        .btn-smooth:active:not(:disabled) { transform: translateY(0); }
+        .btn-smooth:disabled { opacity: 0.45; cursor: not-allowed; }
+        .row-hover:hover { background: rgba(255,255,255,0.025); }
+        .input-focus { transition: border-color 0.15s ease; }
+        .input-focus:focus { border-color: rgba(200,255,0,0.4) !important; outline: none; }
+        .status-select { transition: border-color 0.15s ease; }
+        .status-select:focus { outline: none; }
+      `}</style>
+
+      {/* ── Toast ── */}
       {toast.msg && (
-        <div style={{ position: "fixed", bottom: 28, left: "50%", transform: "translateX(-50%)", background: "#0d1018", border: `1px solid ${toastColor}44`, borderRadius: 12, padding: "12px 22px", fontSize: 13, fontWeight: 600, color: toastColor, zIndex: 300 }}>
+        <div style={{
+          position: "fixed", bottom: 28, left: "50%", transform: "translateX(-50%)",
+          background: "#0d1018", border: `1px solid ${toastColor}55`,
+          borderRadius: 12, padding: "12px 22px",
+          fontSize: 13, fontWeight: 700, color: toastColor, zIndex: 400,
+          animation: "fadeIn 0.2s ease", whiteSpace: "nowrap",
+          boxShadow: `0 4px 24px ${toastColor}22`,
+        }}>
           {toast.msg}
         </div>
       )}
 
-      {/* AI Email Modal */}
+      {/* ── Confirm Delete Modal ── */}
+      {confirmDel && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", display: "grid", placeItems: "center", zIndex: 300 }}>
+          <div style={{ background: "#0d1018", border: "1px solid rgba(248,113,113,0.3)", borderRadius: 16, padding: 28, maxWidth: 380, width: "90%", animation: "fadeIn 0.18s ease" }}>
+            <div style={{ fontSize: 16, fontWeight: 800, color: S.text, marginBottom: 8 }}>Delete Prospect?</div>
+            <div style={{ fontSize: 13, color: S.muted, marginBottom: 24 }}>
+              <span style={{ color: S.text, fontWeight: 700 }}>{confirmDel.name}</span> will be permanently removed. This cannot be undone.
+            </div>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button className="btn-smooth" onClick={handleDelete}
+                style={{ flex: 1, padding: "10px", borderRadius: 10, background: "rgba(248,113,113,0.12)", border: "1px solid rgba(248,113,113,0.35)", color: S.red, fontWeight: 700, fontSize: 13 }}>
+                Delete
+              </button>
+              <button className="btn-smooth" onClick={() => setConfirmDel(null)}
+                style={{ flex: 1, padding: "10px", borderRadius: 10, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: S.muted, fontWeight: 600, fontSize: 13 }}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── AI Email Modal ── */}
       {aiModal && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "grid", placeItems: "center", zIndex: 200, padding: 20 }}>
-          <div style={{ background: "#0d1018", border: "1px solid rgba(200,255,0,0.2)", borderRadius: 18, padding: 28, width: "100%", maxWidth: 600 }}>
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", display: "grid", placeItems: "center", zIndex: 200, padding: 20 }}>
+          <div style={{ background: "#0d1018", border: "1px solid rgba(200,255,0,0.2)", borderRadius: 18, padding: 28, width: "100%", maxWidth: 600, animation: "fadeIn 0.2s ease" }}>
             {aiGenerating ? (
-              <div style={{ textAlign: "center", padding: "40px 0" }}>
-                <div style={{ width: 40, height: 40, border: "3px solid rgba(200,255,0,0.2)", borderTopColor: S.accent, borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 16px" }} />
-                <div style={{ fontSize: 14, fontWeight: 600, color: S.text }}>Generating email for {aiModal.name}...</div>
+              <div style={{ textAlign: "center", padding: "44px 0" }}>
+                <div style={{ width: 40, height: 40, border: "3px solid rgba(200,255,0,0.15)", borderTopColor: S.accent, borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 16px" }} />
+                <div style={{ fontSize: 14, fontWeight: 700, color: S.text }}>Writing email for {aiModal.name ?? "prospect"}…</div>
+                <div style={{ fontSize: 12, color: S.faint, marginTop: 6 }}>AI is crafting a personalised cold email</div>
               </div>
             ) : (
               <>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
+                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 20 }}>
                   <div>
-                    <div style={{ fontSize: 16, fontWeight: 800, color: S.text }}>Real Email Dispatch</div>
-                    <div style={{ fontSize: 12, color: S.faint }}>To: <span style={{ color: S.accent }}>{aiModal.email}</span></div>
+                    <div style={{ fontSize: 16, fontWeight: 800, color: S.text, marginBottom: 4 }}>Send Real Email</div>
+                    <div style={{ fontSize: 12, color: S.faint }}>
+                      To: <span style={{ color: S.accent, fontWeight: 700 }}>{aiModal.email}</span>
+                      {aiModal.name && <span style={{ color: S.faint }}> · {aiModal.name}</span>}
+                    </div>
                   </div>
-                  <button onClick={() => setAiModal(null)} style={{ background: "none", border: "none", color: S.faint, cursor: "pointer", fontSize: 18 }}>✕</button>
+                  <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                    <button className="btn-smooth" onClick={() => openAiModal(aiModal)}
+                      style={{ padding: "6px 12px", borderRadius: 8, background: "rgba(200,255,0,0.07)", border: "1px solid rgba(200,255,0,0.2)", color: S.accent, fontSize: 11, fontWeight: 700 }}>
+                      ↺ Regenerate
+                    </button>
+                    <button className="btn-smooth" onClick={closeAiModal}
+                      style={{ background: "none", border: "none", color: S.faint, fontSize: 20, lineHeight: 1, padding: "2px 4px" }}>×</button>
+                  </div>
                 </div>
+
                 <div style={{ marginBottom: 14 }}>
-                  <label style={{ fontSize: 11, fontWeight: 700, color: S.faint, display: "block", marginBottom: 6 }}>SUBJECT</label>
-                  <input value={aiSubject} onChange={e => setAiSubject(e.target.value)} style={{ width: "100%", padding: "10px 14px", borderRadius: 10, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: S.text, outline: "none" }} />
+                  <label style={{ fontSize: 11, fontWeight: 700, color: S.faint, display: "block", marginBottom: 6, letterSpacing: "0.5px", textTransform: "uppercase" }}>Subject</label>
+                  <input className="input-focus" value={aiSubject} onChange={e => setAiSubject(e.target.value)}
+                    style={{ width: "100%", padding: "10px 14px", borderRadius: 10, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: S.text, fontSize: 13 }} />
                 </div>
-                <div style={{ marginBottom: 18 }}>
-                  <label style={{ fontSize: 11, fontWeight: 700, color: S.faint, display: "block", marginBottom: 6 }}>BODY</label>
-                  <textarea value={aiBody} onChange={e => setAiBody(e.target.value)} rows={8} style={{ width: "100%", padding: "12px 14px", borderRadius: 10, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", color: S.text, outline: "none", resize: "vertical" }} />
+
+                <div style={{ marginBottom: 20 }}>
+                  <label style={{ fontSize: 11, fontWeight: 700, color: S.faint, display: "block", marginBottom: 6, letterSpacing: "0.5px", textTransform: "uppercase" }}>Email Body</label>
+                  <textarea className="input-focus" value={aiBody} onChange={e => setAiBody(e.target.value)} rows={9}
+                    style={{ width: "100%", padding: "12px 14px", borderRadius: 10, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", color: S.text, fontSize: 13, resize: "vertical", lineHeight: 1.6 }} />
                 </div>
+
                 <div style={{ display: "flex", gap: 10 }}>
-                  <button onClick={sendEmail} disabled={sending} style={{ flex: 1, padding: "11px", borderRadius: 10, background: S.accent, border: "none", color: "#050505", fontWeight: 700, cursor: "pointer" }}>
-                    {sending ? "Sending..." : `Send Real Email to ${aiModal.email}`}
+                  <button className="btn-smooth" onClick={sendEmail} disabled={sending || !aiBody.trim() || !aiSubject.trim()}
+                    style={{ flex: 1, padding: "12px", borderRadius: 10, background: S.accent, border: "none", color: "#050505", fontWeight: 800, fontSize: 13 }}>
+                    {sending ? "Sending…" : `✉ Send to ${aiModal.email}`}
                   </button>
                 </div>
               </>
@@ -240,101 +433,231 @@ export default function ProspectsPage() {
         </div>
       )}
 
+      {/* ── Hidden file input ── */}
       <input type="file" ref={fileRef} accept=".csv" onChange={handleCSV} style={{ display: "none" }} />
+
       <Sidebar active="prospects" user={user} onLogout={handleLogout} />
+
       <div style={{ marginLeft: 240, padding: "28px 32px" }}>
+
+        {/* ── Page header ── */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
           <div>
-            <h1 style={{ fontSize: 26, fontWeight: 800, color: S.text, marginBottom: 4 }}>Prospects Management</h1>
-            <p style={{ color: S.muted, fontSize: 14 }}>Real emails integrated · Direct calling enabled · Automated status tracking</p>
+            <h1 style={{ fontSize: 26, fontWeight: 800, color: S.text, marginBottom: 5 }}>Prospects</h1>
+            <p style={{ color: S.muted, fontSize: 13 }}>
+              {prospects.length} total · AI email · Direct call · Auto status tracking
+            </p>
           </div>
           <div style={{ display: "flex", gap: 8 }}>
-            <button onClick={() => fileRef.current?.click()} style={{ padding: "9px 16px", borderRadius: 10, background: "rgba(255,255,255,0.04)", border: `1px solid ${S.lineSoft}`, color: S.muted, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Import CSV</button>
-            <button onClick={() => setShowAdd(!showAdd)} style={{ padding: "9px 18px", borderRadius: 10, background: S.accent, border: "none", color: "#050505", fontWeight: 700, cursor: "pointer" }}>+ Add Prospect</button>
+            <button className="btn-smooth" onClick={() => fileRef.current?.click()} disabled={csvLoading}
+              style={{ padding: "9px 16px", borderRadius: 10, background: "rgba(255,255,255,0.06)", border: `1px solid ${S.lineSoft}`, color: S.muted, fontSize: 13, fontWeight: 600 }}>
+              {csvLoading ? "Importing…" : "↑ Import CSV"}
+            </button>
+            <button className="btn-smooth" onClick={() => { setShowAdd(v => !v); setFormErrors({}); }}
+              style={{ padding: "9px 20px", borderRadius: 10, background: S.accent, border: "none", color: "#050505", fontWeight: 800, fontSize: 13 }}>
+              {showAdd ? "✕ Cancel" : "+ Add Prospect"}
+            </button>
           </div>
         </div>
 
-        {/* Add Form Panel */}
+        {/* ── Add form ── */}
         {showAdd && (
-          <div style={{ background: S.panel, border: "1px solid rgba(200,255,0,0.2)", borderRadius: 16, padding: 24, marginBottom: 20 }}>
-            <div style={{ fontSize: 14, fontWeight: 700, color: S.text, marginBottom: 16 }}>Add New Prospect</div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12, marginBottom: 14 }}>
+          <div style={{ background: S.panel, border: "1px solid rgba(200,255,0,0.18)", borderRadius: 16, padding: 24, marginBottom: 20, animation: "fadeIn 0.18s ease" }}>
+            <div style={{ fontSize: 14, fontWeight: 800, color: S.text, marginBottom: 18 }}>Add New Prospect</div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 14, marginBottom: 14 }}>
               {[
-                { key: "name", label: "Full Name *", placeholder: "Sarah Chen" },
-                { key: "email", label: "Email *", placeholder: "sarah@company.com" },
-                { key: "phone", label: "Phone Number", placeholder: "+1234567890" },
-                { key: "role", label: "Job Title", placeholder: "CRO" },
-                { key: "company", label: "Company", placeholder: "Linear" },
-                { key: "industry", label: "Industry", placeholder: "SaaS" },
+                { key: "name",     label: "Full Name *",    placeholder: "Sarah Chen",        type: "text"  },
+                { key: "email",    label: "Email *",         placeholder: "sarah@company.com", type: "email" },
+                { key: "phone",    label: "Phone Number",    placeholder: "+1 234 567 8900",   type: "tel"   },
+                { key: "role",     label: "Job Title",       placeholder: "Head of Sales",     type: "text"  },
+                { key: "company",  label: "Company",         placeholder: "Acme Inc.",         type: "text"  },
+                { key: "industry", label: "Industry",        placeholder: "SaaS",              type: "text"  },
               ].map(f => (
                 <div key={f.key}>
-                  <label style={{ fontSize: 11, fontWeight: 600, color: S.faint, display: "block", marginBottom: 5 }}>{f.label}</label>
-                  <input value={(form as any)[f.key]} onChange={e => setForm(p => ({ ...p, [f.key]: e.target.value }))} placeholder={f.placeholder} style={{ width: "100%", padding: "9px 12px", borderRadius: 9, background: "rgba(255,255,255,0.04)", border: `1px solid ${S.lineSoft}`, color: S.text, fontSize: 13, outline: "none" }} />
+                  <label style={{ fontSize: 11, fontWeight: 700, color: formErrors[f.key] ? S.red : S.faint, display: "block", marginBottom: 5, textTransform: "uppercase", letterSpacing: "0.4px" }}>
+                    {f.label}
+                  </label>
+                  <input
+                    className="input-focus"
+                    type={f.type}
+                    value={(form as any)[f.key]}
+                    onChange={e => {
+                      setForm(p => ({ ...p, [f.key]: e.target.value }));
+                      if (formErrors[f.key]) setFormErrors(p => { const n = { ...p }; delete n[f.key]; return n; });
+                    }}
+                    placeholder={f.placeholder}
+                    style={{
+                      width: "100%", padding: "10px 12px", borderRadius: 9,
+                      background: "rgba(255,255,255,0.05)",
+                      border: `1px solid ${formErrors[f.key] ? "rgba(248,113,113,0.5)" : S.lineSoft}`,
+                      color: S.text, fontSize: 13,
+                    }}
+                  />
+                  {formErrors[f.key] && (
+                    <div style={{ fontSize: 11, color: S.red, marginTop: 4 }}>{formErrors[f.key]}</div>
+                  )}
                 </div>
               ))}
             </div>
-            <div style={{ display: "flex", gap: 8 }}>
-              <button onClick={handleAdd} style={{ padding: "10px 24px", borderRadius: 10, background: S.accent, border: "none", color: "#050505", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Save Prospect</button>
-              <button onClick={() => setShowAdd(false)} style={{ padding: "10px 16px", borderRadius: 10, background: "rgba(255,255,255,0.04)", border: `1px solid ${S.lineSoft}`, color: S.muted, fontSize: 13, cursor: "pointer" }}>Cancel</button>
+            <div style={{ marginBottom: 18 }}>
+              <label style={{ fontSize: 11, fontWeight: 700, color: S.faint, display: "block", marginBottom: 5, textTransform: "uppercase", letterSpacing: "0.4px" }}>Notes</label>
+              <textarea
+                className="input-focus"
+                value={form.notes}
+                onChange={e => setForm(p => ({ ...p, notes: e.target.value }))}
+                placeholder="Any context about this prospect…"
+                rows={2}
+                style={{ width: "100%", padding: "10px 12px", borderRadius: 9, background: "rgba(255,255,255,0.05)", border: `1px solid ${S.lineSoft}`, color: S.text, fontSize: 13, resize: "vertical" }}
+              />
+            </div>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button className="btn-smooth" onClick={handleAdd} disabled={formLoading}
+                style={{ padding: "11px 28px", borderRadius: 10, background: S.accent, border: "none", color: "#050505", fontSize: 13, fontWeight: 800 }}>
+                {formLoading ? "Saving…" : "Save Prospect"}
+              </button>
+              <button className="btn-smooth" onClick={() => { setShowAdd(false); setFormErrors({}); }}
+                style={{ padding: "11px 18px", borderRadius: 10, background: "rgba(255,255,255,0.05)", border: `1px solid ${S.lineSoft}`, color: S.muted, fontSize: 13, fontWeight: 600 }}>
+                Cancel
+              </button>
             </div>
           </div>
         )}
 
-        {/* Table Structure */}
+        {/* ── Search + Filter ── */}
+        <div style={{ display: "flex", gap: 12, marginBottom: 16, alignItems: "center", flexWrap: "wrap" }}>
+          <div style={{ position: "relative", flex: "1 1 200px", maxWidth: 320 }}>
+            <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: S.faint, fontSize: 14, pointerEvents: "none" }}>🔍</span>
+            <input
+              className="input-focus"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search prospects, companies…"
+              style={{ width: "100%", padding: "9px 12px 9px 34px", borderRadius: 10, background: "rgba(255,255,255,0.05)", border: `1px solid ${S.lineSoft}`, color: S.text, fontSize: 13 }}
+            />
+          </div>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+            {FILTER_TABS.map(tab => (
+              <button key={tab} className="btn-smooth" onClick={() => setFilter(tab)}
+                style={{
+                  padding: "7px 14px", borderRadius: 8, fontSize: 12, fontWeight: 700,
+                  background: filter === tab ? `${S.accent}18` : "rgba(255,255,255,0.04)",
+                  border: `1px solid ${filter === tab ? `${S.accent}55` : S.lineSoft}`,
+                  color: filter === tab ? S.accent : S.muted,
+                  textTransform: "capitalize",
+                }}>
+                {tab === "high" ? "🔥 High Intent" : tab.charAt(0).toUpperCase() + tab.slice(1)}
+              </button>
+            ))}
+          </div>
+          {filtered.length !== prospects.length && (
+            <div style={{ fontSize: 12, color: S.faint, marginLeft: "auto" }}>
+              {filtered.length} of {prospects.length}
+            </div>
+          )}
+        </div>
+
+        {/* ── Table ── */}
         <div style={{ background: S.panel, border: `1px solid ${S.lineSoft}`, borderRadius: 16, overflow: "hidden" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "2fr 1.5fr 120px 140px 160px", padding: "12px 20px", borderBottom: `1px solid ${S.lineSoft}`, background: "rgba(255,255,255,0.02)" }}>
-            {["Prospect & Real Email", "Company", "Direct Call", "Auto Status", "Actions"].map(h => (
-              <div key={h} style={{ fontSize: 10, fontWeight: 700, color: S.faint, textTransform: "uppercase" }}>{h}</div>
+
+          {/* Header row */}
+          <div style={{ display: "grid", gridTemplateColumns: "2fr 1.4fr 130px 150px 170px", padding: "11px 20px", borderBottom: `1px solid ${S.lineSoft}`, background: "rgba(255,255,255,0.02)" }}>
+            {["Prospect", "Company", "Direct Call", "Status", "Actions"].map(h => (
+              <div key={h} style={{ fontSize: 10, fontWeight: 800, color: S.faint, textTransform: "uppercase", letterSpacing: "0.6px" }}>{h}</div>
             ))}
           </div>
 
           {filtered.length === 0 ? (
-            <div style={{ padding: "48px", textAlign: "center", color: S.faint }}>No prospects found. Add one above.</div>
+            <div style={{ padding: "52px", textAlign: "center", color: S.faint }}>
+              <div style={{ fontSize: 28, marginBottom: 10 }}>🔍</div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: S.muted, marginBottom: 6 }}>No prospects found</div>
+              <div style={{ fontSize: 12 }}>{search ? "Try a different search" : "Add your first prospect above"}</div>
+            </div>
           ) : (
             filtered.map((p, i) => (
-              <div key={p.id} style={{ display: "grid", gridTemplateColumns: "2fr 1.5fr 120px 140px 160px", padding: "13px 20px", borderBottom: i < filtered.length - 1 ? `1px solid ${S.lineSoft}` : "none", alignItems: "center" }}>
-                
-                {/* Real Email Display */}
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <div style={{ width: 34, height: 34, borderRadius: "50%", background: p.avatar_bg || "#1a2035", color: p.avatar_color || "#C8FF00", display: "grid", placeItems: "center", fontSize: 11, fontWeight: 800 }}>{p.avatar_init || "P"}</div>
-                  <div>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: S.text }}>{p.name}</div>
-                    <a href={`mailto:${p.email}`} style={{ fontSize: 11, color: S.accent, textDecoration: "none" }}>{p.email}</a>
+              <div key={p.id} className="row-hover"
+                style={{ display: "grid", gridTemplateColumns: "2fr 1.4fr 130px 150px 170px", padding: "13px 20px", borderBottom: i < filtered.length - 1 ? `1px solid ${S.lineSoft}` : "none", alignItems: "center", transition: "background 0.12s ease" }}>
+
+                {/* Prospect info */}
+                <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: "50%", background: p.avatar_bg || "#1a2035", color: p.avatar_color || S.accent, display: "grid", placeItems: "center", fontSize: 11, fontWeight: 800, flexShrink: 0 }}>
+                    {p.avatar_init || "P"}
+                  </div>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: S.text, marginBottom: 2 }}>{p.name || "—"}</div>
+                    <div style={{ fontSize: 11, color: S.accent, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.email || "—"}</div>
+                    {p.role && <div style={{ fontSize: 11, color: S.faint }}>{p.role}</div>}
                   </div>
                 </div>
 
                 {/* Company */}
-                <div style={{ fontSize: 13, color: S.muted }}>{p.company || "N/A"}</div>
-
-                {/* Direct Call Trigger */}
-                <div>
-                  <a href={`tel:${p.phone || ""}`} onClick={() => handleAutomaticStatus(p.id, "contacted")} style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "5px 10px", borderRadius: 8, background: "rgba(52,211,153,0.1)", border: "1px solid rgba(52,211,153,0.3)", color: "#34d399", fontSize: 11, fontWeight: 700, textDecoration: "none" }}>
-                    📞 Call Now
-                  </a>
+                <div style={{ fontSize: 13, color: S.muted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {p.company || <span style={{ color: S.faint }}>—</span>}
+                  {p.industry && <div style={{ fontSize: 11, color: S.faint }}>{p.industry}</div>}
                 </div>
 
-                {/* Auto Status Tracker */}
+                {/* Direct Call */}
                 <div>
-                  <select value={p.status} onChange={e => handleAutomaticStatus(p.id, e.target.value as StatusType)} style={{ fontSize: 11, fontWeight: 700, padding: "4px 8px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.04)", color: p.status === "replied" ? "#34d399" : p.status === "contacted" ? "#818cf8" : p.status === "meeting" ? "#f59e0b" : S.accent, cursor: "pointer", outline: "none" }}>
-                    {["new", "contacted", "replied", "meeting", "closed"].map(s => (
-                      <option key={s} value={s} style={{ background: "#0d1018", color: "#f4f5f7" }}>{s}</option>
+                  {p.phone ? (
+                    <a href={`tel:${p.phone}`}
+                      onClick={() => handleStatus(p.id, "contacted")}
+                      style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "6px 12px", borderRadius: 8, background: "rgba(52,211,153,0.1)", border: "1px solid rgba(52,211,153,0.3)", color: S.green, fontSize: 11, fontWeight: 700, textDecoration: "none", transition: "background 0.15s ease" }}
+                      onMouseEnter={e => (e.currentTarget.style.background = "rgba(52,211,153,0.18)")}
+                      onMouseLeave={e => (e.currentTarget.style.background = "rgba(52,211,153,0.1)")}>
+                      📞 Call
+                    </a>
+                  ) : (
+                    <span style={{ fontSize: 11, color: S.faint, fontStyle: "italic" }}>No phone</span>
+                  )}
+                </div>
+
+                {/* Status dropdown */}
+                <div>
+                  <select
+                    className="status-select"
+                    value={p.status || "new"}
+                    disabled={statusLoading[p.id]}
+                    onChange={e => handleStatus(p.id, e.target.value as StatusType)}
+                    style={{
+                      fontSize: 11, fontWeight: 700, padding: "5px 9px", borderRadius: 8,
+                      border: `1px solid ${STATUS_COLORS[p.status ?? "new"]}55`,
+                      background: `${STATUS_COLORS[p.status ?? "new"]}14`,
+                      color: STATUS_COLORS[p.status ?? "new"],
+                      cursor: statusLoading[p.id] ? "wait" : "pointer",
+                      opacity: statusLoading[p.id] ? 0.6 : 1,
+                      transition: "opacity 0.15s ease",
+                    }}>
+                    {ALL_STATUSES.map(s => (
+                      <option key={s} value={s} style={{ background: "#0d1018", color: "#ffffff" }}>
+                        {s.charAt(0).toUpperCase() + s.slice(1)}
+                      </option>
                     ))}
                   </select>
                 </div>
 
                 {/* Actions */}
                 <div style={{ display: "flex", gap: 6 }}>
-                  <button onClick={() => openAiModal(p)} style={{ padding: "6px 12px", borderRadius: 8, background: "rgba(200,255,0,0.08)", border: "1px solid rgba(200,255,0,0.25)", color: S.accent, fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
-                    AI Email
+                  <button className="btn-smooth" onClick={() => openAiModal(p)}
+                    style={{ padding: "6px 12px", borderRadius: 8, background: "rgba(200,255,0,0.08)", border: "1px solid rgba(200,255,0,0.22)", color: S.accent, fontSize: 11, fontWeight: 700 }}>
+                    ✉ AI Email
                   </button>
-                  <button onClick={() => handleDelete(p.id, p.name)} style={{ padding: "6px 8px", borderRadius: 8, background: "rgba(248,113,113,0.06)", border: "1px solid rgba(248,113,113,0.15)", color: "#f87171", fontSize: 11, cursor: "pointer" }}>
+                  <button className="btn-smooth" onClick={() => confirmDelete(p.id, p.name || "Prospect")}
+                    style={{ padding: "6px 10px", borderRadius: 8, background: "rgba(248,113,113,0.06)", border: "1px solid rgba(248,113,113,0.18)", color: S.red, fontSize: 12 }}>
                     ✕
                   </button>
                 </div>
+
               </div>
             ))
           )}
         </div>
+
+        {/* ── Footer count ── */}
+        {filtered.length > 0 && (
+          <div style={{ textAlign: "center", padding: "14px 0 4px", fontSize: 12, color: S.faint }}>
+            Showing {filtered.length} prospect{filtered.length !== 1 ? "s" : ""}
+          </div>
+        )}
+
       </div>
     </div>
   );
