@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import { useAuth } from "@/components/useAuth";
 import { useProspects, Prospect } from "@/components/useProspects";
@@ -180,8 +180,8 @@ function ProspectDrawer({
         <div style={{ padding:"0 24px 20px", display:"flex", gap:10 }}>
           {prospect.phone ? (
             <a href={`tel:${prospect.phone}`} onClick={() => {
+                // onCall already handles autoStatus + Supabase log — don't double-update
                 onCall(prospect);
-                onStatusChange(prospect.id, autoStatus(prospect.status, "call"));
               }}
               style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", gap:7,
                 padding:"11px", borderRadius:10, textDecoration:"none",
@@ -326,6 +326,13 @@ export default function ProspectsPage() {
     setToast({ msg, type });
     setTimeout(() => setToast({ msg:"", type:"success" }), 4000);
   }, []);
+
+  // ── Keep drawer in sync when prospects array updates (e.g. after any PATCH)
+  useEffect(() => {
+    if (!drawer) return;
+    const fresh = prospects.find(p => p.id === drawer.id);
+    if (fresh && JSON.stringify(fresh) !== JSON.stringify(drawer)) setDrawer(fresh);
+  }, [prospects]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Status update (with auto-sync to open drawer)
   const handleStatus = useCallback(async (id: string, newStatus: StatusType) => {
@@ -528,6 +535,8 @@ export default function ProspectsPage() {
         .row-hover { transition: background 0.12s ease; cursor:pointer; }
         .row-hover:hover { background: rgba(255,255,255,0.025) !important; }
         .input-focus { transition: border-color 0.15s ease; }
+        .input-focus:focus { outline:none; border-color:rgba(200,255,0,0.45) !important; }
+        @media (max-width:768px) { .prospects-main { margin-left:0 !important; padding:16px !important; } }
         .input-focus:focus { border-color: rgba(200,255,0,0.4) !important; outline:none; }
       `}</style>
 
@@ -636,7 +645,7 @@ export default function ProspectsPage() {
       <input type="file" ref={fileRef} accept=".csv" onChange={handleCSV} style={{ display:"none" }} />
       <Sidebar active="prospects" user={user} onLogout={handleLogout} />
 
-      <div style={{ marginLeft:240, padding:"28px 32px" }}>
+      <div className="prospects-main" style={{ marginLeft:240, padding:"28px 32px" }}>
 
         {/* Header */}
         <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:24 }}>
@@ -754,11 +763,52 @@ export default function ProspectsPage() {
           </div>
 
           {filtered.length === 0 ? (
-            <div style={{ padding:52, textAlign:"center", color:S.faint }}>
-              <div style={{ fontSize:28, marginBottom:10 }}>🔍</div>
-              <div style={{ fontSize:14, fontWeight:600, color:S.muted, marginBottom:6 }}>No prospects found</div>
-              <div style={{ fontSize:12 }}>{search ? "Try a different search" : "Add your first prospect above"}</div>
-            </div>
+            prospects.length === 0 ? (
+              /* ── True empty state: brand new user, no prospects at all ── */
+              <div style={{ padding:"64px 32px", textAlign:"center" }}>
+                <div style={{ width:72, height:72, borderRadius:20,
+                  background:"linear-gradient(140deg,rgba(200,255,0,0.12),rgba(200,255,0,0.04))",
+                  border:"1px solid rgba(200,255,0,0.18)",
+                  display:"grid", placeItems:"center", margin:"0 auto 20px", fontSize:28 }}>
+                  🎯
+                </div>
+                <div style={{ fontSize:18, fontWeight:800, color:S.text, marginBottom:8 }}>
+                  No prospects yet
+                </div>
+                <div style={{ fontSize:13, color:S.muted, marginBottom:24, maxWidth:340, margin:"0 auto 24px" }}>
+                  Add your first prospect manually or import a CSV file to get started. Every great pipeline starts somewhere.
+                </div>
+                <div style={{ display:"flex", gap:10, justifyContent:"center", flexWrap:"wrap" }}>
+                  <button className="btn-smooth" onClick={() => setShowAdd(true)}
+                    style={{ padding:"11px 24px", borderRadius:10, background:S.accent,
+                      border:"none", color:"#050505", fontWeight:800, fontSize:13 }}>
+                    + Add First Prospect
+                  </button>
+                  <button className="btn-smooth" onClick={() => fileRef.current?.click()}
+                    style={{ padding:"11px 20px", borderRadius:10, background:"rgba(255,255,255,0.06)",
+                      border:`1px solid ${S.line}`, color:S.muted, fontWeight:700, fontSize:13 }}>
+                    📥 Import CSV
+                  </button>
+                </div>
+              </div>
+            ) : (
+              /* ── Search/filter returned nothing ── */
+              <div style={{ padding:52, textAlign:"center", color:S.faint }}>
+                <div style={{ fontSize:28, marginBottom:10 }}>🔍</div>
+                <div style={{ fontSize:14, fontWeight:600, color:S.muted, marginBottom:6 }}>No prospects found</div>
+                <div style={{ fontSize:12 }}>
+                  {search ? `No results for "${search}" — try a different term` : "No prospects match this filter"}
+                </div>
+                {(search || filter !== "all") && (
+                  <button className="btn-smooth" onClick={() => { setSearch(""); setFilter("all"); }}
+                    style={{ marginTop:14, padding:"7px 16px", borderRadius:8,
+                      background:"rgba(255,255,255,0.05)", border:`1px solid ${S.line}`,
+                      color:S.muted, fontSize:12, fontWeight:600 }}>
+                    Clear filters
+                  </button>
+                )}
+              </div>
+            )
           ) : filtered.map((p, i) => {
             const sm = STATUS_META[p.status ?? "new"] ?? STATUS_META.new;
             return (
