@@ -450,7 +450,12 @@ export default function ProspectsPage() {
     try {
       const res  = await fetch("/api/send-email", {
         method:"POST", headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({ to:aiModal.email, toName:aiModal.name, subject:aiSubject, emailBody:aiBody, prospectId:aiModal.id }),
+        body: JSON.stringify({
+          userId: user?.uid,
+          to: aiModal.email, toName: aiModal.name,
+          subject: aiSubject, emailBody: aiBody,
+          prospectId: aiModal.id,
+        }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -467,14 +472,30 @@ export default function ProspectsPage() {
     } finally { setSending(false); }
   };
 
-  // ── Handle call click (auto-status)
+  // ── Handle call click (auto-status + Supabase log)
   const handleCallClick = useCallback(async (p: Prospect) => {
+    // 1. Auto-update status
     const next = autoStatus(p.status, "call");
     if (next !== p.status) {
       await handleStatus(p.id, next);
-      showToast(`📞 Calling ${p.name} — status → ${next}`);
     }
-  }, [handleStatus, showToast]);
+    showToast(`📞 Calling ${p.name}…`);
+
+    // 2. Log call to Supabase (fire-and-forget; don't block the tel: link)
+    if (user?.uid) {
+      fetch("/api/call-log", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId:       user.uid,
+          prospectId:   p.id,
+          prospectName: p.name,
+          phone:        p.phone ?? null,
+          status:       "attempted",
+        }),
+      }).catch(() => {}); // silent — call still works even if log fails
+    }
+  }, [handleStatus, showToast, user]);
 
   // ── Filtering
   const filtered = prospects.filter(p => {
