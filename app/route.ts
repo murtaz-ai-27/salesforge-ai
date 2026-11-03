@@ -405,6 +405,7 @@ footer{border-top:1px solid var(--line-soft);padding:60px 0 40px;margin-top:24px
         <a href="#features">Features</a>
         <a href="#agents">AI Agents<span class="nav-badge">New</span></a>
         <a href="#integrations">Integrations</a>
+        <a target="_top" href="/dashboard/mcp">MCP<span class="nav-badge">New</span></a>
         <a href="#pricing">Pricing</a>
         <a href="#testimonials">Reviews</a>
       </div>
