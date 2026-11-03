@@ -26,9 +26,17 @@ export default function SignupPage() {
     try {
       const { signInWithGithub } = await import("@/lib/firebase");
       await signInWithGithub();
-      router.push("/onboarding"); // → onboarding instead of dashboard
+      router.push("/onboarding");
     } catch (err: any) {
-      setError(err.message ?? "Sign up failed");
+      if (err?.code === "auth/account-exists-with-different-credential") {
+        setError("This email already has an account via Google. Please sign in with Google instead.");
+      } else if (err?.code === "auth/popup-closed-by-user") {
+        setError("Sign-in popup was closed. Please try again.");
+      } else if (err?.code === "auth/popup-blocked") {
+        setError("Popup was blocked. Please allow popups for this site and try again.");
+      } else {
+        setError(err.message ?? "Sign up failed");
+      }
     }
     setLoading(false);
   };

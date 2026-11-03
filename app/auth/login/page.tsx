@@ -27,7 +27,17 @@ function LoginContent() {
       const { signInWithGithub } = await import("@/lib/firebase");
       await signInWithGithub();
       router.push(redirectTo);
-    } catch (err: any) { setError(err.message ?? "Sign in failed"); }
+    } catch (err: any) {
+      if (err?.code === "auth/account-exists-with-different-credential") {
+        setError("This email is already linked to a Google account. Please sign in with Google — you can link GitHub later from Settings.");
+      } else if (err?.code === "auth/popup-closed-by-user") {
+        setError("Sign-in popup was closed. Please try again.");
+      } else if (err?.code === "auth/popup-blocked") {
+        setError("Popup was blocked by your browser. Please allow popups for this site and try again.");
+      } else {
+        setError(err.message ?? "GitHub sign in failed");
+      }
+    }
     setLoading(false);
   };
 
