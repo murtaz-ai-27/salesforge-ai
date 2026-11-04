@@ -28,9 +28,9 @@ const BRAND: Record<PlatformId,{ primary:string; bg:string; glow:string; textOnP
 /* ─── REAL Logos (pixel-faithful SVG recreations) ───────────── */
 
 /** Claude — always orange asterisk (Anthropic brand) */
-function LogoClaude({ size=22, active=false }: { size?:number; active?:boolean }) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function LogoClaude({ size=22, active: _active=false }: { size?:number; active?:boolean }) {
   const c = "#CC785C"; // always orange — never white
-  void active;
   // 12 rounded rays rotated 30° each, like the real Claude logo
   const rays = Array.from({length:12},(_,i)=>{
     const angle = (i * 30) * Math.PI / 180;
@@ -75,7 +75,7 @@ function LogoTelegram({ size=22, active=false }: { size?:number; active?:boolean
           <stop offset="100%" stopColor="#229ED9"/>
         </linearGradient>
       </defs>
-      <circle cx="120" cy="120" r="120" fill={active ? "url(#tg-grad)" : "url(#tg-grad)"}/>
+      <circle cx="120" cy="120" r="120" fill="url(#tg-grad)"/>
       <path
         d="M54 117.9c35.4-15.4 59-25.6 70.9-30.6 33.7-14.1 40.8-16.5 45.3-16.6.9 0 3.1.2 4.5 1.4 1.1 1 1.5 2.3 1.6 3.2.1.9.3 3 .2 4.6-1.6 17-8.7 58.4-12.3 77.5-1.5 8.1-4.5 10.8-7.3 11.1-6.3.6-11-4.1-17-8.1-9.5-6.2-14.8-10-24-16-10.7-7-3.7-10.8 2.3-17.1 1.6-1.7 29.5-27 30-29.3.1-.3.1-.5-.2-.7-.3-.2-.7-.1-1-.1-.4.1-7 4.5-19.8 13.1-18.8 12.9-37.7 25.6-37.7 25.6s-21.3-6.6-21.5-6.5z"
         fill="white"
@@ -182,26 +182,24 @@ const PLATFORMS: Platform[] = [
       { icon:"📊", title:"Pipeline Intel",  desc:"Real-time stats from your Salevrix pipeline" },
     ],
     steps:[
-      { title:"Open Claude Desktop settings",
-        desc:"Go to Claude Desktop → Settings (⌘,) → Developer tab → click Edit Config" },
-      { title:"Add Salevrix MCP server",
-        desc:"Paste this into your claude_desktop_config.json file:", lang:"json",
+      { title:"Get your API key",
+        desc:"Your API key is your Firebase UID — copy it from the section below, then paste it in the config." },
+      { title:"Open Claude Desktop config",
+        desc:"Go to Claude Desktop → Settings (⌘,) → Developer → Edit Config. The file is at ~/Library/Application Support/Claude/claude_desktop_config.json", lang:"json",
         code:`{
   "mcpServers": {
     "salevrix": {
-      "command": "npx",
-      "args": ["-y", "@salevrix/mcp-server"],
-      "env": {
-        "SALEVRIX_API_KEY": "YOUR_API_KEY_HERE",
-        "SALEVRIX_SERVER_URL": "${SERVER}"
+      "url": "${SERVER}",
+      "headers": {
+        "Authorization": "Bearer YOUR_API_KEY_HERE"
       }
     }
   }
 }` },
-      { title:"Restart Claude Desktop",
-        desc:"Fully quit Claude (⌘Q) and reopen it. The 🔧 Salevrix tools will appear in the tool selector." },
-      { title:"Start prospecting",
-        desc:'Try asking Claude: "Salevrix: find me 10 SaaS founders in NYC and draft personalized outreach for each"' },
+      { title:"Fully quit and restart Claude Desktop",
+        desc:"Press ⌘Q to quit (not just close the window), then reopen. The 🔧 tool icon appears in the message bar when Salevrix is connected." },
+      { title:"Try it out",
+        desc:'Ask Claude: "List my top prospects" or "Show me pipeline stats" — Salevrix will respond with real data from your pipeline.' },
     ],
   },
   {
@@ -213,22 +211,23 @@ const PLATFORMS: Platform[] = [
       { icon:"🛠️", title:"Dev Friendly", desc:"Full JSON output for piping and scripting" },
     ],
     steps:[
-      { title:"Install Claude Code CLI",
+      { title:"Install Claude Code",
         desc:"Requires Node.js 18+. Install globally:", lang:"bash",
         code:"npm install -g @anthropic-ai/claude-code" },
-      { title:"Register Salevrix as an MCP server",
-        desc:"Run this command once in your terminal:", lang:"bash",
-        code:`claude mcp add salevrix npx -- -y @salevrix/mcp-server \\
-  --env SALEVRIX_API_KEY=YOUR_API_KEY_HERE \\
-  --env SALEVRIX_SERVER_URL=${SERVER}` },
+      { title:"Register Salevrix via HTTP transport",
+        desc:"Run once in your terminal — replace YOUR_API_KEY_HERE with the key below:", lang:"bash",
+        code:`claude mcp add --transport http salevrix ${SERVER} \\
+  --header "Authorization: Bearer YOUR_API_KEY_HERE"` },
       { title:"Verify the connection",
-        desc:"Confirm Salevrix is registered:", lang:"bash",
-        code:"claude mcp list\n# → salevrix   npx @salevrix/mcp-server   connected" },
-      { title:"Use in a Claude Code session",
-        desc:"Start Claude Code and talk to your pipeline:", lang:"bash",
+        desc:"List registered MCP servers:", lang:"bash",
+        code:`claude mcp list
+# salevrix   ${SERVER}   http   ✓ connected` },
+      { title:"Use Salevrix in any Claude Code session",
+        desc:"Start a session and talk to your pipeline:", lang:"bash",
         code:`claude
-# Then type inside the session:
-# > Use salevrix to list my top 5 uncontacted prospects and write follow-up emails` },
+> List my prospects with status "new"
+> Add a new prospect: John Doe, john@acme.com, Acme Corp
+> Show me pipeline stats` },
     ],
   },
   {
@@ -297,43 +296,41 @@ paths:
                 body: { type: string }
       responses:
         "200": { description: Email sent confirmation }` },
-      { title:"Set Authentication to Bearer Token",
-        desc:"In the Action config: Authentication → API Key → Auth Type: Bearer → paste your Salevrix API key" },
+      { title:"Set authentication",
+        desc:"In the Action config → Authentication → API Key → Auth Type: Bearer → paste your API key (the one shown below)" },
       { title:"Save and test",
-        desc:'Click Save → Test → Ask: "Get my prospects who haven\'t replied in 7 days and draft follow-ups"' },
+        desc:'Click Save → Test the action → Then ask your GPT: "List my prospects" or "Show pipeline stats" — it will call the real Salevrix API.' },
     ],
   },
   {
     id:"codex", label:"Codex", badge:"Beta",
-    tagline:"Integrate Salevrix with OpenAI Codex via the Responses API. Build AI sales agents that can search leads, draft emails, and update pipelines autonomously.",
+    tagline:"Integrate Salevrix with OpenAI GPT-4o / Codex via function calling. Build AI sales agents that search leads, update your pipeline, and get stats autonomously.",
     features:[
-      { icon:"🧠", title:"AI Agents",     desc:"Build autonomous sales agents with Codex" },
+      { icon:"🧠", title:"AI Agents",     desc:"Build autonomous sales agents with GPT-4o" },
       { icon:"🔧", title:"Tool Calling",  desc:"Full function-calling with Salevrix tools" },
-      { icon:"🚀", title:"Responses API", desc:"Stream results directly into your app" },
+      { icon:"🚀", title:"Streaming",     desc:"Stream results directly into your app" },
     ],
     steps:[
-      { title:"Get your OpenAI API key",
-        desc:"OpenAI Platform → API Keys → Create new secret key → copy it" },
       { title:"Install the OpenAI SDK",
-        desc:"Install in your project:", lang:"bash",
+        desc:"Requires Node.js 18+. Install in your project:", lang:"bash",
         code:"npm install openai" },
-      { title:"Register Salevrix as a tool",
-        desc:"Use function calling to give Codex access to your pipeline:", lang:"bash",
+      { title:"Define Salevrix as OpenAI tools",
+        desc:"These tool definitions map directly to real Salevrix MCP tools:", lang:"bash",
         code:`import OpenAI from "openai";
 
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-const tools = [
+const tools: OpenAI.Chat.ChatCompletionTool[] = [
   {
     type: "function",
     function: {
-      name: "salevrix_list_prospects",
+      name: "list_prospects",
       description: "List prospects from the Salevrix pipeline",
       parameters: {
         type: "object",
         properties: {
-          status: { type: "string", enum: ["new","contacted","replied","closed"] },
-          limit:  { type: "number", default: 20 }
+          status: { type: "string", enum: ["new","contacted","replied","closed","all"] },
+          limit:  { type: "number", minimum: 1, maximum: 100 }
         }
       }
     }
@@ -341,72 +338,99 @@ const tools = [
   {
     type: "function",
     function: {
-      name: "salevrix_send_email",
-      description: "Send an outreach email to a prospect",
+      name: "get_stats",
+      description: "Get pipeline statistics — counts by status, average AI score",
+      parameters: { type: "object", properties: {} }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "add_prospect",
+      description: "Add a new prospect to the pipeline",
       parameters: {
         type: "object",
-        required: ["prospectId","subject","body"],
+        required: ["name", "email"],
         properties: {
-          prospectId: { type: "string" },
-          subject:    { type: "string" },
-          body:       { type: "string" }
+          name:    { type: "string" },
+          email:   { type: "string" },
+          company: { type: "string" },
+          role:    { type: "string" }
         }
       }
     }
   }
-];
+];` },
+      { title:"Call the Salevrix MCP endpoint when a tool fires",
+        desc:"When GPT-4o calls a tool, forward it to the real Salevrix MCP API:", lang:"bash",
+        code:`async function callSalevrix(name: string, args: Record<string, unknown>) {
+  // Build a proper MCP JSON-RPC request
+  const mcpRequest = {
+    jsonrpc: "2.0",
+    id: 1,
+    method: "tools/call",
+    params: { name, arguments: args }
+  };
 
+  const res = await fetch("${SERVER}", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": \`Bearer \${process.env.SALEVRIX_API_KEY}\`,
+      "Accept": "application/json, text/event-stream"
+    },
+    body: JSON.stringify(mcpRequest)
+  });
+
+  const json = await res.json();
+  return json?.result?.content?.[0]?.text ?? JSON.stringify(json);
+}
+
+// Run the agentic loop
 const response = await client.chat.completions.create({
   model: "gpt-4o",
   tools,
-  messages: [{ role: "user", content: "Find my top 5 uncontacted leads and draft emails" }]
-});` },
-      { title:"Handle tool calls and call Salevrix",
-        desc:"When Codex calls a tool, forward it to your Salevrix API:", lang:"bash",
-        code:`async function callSalevrix(name: string, args: Record<string,unknown>) {
-  const res = await fetch(\`${SERVER}/\${name.replace("salevrix_","")}\`, {
-    method: "POST",
-    headers: {
-      "Authorization": \`Bearer \${process.env.SALEVRIX_API_KEY}\`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(args)
-  });
-  return res.json();
+  messages: [{ role: "user", content: "Show me my pipeline stats and list all new prospects" }]
+});
+
+if (response.choices[0].finish_reason === "tool_calls") {
+  for (const tc of response.choices[0].message.tool_calls ?? []) {
+    const result = await callSalevrix(tc.function.name, JSON.parse(tc.function.arguments));
+    console.log(result);
+  }
 }` },
     ],
   },
   {
     id:"cursor", label:"Cursor",
-    tagline:"Use Salevrix tools directly inside Cursor's AI Composer. Research leads, draft emails, and update your pipeline — right in your editor.",
+    tagline:"Use Salevrix tools directly inside Cursor's AI Composer. Research leads, add prospects, and get pipeline stats — right in your editor.",
     features:[
       { icon:"🖊️", title:"In-Editor",    desc:"Prospect research inside your IDE" },
       { icon:"🤝", title:"Composer",     desc:"Full Salevrix tools in Cursor Composer" },
-      { icon:"⚙️", title:"MCP Native",   desc:"First-class MCP protocol support" },
+      { icon:"⚙️", title:"MCP Native",   desc:"First-class MCP HTTP transport support" },
     ],
     steps:[
       { title:"Open Cursor MCP settings",
-        desc:"Cursor → Settings (⌘,) → Features → scroll to MCP (Beta) → Add new MCP server" },
-      { title:"Add Salevrix to your MCP config",
-        desc:"Paste into ~/.cursor/mcp.json (create if it doesn't exist):", lang:"json",
+        desc:"Cursor → Settings (⌘,) → Features → scroll to MCP Servers → Add new MCP server" },
+      { title:"Add Salevrix with HTTP transport",
+        desc:"Paste this into ~/.cursor/mcp.json (create if it doesn't exist). Replace YOUR_API_KEY_HERE with the key below:", lang:"json",
         code:`{
   "mcpServers": {
     "salevrix": {
-      "command": "npx",
-      "args": ["-y", "@salevrix/mcp-server"],
-      "env": {
-        "SALEVRIX_API_KEY": "YOUR_API_KEY_HERE",
-        "SALEVRIX_SERVER_URL": "${SERVER}"
+      "url": "${SERVER}",
+      "headers": {
+        "Authorization": "Bearer YOUR_API_KEY_HERE"
       }
     }
   }
 }` },
       { title:"Reload Cursor",
-        desc:"Press ⌘⇧P → type Reload Window → Enter. Salevrix tools will appear in Cursor Composer." },
+        desc:"Press ⌘⇧P → Reload Window → Enter. The Salevrix tools (list_prospects, add_prospect, get_stats, etc.) will appear in Cursor Composer." },
       { title:"Try it in Composer (⌘I)",
-        desc:"Open Composer and type:", lang:"bash",
-        code:`"Use Salevrix to get all prospects at Series A startups
- and generate a personalized cold email sequence for each one"` },
+        desc:"Open Composer and type naturally:", lang:"bash",
+        code:`List my top 10 prospects with status "new"
+Add a prospect: Sarah Chen, sarah@acme.com, Acme Corp, VP Engineering
+Show me my pipeline stats` },
     ],
   },
   {
@@ -419,76 +443,116 @@ const response = await client.chat.completions.create({
     ],
     steps:[
       { title:"Create a Telegram Bot",
-        desc:"Open Telegram → search @BotFather → send /newbot → follow prompts → copy the token" },
-      { title:"Start the Salevrix bridge",
-        desc:"Run in your terminal or server:", lang:"bash",
-        code:`npx @salevrix/telegram-bridge \\
-  --telegram-token YOUR_BOT_TOKEN \\
-  --salevrix-key YOUR_API_KEY_HERE \\
-  --server-url ${SERVER}` },
-      { title:"Or deploy with Docker (recommended for 24/7)",
-        desc:"One command for a persistent VPS deployment:", lang:"bash",
-        code:`docker run -d --name salevrix-bot --restart always \\
-  -e TELEGRAM_TOKEN=YOUR_BOT_TOKEN \\
-  -e SALEVRIX_API_KEY=YOUR_API_KEY_HERE \\
-  -e SALEVRIX_SERVER_URL=${SERVER} \\
-  salevrix/telegram-bridge:latest` },
-      { title:"Available bot commands",
-        desc:"Send these inside your Telegram bot chat:", lang:"bash",
-        code:`/prospects             – List your top 10 prospects
-/pipeline              – Full pipeline overview with stats
-/send @email "Subject" "Body"  – Send an outreach email
-/status @email contacted       – Update prospect status
-/stats                 – Open rate, reply rate, emails sent
-/help                  – Show all available commands` },
+        desc:"Open Telegram → search @BotFather → /newbot → follow the prompts → copy the HTTP API token you receive." },
+      { title:"Install the official Grammy bot framework",
+        desc:"Grammy is the real, actively-maintained Telegram bot framework for Node.js:", lang:"bash",
+        code:"npm install grammy node-fetch" },
+      { title:"Build the Salevrix bot",
+        desc:"Create bot.ts — it calls the real Salevrix MCP API on every command:", lang:"bash",
+        code:`import { Bot } from "grammy";
+
+const bot = new Bot(process.env.TELEGRAM_BOT_TOKEN!);
+const SALEVRIX = "${SERVER}";
+const KEY = process.env.SALEVRIX_API_KEY!;
+
+async function mcp(tool: string, args = {}) {
+  const r = await fetch(SALEVRIX, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": \`Bearer \${KEY}\`,
+      "Accept": "application/json, text/event-stream"
+    },
+    body: JSON.stringify({ jsonrpc:"2.0", id:1, method:"tools/call", params:{ name:tool, arguments:args } })
+  });
+  const j = await r.json();
+  return j?.result?.content?.[0]?.text ?? "No response";
+}
+
+bot.command("start",  ctx => ctx.reply("👋 Salevrix bot active. Try /prospects or /stats"));
+bot.command("stats",  async ctx => ctx.reply(await mcp("get_stats")));
+bot.command("prospects", async ctx => ctx.reply(await mcp("list_prospects", { limit: 10 })));
+bot.command("new",    async ctx => ctx.reply(await mcp("list_prospects", { status:"new", limit:10 })));
+bot.command("search", async ctx => {
+  const q = ctx.message?.text?.split(" ").slice(1).join(" ");
+  if (!q) return ctx.reply("Usage: /search <name or company>");
+  ctx.reply(await mcp("search_prospects", { query: q }));
+});
+
+bot.start();
+console.log("Salevrix Telegram bot running");` },
+      { title:"Set environment variables and run",
+        desc:"Add to your .env file and start the bot:", lang:"bash",
+        code:`TELEGRAM_BOT_TOKEN=your_bot_token_from_botfather
+SALEVRIX_API_KEY=YOUR_API_KEY_HERE
+
+# Run the bot
+npx tsx bot.ts` },
     ],
   },
   {
     id:"cli", label:"CLI",
-    tagline:"Full terminal access to your Salevrix pipeline. Import leads, send emails, search prospects — all from the command line.",
+    tagline:"Full terminal access to your Salevrix pipeline via the MCP HTTP API. Use curl, httpie, or any HTTP client — no install required.",
     features:[
-      { icon:"⚡", title:"Fast",        desc:"Sub-100ms responses on all commands" },
+      { icon:"⚡", title:"No install",   desc:"Just curl — works anywhere Node isn't available" },
       { icon:"🔗", title:"Pipeable",    desc:"JSON output — works perfectly with jq" },
-      { icon:"📁", title:"Import/Export", desc:"CSV, JSON, and custom field mapping" },
+      { icon:"🔑", title:"Bearer auth",  desc:"Your Firebase UID is the API key — copy it above" },
     ],
     steps:[
-      { title:"Install the Salevrix CLI",
-        desc:"Install globally via npm (Node.js 18+ required):", lang:"bash",
-        code:"npm install -g @salevrix/cli" },
-      { title:"Authenticate",
-        desc:"Login once with your API key:", lang:"bash",
-        code:`salevrix auth login --key YOUR_API_KEY_HERE
-# → ✓ Authenticated as your@email.com` },
-      { title:"Core pipeline commands",
-        desc:"Everything you need to manage your prospects:", lang:"bash",
-        code:`# List prospects
-salevrix prospects list --status new --limit 20
-
-# Add a new prospect
-salevrix prospects add \\
-  --name "Sarah Chen" \\
-  --email sarah@company.com \\
-  --company "Acme Corp" \\
-  --title "VP of Engineering"
-
-# Send an email
-salevrix email send \\
-  --to PROSPECT_ID \\
-  --subject "Quick question about your stack" \\
-  --template follow_up_1
-
-# View analytics
-salevrix analytics --range 30d` },
-      { title:"Compose with other tools",
-        desc:"Pipe with your existing terminal toolkit:", lang:"bash",
-        code:`# Export as CSV
-salevrix prospects list --format csv > prospects.csv
-
-# Import a leads file
-salevrix prospects import --file leads.csv --map name,email,company
-
-# Search and pipe to jq
-salevrix prospects search "saas founder" --format json | jq '.[] | .email'` },
+      { title:"Get your pipeline stats",
+        desc:"Call the MCP endpoint directly with curl. Replace YOUR_API_KEY_HERE with your key shown above:", lang:"bash",
+        code:`curl -s -X POST https://salevrix-ai.vercel.app/api/mcp \\
+  -H "Authorization: Bearer YOUR_API_KEY_HERE" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "tools/call",
+    "params": {
+      "name": "get_stats",
+      "arguments": {}
+    }
+  }' | jq '.result.content[0].text'` },
+      { title:"List your prospects",
+        desc:"Fetch up to 100 prospects, optionally filtered by status (new | contacted | replied | closed | all):", lang:"bash",
+        code:`curl -s -X POST https://salevrix-ai.vercel.app/api/mcp \\
+  -H "Authorization: Bearer YOUR_API_KEY_HERE" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 2,
+    "method": "tools/call",
+    "params": {
+      "name": "list_prospects",
+      "arguments": { "status": "new", "limit": 20 }
+    }
+  }' | jq -r '.result.content[0].text'` },
+      { title:"Add a prospect",
+        desc:"Insert a new lead directly into your pipeline:", lang:"bash",
+        code:`curl -s -X POST https://salevrix-ai.vercel.app/api/mcp \\
+  -H "Authorization: Bearer YOUR_API_KEY_HERE" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 3,
+    "method": "tools/call",
+    "params": {
+      "name": "add_prospect",
+      "arguments": {
+        "name": "Sarah Chen",
+        "email": "sarah@company.com",
+        "company": "Acme Corp",
+        "role": "VP of Engineering"
+      }
+    }
+  }' | jq '.result.content[0].text'` },
+      { title:"Discover all available tools",
+        desc:"List every MCP tool the server exposes:", lang:"bash",
+        code:`curl -s -X POST https://salevrix-ai.vercel.app/api/mcp \\
+  -H "Authorization: Bearer YOUR_API_KEY_HERE" \\
+  -H "Content-Type: application/json" \\
+  -d '{"jsonrpc":"2.0","id":0,"method":"tools/list","params":{}}' \\
+  | jq '[.result.tools[].name]'` },
     ],
   },
 ];
@@ -530,10 +594,11 @@ export default function MCPPage() {
   const p     = PLATFORMS.find(x => x.id === active)!;
   const brand = BRAND[active];
 
-  // Generate a stable fake API key from the user's UID (for display only)
-  const uid        = user?.uid ?? "xxxxxxxxxxxxxxxxxxxxxxxxxxxx";
-  const apiKeyReal = `slvx_live_sk_${uid.slice(0, 24)}xx`;
-  const apiKeyMask = "slvx_live_••••••••••••••••••••••";
+  // The API key IS the Firebase UID — no extra key management needed.
+  // The MCP backend reads: Authorization: Bearer <uid>
+  const uid        = user?.uid ?? "";
+  const apiKeyReal = uid;
+  const apiKeyMask = uid.slice(0, 6) + "••••••••••••••••••••••" + uid.slice(-4);
 
   const copyKey = () => {
     navigator.clipboard.writeText(apiKeyReal).catch(()=>{});
@@ -696,9 +761,10 @@ export default function MCPPage() {
         <div style={{ background:S.panel, border:`1px solid ${S.line}`, borderRadius:14, padding:"18px 22px", marginBottom:20 }}>
           <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:12, flexWrap:"wrap" as const, gap:10 }}>
             <div>
-              <div style={{ fontSize:13, fontWeight:700, color:S.text, marginBottom:2 }}>Your API Key</div>
+              <div style={{ fontSize:13, fontWeight:700, color:S.text, marginBottom:2 }}>Your API Key (Firebase UID)</div>
               <div style={{ fontSize:12, color:S.muted }}>
-                Replace <code style={{ fontFamily:"monospace", color:brand.primary, background:brand.bg, padding:"1px 5px", borderRadius:3 }}>YOUR_API_KEY_HERE</code> in the configs below
+                This is your Firebase UID — use it as the Bearer token. Replace{" "}
+                <code style={{ fontFamily:"monospace", color:brand.primary, background:brand.bg, padding:"1px 5px", borderRadius:3 }}>YOUR_API_KEY_HERE</code> in every config below.
               </div>
             </div>
             <div style={{ display:"flex", gap:8 }}>
@@ -773,7 +839,7 @@ export default function MCPPage() {
               Email{" "}
               <a href="mailto:support@salevrix.ai" style={{ color:brand.primary, textDecoration:"none" }}>support@salevrix.ai</a>
               {" · "}
-              <a href="https://docs.salevrix.ai/mcp" target="_blank" rel="noopener noreferrer" style={{ color:brand.primary, textDecoration:"none" }}>Read docs →</a>
+              MCP endpoint: <code style={{ fontFamily:"monospace", fontSize:11, color:brand.primary }}>POST /api/mcp</code>
             </div>
           </div>
           <div style={{ fontSize:11, color:S.faint, textAlign:"right" as const, lineHeight:1.6 }}>
