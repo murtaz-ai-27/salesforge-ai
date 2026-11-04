@@ -13,12 +13,13 @@ const S = {
 };
 
 /* ─── Brand colours ──────────────────────────────────────────── */
-type PlatformId = "claude"|"claude-code"|"chatgpt"|"cursor"|"telegram"|"cli";
+type PlatformId = "claude"|"claude-code"|"chatgpt"|"codex"|"cursor"|"telegram"|"cli";
 
 const BRAND: Record<PlatformId,{ primary:string; bg:string; glow:string; textOnPrimary:string }> = {
   "claude":      { primary:"#CC785C", bg:"rgba(204,120,92,0.13)",  glow:"rgba(204,120,92,0.28)",  textOnPrimary:"#fff" },
   "claude-code": { primary:"#CC785C", bg:"rgba(204,120,92,0.13)",  glow:"rgba(204,120,92,0.28)",  textOnPrimary:"#fff" },
   "chatgpt":     { primary:"#10A37F", bg:"rgba(16,163,127,0.13)",  glow:"rgba(16,163,127,0.28)",  textOnPrimary:"#fff" },
+  "codex":       { primary:"#3b82f6", bg:"rgba(59,130,246,0.13)",  glow:"rgba(59,130,246,0.28)",  textOnPrimary:"#fff" },
   "cursor":      { primary:"#a07aff", bg:"rgba(160,122,255,0.13)", glow:"rgba(160,122,255,0.28)", textOnPrimary:"#fff" },
   "telegram":    { primary:"#2AABEE", bg:"rgba(42,171,238,0.13)",  glow:"rgba(42,171,238,0.28)",  textOnPrimary:"#fff" },
   "cli":         { primary:"#C8FF00", bg:"rgba(200,255,0,0.12)",   glow:"rgba(200,255,0,0.26)",   textOnPrimary:"#0a1200" },
@@ -26,9 +27,10 @@ const BRAND: Record<PlatformId,{ primary:string; bg:string; glow:string; textOnP
 
 /* ─── REAL Logos (pixel-faithful SVG recreations) ───────────── */
 
-/** Claude — orange 12-ray asterisk (Anthropic brand) */
+/** Claude — always orange asterisk (Anthropic brand) */
 function LogoClaude({ size=22, active=false }: { size?:number; active?:boolean }) {
-  const c = active ? "#fff" : "#CC785C";
+  const c = "#CC785C"; // always orange — never white
+  void active;
   // 12 rounded rays rotated 30° each, like the real Claude logo
   const rays = Array.from({length:12},(_,i)=>{
     const angle = (i * 30) * Math.PI / 180;
@@ -48,16 +50,16 @@ function LogoClaude({ size=22, active=false }: { size?:number; active?:boolean }
   );
 }
 
-/** OpenAI / ChatGPT — official interlocking-hexagon knot */
+/** OpenAI / ChatGPT — white knot on green circle */
 function LogoChatGPT({ size=22, active=false }: { size?:number; active?:boolean }) {
-  const c = active ? "#10A37F" : "#10A37F";
-  const bg = active ? "#10A37F" : "transparent";
   return (
     <svg width={size} height={size} viewBox="0 0 41 41" fill="none">
-      {active && <rect width="41" height="41" rx="10" fill={bg}/>}
+      {/* always show green circle bg */}
+      <rect width="41" height="41" rx="10" fill={active ? "#10A37F" : "rgba(16,163,127,0.18)"}/>
+      {/* knot always white */}
       <path
         d="M37.532 16.87a9.963 9.963 0 0 0-.856-8.184 10.078 10.078 0 0 0-10.855-4.835 9.964 9.964 0 0 0-6.650-2.981 10.079 10.079 0 0 0-9.619 6.980 9.967 9.967 0 0 0-6.675 4.834 10.08 10.08 0 0 0 1.24 11.817 9.965 9.965 0 0 0 .856 8.185 10.079 10.079 0 0 0 10.855 4.835 9.965 9.965 0 0 0 6.650 2.981 10.079 10.079 0 0 0 9.619-6.980 9.967 9.967 0 0 0 6.675-4.834 10.079 10.079 0 0 0-1.24-11.818zm-17.233 24.08a7.46 7.46 0 0 1-4.800-1.735c.061-.033.168-.091.237-.134l7.964-4.6a1.294 1.294 0 0 0 .655-1.134V19.054l3.366 1.944a.12.12 0 0 1 .066.092v9.299a7.505 7.505 0 0 1-7.488 7.561zM4.392 33.906a7.471 7.471 0 0 1-.894-5.023c.06.036.162.099.237.141l7.964 4.6a1.297 1.297 0 0 0 1.308 0l9.724-5.614v3.888a.12.12 0 0 1-.048.103L14.627 36.9a7.505 7.505 0 0 1-10.235-2.995zm-2.410-16.593a7.470 7.470 0 0 1 3.903-3.287c0 .068-.004.19-.004.274v9.201a1.294 1.294 0 0 0 .654 1.132l9.723 5.614-3.366 1.944a.12.12 0 0 1-.114.012L4.750 27.202a7.505 7.505 0 0 1-2.768-9.889zm27.658 6.437l-9.724-5.615 3.367-1.943a.121.121 0 0 1 .114-.012l8.048 4.648a7.498 7.498 0 0 1-1.158 13.528v-9.476a1.293 1.293 0 0 0-.647-1.13zm3.35-5.043c-.059-.037-.162-.099-.236-.141l-7.965-4.600a1.298 1.298 0 0 0-1.308 0l-9.723 5.614v-3.888a.12.12 0 0 1 .048-.103l8.048-4.645a7.498 7.498 0 0 1 11.136 7.763zm-21.063 6.929l-3.367-1.944a.12.12 0 0 1-.065-.092v-9.299a7.497 7.497 0 0 1 12.293-5.756 6.94 6.94 0 0 0-.236.134l-7.965 4.6a1.294 1.294 0 0 0-.654 1.132l-.006 11.225zm1.829-3.943l4.33-2.501 4.332 2.500v4.999l-4.331 2.5-4.331-2.5V21.693z"
-        fill={active ? "#fff" : c}
+        fill="white"
       />
     </svg>
   );
@@ -143,10 +145,24 @@ function LogoCLI({ size=22, active=false }: { size?:number; active?:boolean }) {
   );
 }
 
+/** Codex — OpenAI Codex blue circuit / code icon */
+function LogoCodex({ size=22, active=false }: { size?:number; active?:boolean }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 100 100" fill="none">
+      <rect width="100" height="100" rx="18" fill={active ? "#3b82f6" : "rgba(59,130,246,0.18)"}/>
+      {/* </> code brackets */}
+      <path d="M28 38L14 50l14 12" stroke="white" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M72 38l14 12-14 12" stroke="white" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M57 28L43 72" stroke="white" strokeWidth="6" strokeLinecap="round"/>
+    </svg>
+  );
+}
+
 const LogoComponents: Record<PlatformId, (props:{size?:number;active?:boolean})=>React.ReactElement> = {
   "claude":      (p) => <LogoClaude {...p}/>,
   "claude-code": (p) => <LogoClaudeCode {...p}/>,
   "chatgpt":     (p) => <LogoChatGPT {...p}/>,
+  "codex":       (p) => <LogoCodex {...p}/>,
   "cursor":      (p) => <LogoCursor {...p}/>,
   "telegram":    (p) => <LogoTelegram {...p}/>,
   "cli":         (p) => <LogoCLI {...p}/>,
@@ -291,6 +307,79 @@ paths:
         desc:"In the Action config: Authentication → API Key → Auth Type: Bearer → paste your Salevrix API key" },
       { title:"Save and test",
         desc:'Click Save → Test → Ask: "Get my prospects who haven\'t replied in 7 days and draft follow-ups"' },
+    ],
+  },
+  {
+    id:"codex", label:"Codex", badge:"Beta",
+    tagline:"Integrate Salevrix with OpenAI Codex via the Responses API. Build AI sales agents that can search leads, draft emails, and update pipelines autonomously.",
+    features:[
+      { icon:"🧠", title:"AI Agents",     desc:"Build autonomous sales agents with Codex" },
+      { icon:"🔧", title:"Tool Calling",  desc:"Full function-calling with Salevrix tools" },
+      { icon:"🚀", title:"Responses API", desc:"Stream results directly into your app" },
+    ],
+    steps:[
+      { title:"Get your OpenAI API key",
+        desc:"OpenAI Platform → API Keys → Create new secret key → copy it" },
+      { title:"Install the OpenAI SDK",
+        desc:"Install in your project:", lang:"bash",
+        code:"npm install openai" },
+      { title:"Register Salevrix as a tool",
+        desc:"Use function calling to give Codex access to your pipeline:", lang:"bash",
+        code:`import OpenAI from "openai";
+
+const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+const tools = [
+  {
+    type: "function",
+    function: {
+      name: "salevrix_list_prospects",
+      description: "List prospects from the Salevrix pipeline",
+      parameters: {
+        type: "object",
+        properties: {
+          status: { type: "string", enum: ["new","contacted","replied","closed"] },
+          limit:  { type: "number", default: 20 }
+        }
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "salevrix_send_email",
+      description: "Send an outreach email to a prospect",
+      parameters: {
+        type: "object",
+        required: ["prospectId","subject","body"],
+        properties: {
+          prospectId: { type: "string" },
+          subject:    { type: "string" },
+          body:       { type: "string" }
+        }
+      }
+    }
+  }
+];
+
+const response = await client.chat.completions.create({
+  model: "gpt-4o",
+  tools,
+  messages: [{ role: "user", content: "Find my top 5 uncontacted leads and draft emails" }]
+});` },
+      { title:"Handle tool calls and call Salevrix",
+        desc:"When Codex calls a tool, forward it to your Salevrix API:", lang:"bash",
+        code:`async function callSalevrix(name: string, args: Record<string,unknown>) {
+  const res = await fetch(\`${SERVER}/\${name.replace("salevrix_","")}\`, {
+    method: "POST",
+    headers: {
+      "Authorization": \`Bearer \${process.env.SALEVRIX_API_KEY}\`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(args)
+  });
+  return res.json();
+}` },
     ],
   },
   {
@@ -461,7 +550,7 @@ export default function MCPPage() {
   return (
     <div style={{ display:"flex", minHeight:"100vh", background:S.bg, fontFamily:"Inter,sans-serif", color:S.text }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap');
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
         ::-webkit-scrollbar{width:4px;height:4px}
         ::-webkit-scrollbar-track{background:transparent}
@@ -469,8 +558,9 @@ export default function MCPPage() {
         .mcp-tab{
           background:none;border:1px solid transparent;cursor:pointer;
           display:flex;align-items:center;gap:9px;padding:9px 15px;
-          border-radius:10px;color:${S.muted};font-size:13.5px;font-weight:500;
-          transition:all 0.18s;white-space:nowrap;font-family:Inter,sans-serif;
+          border-radius:10px;color:${S.muted};font-size:13px;font-weight:600;
+          transition:all 0.18s;white-space:nowrap;
+          font-family:'Syne',sans-serif;letter-spacing:0.01em;
         }
         .mcp-tab:hover{ background:rgba(255,255,255,0.04); color:${S.text}; }
         .step-card{
@@ -484,7 +574,8 @@ export default function MCPPage() {
         }
         .reveal-btn, .copy-key-btn{
           border:none;border-radius:8px;padding:7px 13px;
-          font-size:12px;cursor:pointer;font-family:Inter,sans-serif;
+          font-size:12px;cursor:pointer;
+          font-family:'Syne',sans-serif;font-weight:600;letter-spacing:0.02em;
           display:flex;align-items:center;gap:6px;transition:all 0.2s;
         }
         @media(max-width:900px){
@@ -523,8 +614,9 @@ export default function MCPPage() {
             <div style={{ display:"flex", gap:10, flexWrap:"wrap" as const, alignItems:"center" }}>
               <button style={{
                 background: brand.primary, border:"none", borderRadius:10,
-                padding:"11px 22px", color: brand.textOnPrimary,
-                fontSize:14, fontWeight:700, cursor:"pointer", fontFamily:"Inter,sans-serif",
+                padding:"11px 24px", color: brand.textOnPrimary,
+                fontSize:13, fontWeight:700, cursor:"pointer",
+                fontFamily:"Syne,sans-serif", letterSpacing:"0.03em",
                 display:"flex", alignItems:"center", gap:8,
                 boxShadow:`0 0 28px ${brand.glow}`,
                 transition:"all 0.3s",
@@ -537,7 +629,8 @@ export default function MCPPage() {
               <a href="#steps" style={{
                 background:"rgba(255,255,255,0.05)", border:`1px solid ${S.line}`,
                 borderRadius:10, padding:"11px 20px", color:S.muted,
-                fontSize:14, fontWeight:500, fontFamily:"Inter,sans-serif",
+                fontSize:13, fontWeight:600, fontFamily:"Syne,sans-serif",
+                letterSpacing:"0.02em",
                 textDecoration:"none", display:"flex", alignItems:"center", gap:7,
                 transition:"all 0.2s",
               }}>
