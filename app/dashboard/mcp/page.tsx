@@ -84,21 +84,15 @@ function LogoTelegram({ size=22, active=false }: { size?:number; active?:boolean
   );
 }
 
-/** Claude Code — purple gradient cloud with >_ terminal */
+/** Claude Code — orange cloud with >_ terminal (matches Claude brand) */
 function LogoClaudeCode({ size=22, active=false }: { size?:number; active?:boolean }) {
-  const id = `cc-grad-${size}`;
+  const fill = active ? "#CC785C" : "rgba(204,120,92,0.55)";
   return (
     <svg width={size} height={size} viewBox="0 0 100 100" fill="none">
-      <defs>
-        <linearGradient id={id} x1="20" y1="10" x2="80" y2="90" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor={active ? "#c084fc" : "#9b6fd4"}/>
-          <stop offset="100%" stopColor={active ? "#7c3aed" : "#6d28d9"}/>
-        </linearGradient>
-      </defs>
       {/* cloud shape */}
       <path
         d="M75 42c0-11-9-20-20-20a20 20 0 0 0-18.4 12.2A14 14 0 0 0 22 48c0 7.7 6.3 14 14 14h37c7.7 0 14-6.3 14-14a14 14 0 0 0-12-13.9z"
-        fill={`url(#${id})`}
+        fill={fill}
       />
       {/* >_ symbols */}
       <text x="31" y="57" fontSize="20" fontWeight="700" fill="white" fontFamily="monospace">&gt;_</text>
