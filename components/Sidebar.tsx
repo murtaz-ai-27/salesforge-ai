@@ -1,10 +1,14 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
+import { useRole } from "@/components/useRole";
+import { ROLE_LABELS, ROLE_COLORS } from "@/lib/roles";
 
 type User = { displayName:string|null; email:string|null; photoURL:string|null; uid:string; };
 
-const NAV = [
+type NavPage = "dashboard"|"prospects"|"sequences"|"templates"|"agents"|"automations"|"inbox"|"analytics"|"mcp"|"pricing"|"settings";
+
+const NAV: { id:NavPage; label:string; href:string; icon:string; badge:string|null }[] = [
   { id:"dashboard",   label:"Dashboard",   href:"/dashboard",             icon:"M3 13l2-2 7-7 7 7M5 11v9a1 1 0 001 1h3V15h4v5h3a1 1 0 001-1v-9", badge:null },
   { id:"prospects",   label:"Prospects",   href:"/dashboard/prospects",   icon:"M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z", badge:null },
   { id:"sequences",   label:"Sequences",   href:"/dashboard/sequences",   icon:"M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z", badge:null },
@@ -16,13 +20,14 @@ const NAV = [
   { id:"mcp",         label:"MCP",         href:"/dashboard/mcp",         icon:"M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5", badge:"New" },
 ];
 
-const BOTTOM_NAV_ITEMS = [
+const BOTTOM_NAV_ITEMS: { id:NavPage; label:string; href:string; icon:string; accent:boolean }[] = [
   { id:"pricing",  label:"Upgrade Plan", href:"/dashboard/pricing",  icon:"M13 2L3 14h9l-1 8 10-12h-9l1-8z", accent:true },
   { id:"settings", label:"Settings",     href:"/dashboard/settings", icon:"M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z", accent:false },
 ];
 
 export default function Sidebar({ active, user, onLogout }: { active:string; user:User|null; onLogout:()=>void }) {
   const router = useRouter();
+  const { appRole, canSeePage, roleLoading } = useRole();
   const [open, setOpen] = useState(false);
   // Real avatar from Supabase profile
   const [avatarUrl, setAvatarUrl] = useState<string|null>(user?.photoURL ?? null);
@@ -139,35 +144,40 @@ export default function Sidebar({ active, user, onLogout }: { active:string; use
         {/* Nav */}
         <div className="sf-nav-scroll" style={{ flex:1,padding:"12px 10px",overflowY:"auto" }}>
           <div style={{ fontSize:10,fontWeight:700,color:"#555a66",textTransform:"uppercase",letterSpacing:".1em",padding:"0 10px",marginBottom:8 }}>Main Menu</div>
-          {NAV.map(item => {
-            const isActive = active===item.id;
-            return (
-              <button key={item.id} onClick={()=>navigate(item.href)} className={`sf-nav-btn${isActive?" active":""}`}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink:0 }}>
-                  <path d={item.icon}/>
-                </svg>
-                <span style={{ fontSize:13,fontWeight:isActive?700:500,flex:1 }}>{item.label}</span>
-                {item.badge&&<span style={{ fontSize:10,fontWeight:700,padding:"2px 7px",borderRadius:999,background:isActive?"rgba(200,255,0,0.15)":"rgba(255,255,255,0.06)",color:isActive?"#C8FF00":"#555a66" }}>{item.badge}</span>}
-                {isActive&&<div style={{ width:3,height:16,borderRadius:2,background:"#C8FF00",position:"absolute",right:0,top:"50%",transform:"translateY(-50%)" }}/>}
-              </button>
-            );
-          })}
-
-          <div style={{ marginTop:12,paddingTop:10,borderTop:"1px solid rgba(255,255,255,0.05)" }}>
-            {BOTTOM_NAV_ITEMS.map(item => {
+          {NAV
+            /* Hide pages the role has no access to */
+            .filter(item => roleLoading || canSeePage(item.id))
+            .map(item => {
               const isActive = active===item.id;
               return (
-                <button key={item.id} onClick={()=>navigate(item.href)} className={`sf-nav-btn${isActive?" active":""}`}
-                  style={{ color:item.accent?"#C8FF00":"#9598a3",background:item.accent&&!isActive?"rgba(200,255,0,0.05)":"transparent" }}>
+                <button key={item.id} onClick={()=>navigate(item.href)} className={`sf-nav-btn${isActive?" active":""}`}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink:0 }}>
                     <path d={item.icon}/>
                   </svg>
-                  <span style={{ fontSize:13,fontWeight:500,flex:1 }}>{item.label}</span>
-                  {item.accent&&!isActive&&<span style={{ fontSize:9,fontWeight:700,padding:"2px 6px",borderRadius:999,background:"rgba(200,255,0,0.15)",color:"#C8FF00" }}>PRO</span>}
+                  <span style={{ fontSize:13,fontWeight:isActive?700:500,flex:1 }}>{item.label}</span>
+                  {item.badge&&<span style={{ fontSize:10,fontWeight:700,padding:"2px 7px",borderRadius:999,background:isActive?"rgba(200,255,0,0.15)":"rgba(255,255,255,0.06)",color:isActive?"#C8FF00":"#555a66" }}>{item.badge}</span>}
                   {isActive&&<div style={{ width:3,height:16,borderRadius:2,background:"#C8FF00",position:"absolute",right:0,top:"50%",transform:"translateY(-50%)" }}/>}
                 </button>
               );
             })}
+
+          <div style={{ marginTop:12,paddingTop:10,borderTop:"1px solid rgba(255,255,255,0.05)" }}>
+            {BOTTOM_NAV_ITEMS
+              .filter(item => roleLoading || canSeePage(item.id))
+              .map(item => {
+                const isActive = active===item.id;
+                return (
+                  <button key={item.id} onClick={()=>navigate(item.href)} className={`sf-nav-btn${isActive?" active":""}`}
+                    style={{ color:item.accent?"#C8FF00":"#9598a3",background:item.accent&&!isActive?"rgba(200,255,0,0.05)":"transparent" }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink:0 }}>
+                      <path d={item.icon}/>
+                    </svg>
+                    <span style={{ fontSize:13,fontWeight:500,flex:1 }}>{item.label}</span>
+                    {item.accent&&!isActive&&<span style={{ fontSize:9,fontWeight:700,padding:"2px 6px",borderRadius:999,background:"rgba(200,255,0,0.15)",color:"#C8FF00" }}>PRO</span>}
+                    {isActive&&<div style={{ width:3,height:16,borderRadius:2,background:"#C8FF00",position:"absolute",right:0,top:"50%",transform:"translateY(-50%)" }}/>}
+                  </button>
+                );
+              })}
           </div>
         </div>
 
@@ -250,7 +260,14 @@ export default function Sidebar({ active, user, onLogout }: { active:string; use
             onMouseLeave={e=>(e.currentTarget as HTMLDivElement).style.background="rgba(255,255,255,0.03)"}>
             <UserAvatar size={32}/>
             <div style={{ flex:1,minWidth:0 }}>
-              <div style={{ fontSize:12,fontWeight:600,color:"#f4f5f7",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>{user?.displayName??"User"}</div>
+              <div style={{ display:"flex",alignItems:"center",gap:5 }}>
+                <div style={{ fontSize:12,fontWeight:600,color:"#f4f5f7",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>{user?.displayName??"User"}</div>
+                {!roleLoading&&(
+                  <span style={{ fontSize:9,fontWeight:700,padding:"2px 6px",borderRadius:5,background:`${ROLE_COLORS[appRole]}18`,color:ROLE_COLORS[appRole],flexShrink:0,letterSpacing:"0.04em",fontFamily:"Syne,sans-serif" }}>
+                    {ROLE_LABELS[appRole].toUpperCase()}
+                  </span>
+                )}
+              </div>
               <div style={{ fontSize:10,color:"#555a66",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>{user?.email??""}</div>
             </div>
             <button onClick={e=>{ e.stopPropagation(); onLogout(); }}

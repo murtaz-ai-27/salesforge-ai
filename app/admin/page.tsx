@@ -1,10 +1,8 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
+import { useAuth } from "@/components/useAuth";
 
 const S = { bg:"#050505",panel:"#0d1018",lineSoft:"rgba(255,255,255,0.05)",text:"#f4f5f7",muted:"#9598a3",faint:"#555a66",accent:"#C8FF00" };
-
-// !! CHANGE THIS TO YOUR UID !!
-const ADMIN_PASS = "murtaz@28admin"; // ← apna password yahan change karo
 
 type Stats = {
   totalUsers: number;
@@ -24,24 +22,33 @@ type Stats = {
 };
 
 export default function AdminDashboard() {
+  const { user, loading: authLoading } = useAuth();
   const [authed, setAuthed] = useState(false);
-  const [pass, setPass] = useState("");
-  const [passError, setPassError] = useState(false);
   const [checking, setChecking] = useState(true);
+  const [accessDenied, setAccessDenied] = useState(false);
   const [stats, setStats] = useState<Stats|null>(null);
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date|null>(null);
   const [liveUsers, setLiveUsers] = useState(0);
   const intervalRef = useRef<NodeJS.Timeout|null>(null);
 
-  // Simple password check
+  // Check admin access via /api/role/check — no hardcoded passwords
   useEffect(() => {
-    const saved = localStorage.getItem("salevrix_admin");
-    if (saved === ADMIN_PASS) {
-      setAuthed(true);
-    }
-    setChecking(false);
-  }, []);
+    if (authLoading) return;
+    if (!user) { setChecking(false); return; }
+
+    fetch(`/api/role/check?userId=${user.uid}`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.isAdmin) {
+          setAuthed(true);
+        } else {
+          setAccessDenied(true);
+        }
+      })
+      .catch(() => setAccessDenied(true))
+      .finally(() => setChecking(false));
+  }, [user, authLoading]);
 
   const fetchStats = async () => {
     try {
@@ -73,40 +80,29 @@ export default function AdminDashboard() {
 
 
 
-  const handleLogin = () => {
-    if (pass === ADMIN_PASS) {
-      localStorage.setItem("salevrix_admin", pass);
-      setAuthed(true);
-      setPassError(false);
-    } else {
-      setPassError(true);
-    }
-  };
-
-  if (!authed) return (
+  // Access denied — not an admin UID
+  if (accessDenied || (!authLoading && !user)) return (
     <div style={{ minHeight:"100vh",background:S.bg,display:"grid",placeItems:"center",fontFamily:"Inter,sans-serif" }}>
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}}input:focus{outline:none}`}</style>
-      <div style={{ width:360,background:"#0d1018",border:"1px solid rgba(255,255,255,0.08)",borderRadius:18,padding:32,textAlign:"center" }}>
-        <div style={{ width:52,height:52,borderRadius:14,background:"rgba(200,255,0,0.1)",border:"1px solid rgba(200,255,0,0.2)",display:"grid",placeItems:"center",margin:"0 auto 20px",fontSize:24 }}>🔐</div>
-        <div style={{ fontFamily:"Syne,sans-serif",fontSize:22,fontWeight:800,color:S.text,marginBottom:6 }}>Admin Access</div>
-        <div style={{ fontSize:13,color:S.faint,marginBottom:28 }}>Salevrix AI — Owner Dashboard</div>
-        <input
-          type="password"
-          value={pass}
-          onChange={e=>{ setPass(e.target.value); setPassError(false); }}
-          onKeyDown={e=>e.key==="Enter"&&handleLogin()}
-          placeholder="Enter admin password"
-          autoFocus
-          style={{ width:"100%",padding:"12px 16px",borderRadius:10,background:"rgba(255,255,255,0.04)",border:`1px solid ${passError?"rgba(248,113,113,0.5)":"rgba(255,255,255,0.1)"}`,color:S.text,fontSize:14,fontFamily:"Inter,sans-serif",marginBottom:passError?8:16,textAlign:"center",letterSpacing:"0.1em" }}
-        />
-        {passError&&<div style={{ fontSize:12,color:"#f87171",marginBottom:12 }}>Wrong password. Try again.</div>}
-        <button onClick={handleLogin}
-          style={{ width:"100%",padding:"12px",borderRadius:10,background:S.accent,border:"none",color:"#050505",fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:"Syne,sans-serif" }}>
-          Enter Dashboard →
-        </button>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+      <div style={{ width:360,background:"#0d1018",border:"1px solid rgba(248,113,113,0.2)",borderRadius:18,padding:36,textAlign:"center" }}>
+        <div style={{ width:52,height:52,borderRadius:14,background:"rgba(248,113,113,0.1)",border:"1px solid rgba(248,113,113,0.2)",display:"grid",placeItems:"center",margin:"0 auto 20px",fontSize:24 }}>🚫</div>
+        <div style={{ fontFamily:"Syne,sans-serif",fontSize:20,fontWeight:800,color:S.text,marginBottom:8 }}>Access Denied</div>
+        <div style={{ fontSize:13,color:S.muted,lineHeight:1.6 }}>
+          {!user
+            ? "You must be logged in to access this page."
+            : "Your account does not have admin privileges. Contact support if you believe this is an error."
+          }
+        </div>
+        {!user && (
+          <a href="/auth/login" style={{ display:"block",marginTop:20,padding:"11px",borderRadius:10,background:S.accent,color:"#050505",fontSize:13,fontWeight:700,fontFamily:"Syne,sans-serif",textDecoration:"none" }}>
+            Sign In →
+          </a>
+        )}
       </div>
     </div>
   );
+
+  if (!authed) return null; // still checking
 
   const timeAgo = (d:string) => {
     const diff = Date.now()-new Date(d).getTime();

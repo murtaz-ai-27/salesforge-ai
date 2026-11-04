@@ -1,7 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseServer";
+import { isAdminUid } from "@/lib/roles";
 
 export async function GET(req: NextRequest) {
+  // Auth — Bearer token must be an admin UID
+  const auth = req.headers.get("authorization") ?? "";
+  const uid = auth.startsWith("Bearer ") ? auth.slice(7).trim() : "";
+  if (!uid || !isAdminUid(uid)) {
+    return NextResponse.json({ error: "Admin access required" }, { status: 403 });
+  }
+
   try {
     const now = new Date();
     const todayStart = new Date(now); todayStart.setHours(0,0,0,0);

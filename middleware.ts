@@ -5,6 +5,14 @@ const ipRequestMap = new Map<string, { count: number; resetAt: number }>();
 const IP_LIMIT = 200; // requests per minute per IP
 const IP_WINDOW = 60 * 1000;
 
+// Admin UIDs from env — comma-separated Firebase UIDs
+function getAdminUids(): Set<string> {
+  return new Set(
+    (process.env.ADMIN_UIDS ?? "")
+      .split(",").map(s => s.trim()).filter(Boolean)
+  );
+}
+
 function getIP(req: NextRequest): string {
   return (
     req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
@@ -45,6 +53,20 @@ export function middleware(req: NextRequest) {
     pathname.includes(".")
   ) {
     return NextResponse.next();
+  }
+
+  // ── Admin route protection ─────────────────────────────────────
+  // The admin API route (/api/admin/*) requires that the request
+  // comes from a known admin UID passed as a Bearer token.
+  if (pathname.startsWith("/api/admin/")) {
+    const auth = req.headers.get("authorization") ?? "";
+    const uid = auth.startsWith("Bearer ") ? auth.slice(7).trim() : "";
+    if (!uid || !getAdminUids().has(uid)) {
+      return NextResponse.json(
+        { error: "Admin access required" },
+        { status: 403 }
+      );
+    }
   }
 
   // IP rate limiting for API routes
