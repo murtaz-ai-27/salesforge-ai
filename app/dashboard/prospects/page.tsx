@@ -537,7 +537,6 @@ export default function ProspectsPage() {
         .input-focus { transition: border-color 0.15s ease; }
         .input-focus:focus { outline:none; border-color:rgba(200,255,0,0.45) !important; }
         @media (max-width:768px) { .prospects-main { margin-left:0 !important; padding:16px !important; } }
-        .input-focus:focus { border-color: rgba(200,255,0,0.4) !important; outline:none; }
       `}</style>
 
       {/* Toast */}

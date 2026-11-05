@@ -41,12 +41,14 @@ export default function OnboardingPage() {
   const [addingProspect, setAddingProspect] = useState(false);
 
   useEffect(() => {
+    let unsubscribe: (() => void) | undefined;
     import("@/lib/firebase").then(({ onAuthChange }) => {
-      onAuthChange((u) => {
+      unsubscribe = onAuthChange((u) => {
         if (u) setUser({ displayName:u.displayName, email:u.email, uid:u.uid });
         else router.push("/auth/login");
       });
     });
+    return () => { unsubscribe?.(); };
   }, [router]);
 
   const goNext = () => {

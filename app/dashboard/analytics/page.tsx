@@ -287,23 +287,21 @@ export default function AnalyticsPage() {
   const [selecting, setSelecting] = useState<'start' | 'end' | null>(null);
   const [calMonth, setCalMonth] = useState(new Date());
 
-  const fetchStats = () => {
-    if (!user?.uid) return;
-    fetch(`/api/stats?userId=${user.uid}&start=${dateRange.start}&end=${dateRange.end}`)
-      .then(r => r.json())
-      .then(d => { if (!d.error) setStats(d); })
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  };
-
   useEffect(() => {
     if (!user?.uid) return;
     setLoading(true);
-    fetchStats();
+    const doFetch = () => {
+      fetch(`/api/stats?userId=${user.uid}&start=${dateRange.start}&end=${dateRange.end}`)
+        .then(r => r.json())
+        .then(d => { if (!d.error) setStats(d); })
+        .catch(() => {})
+        .finally(() => setLoading(false));
+    };
+    doFetch();
     // Auto-refresh every 30 seconds
-    const interval = setInterval(fetchStats, 30000);
+    const interval = setInterval(doFetch, 30000);
     return () => clearInterval(interval);
-  }, [user?.uid, dateRange]);
+  }, [user?.uid, dateRange.start, dateRange.end]);
 
   if (authLoading) return <LoadingScreen />;
 

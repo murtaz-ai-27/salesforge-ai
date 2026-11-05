@@ -76,8 +76,12 @@ export default function DashboardPage() {
         });
       });
 
-      // Sort by time desc
-      items.sort((a,b)=>new Date(b.time).getTime()-new Date(a.time).getTime());
+      // Sort by time desc — guard against null/invalid dates
+      items.sort((a, b) => {
+        const ta = a.time ? new Date(a.time).getTime() : 0;
+        const tb = b.time ? new Date(b.time).getTime() : 0;
+        return (isNaN(tb) ? 0 : tb) - (isNaN(ta) ? 0 : ta);
+      });
       setActivity(items.slice(0,8));
     });
   }, [user?.uid]);
@@ -89,14 +93,18 @@ export default function DashboardPage() {
   const isNew = !stats || stats.totalProspects===0;
   const firstName = user?.displayName?.split(" ")[0] ?? "there";
 
-  const timeAgo = (dateStr:string) => {
-    const diff = Date.now()-new Date(dateStr).getTime();
-    const mins = Math.floor(diff/60000);
-    if (mins<1) return "just now";
-    if (mins<60) return `${mins}m ago`;
-    const hrs = Math.floor(mins/60);
-    if (hrs<24) return `${hrs}h ago`;
-    return `${Math.floor(hrs/24)}d ago`;
+  const timeAgo = (dateStr: string | null | undefined) => {
+    if (!dateStr) return "";
+    const ms = new Date(dateStr).getTime();
+    if (isNaN(ms)) return "";
+    const diff = Date.now() - ms;
+    if (diff < 0) return "just now";
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return "just now";
+    if (mins < 60) return `${mins}m ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h ago`;
+    return `${Math.floor(hrs / 24)}d ago`;
   };
 
   if (authLoading||loading) return <LoadingScreen text="Loading your dashboard"/>;
