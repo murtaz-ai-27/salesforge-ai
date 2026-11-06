@@ -177,7 +177,7 @@ export default function SequencesPage() {
     setView("builder");
   };
 
-  if (authLoading) return <LoadingScreen text="Loading sequences"/>;
+  if (authLoading) return null;
 
   const toastColor = toast.type==="error"?"#f87171":toast.type==="warning"?"#f59e0b":S.accent;
 

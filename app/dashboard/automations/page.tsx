@@ -754,7 +754,7 @@ Execute this automation and show the output.` };
     showToast("Copied!", S.accent);
   };
 
-  if (authLoading) return <LoadingScreen/>;
+  if (authLoading) return null;
 
   return (
     <div style={{background:S.bg,minHeight:"100vh",fontFamily:"Inter,sans-serif"}}>

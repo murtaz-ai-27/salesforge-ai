@@ -145,7 +145,7 @@ export default function InboxPage() {
   const toastColor = toast.type==="error"?"#f87171":toast.type==="warning"?"#f59e0b":S.accent;
   const toastBorder = toast.type==="error"?"rgba(248,113,113,0.3)":toast.type==="warning"?"rgba(245,158,11,0.3)":"rgba(200,255,0,0.3)";
 
-  if (authLoading) return <LoadingScreen text="Loading inbox"/>;
+  if (authLoading) return null;
 
   return (
     <div style={{ background:S.bg,minHeight:"100vh",fontFamily:"Inter,sans-serif" }}>

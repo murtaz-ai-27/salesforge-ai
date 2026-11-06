@@ -514,8 +514,8 @@ export default function ProspectsPage() {
 
   const toastColor = toast.type==="error" ? S.red : toast.type==="warning" ? S.amber : S.accent;
 
-  if (authLoading || dataLoading) return <LoadingScreen text="Loading platform data..." />;
-  if (!user) return <LoadingScreen text="Redirecting..." />;
+  if (authLoading || dataLoading) return null;
+  if (!user) return null;
 
   return (
     <div style={{ background:S.bg, minHeight:"100vh", fontFamily:"Inter,sans-serif" }}>

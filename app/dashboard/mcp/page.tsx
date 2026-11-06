@@ -589,7 +589,7 @@ export default function MCPPage() {
   const [keyVisible, setKeyVisible] = useState(false);
   const [keyCopied, setKeyCopied]   = useState(false);
 
-  if (loading) return <LoadingScreen />;
+  if (loading) return null;
 
   const p     = PLATFORMS.find(x => x.id === active)!;
   const brand = BRAND[active];

@@ -303,7 +303,7 @@ export default function AnalyticsPage() {
     return () => clearInterval(interval);
   }, [user?.uid, dateRange.start, dateRange.end]);
 
-  if (authLoading) return <LoadingScreen />;
+  if (authLoading) return null;
 
   const totalProspects = stats?.totalProspects ?? 0;
   const emailsSent = stats?.emailsSentThisMonth ?? 0;

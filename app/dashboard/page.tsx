@@ -107,7 +107,7 @@ export default function DashboardPage() {
     return `${Math.floor(hrs / 24)}d ago`;
   };
 
-  if (authLoading||loading) return <LoadingScreen text="Loading your dashboard"/>;
+  if (authLoading||loading) return null;
 
   const kpis = [
     { label:"Total Prospects",   value:stats?.totalProspects??0,          suffix:"",   color:S.accent,  href:"/dashboard/prospects", icon:"👥", sub:"AI-scored" },

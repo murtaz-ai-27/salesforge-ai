@@ -99,7 +99,7 @@ export default function PricingPage() {
   const [billing, setBilling] = useState<"monthly"|"annual">("monthly");
   const [currentPlan] = useState("free");
 
-  if (loading) return <LoadingScreen text="Loading pricing plans"/>;
+  if (loading) return null;
 
   return (
     <div style={{ background:S.bg,minHeight:"100vh",fontFamily:"Inter,sans-serif" }}>

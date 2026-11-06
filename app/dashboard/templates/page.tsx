@@ -282,7 +282,7 @@ Rewrite the email filling in all {{variables}} with relevant, specific informati
     setAiGenerating(false);
   };
 
-  if (authLoading) return <LoadingScreen text="Loading templates"/>;
+  if (authLoading) return null;
 
   return (
     <div style={{ background:S.bg,minHeight:"100vh",fontFamily:"Inter,sans-serif" }}>

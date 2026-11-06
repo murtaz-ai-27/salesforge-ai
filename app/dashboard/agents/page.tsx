@@ -169,7 +169,7 @@ export default function AgentsPage() {
     showToast("Copied!", S.accent);
   };
 
-  if (authLoading) return <LoadingScreen/>;
+  if (authLoading) return null;
 
   const totalRuns = AGENTS.reduce((s,a)=>s+a.stats.runs,0);
 

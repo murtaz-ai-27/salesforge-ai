@@ -71,7 +71,7 @@ export default function SettingsPage() {
     }
   };
 
-  if (authLoading) return <LoadingScreen text="Loading settings…" />;
+  if (authLoading) return null;
 
   const toastColor = toast.type==="error" ? S.red : toast.type==="warning" ? "#f59e0b" : S.accent;
 
