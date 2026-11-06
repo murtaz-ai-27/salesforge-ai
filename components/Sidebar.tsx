@@ -97,6 +97,8 @@ export default function Sidebar({ active, user, onLogout }: { active:string; use
   }, [open]);
 
   const navigate = (href:string) => { router.push(href); setOpen(false); };
+  // Prefetch on hover — page starts loading before the click lands
+  const prefetch = (href:string) => { router.prefetch(href); };
 
   const UserAvatar = ({ size=32 }: { size?:number }) => (
     avatarUrl
@@ -150,7 +152,7 @@ export default function Sidebar({ active, user, onLogout }: { active:string; use
             .map(item => {
               const isActive = active===item.id;
               return (
-                <button key={item.id} onClick={()=>navigate(item.href)} className={`sf-nav-btn${isActive?" active":""}`}>
+                <button key={item.id} onClick={()=>navigate(item.href)} onMouseEnter={()=>prefetch(item.href)} className={`sf-nav-btn${isActive?" active":""}`}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink:0 }}>
                     <path d={item.icon}/>
                   </svg>
@@ -167,7 +169,7 @@ export default function Sidebar({ active, user, onLogout }: { active:string; use
               .map(item => {
                 const isActive = active===item.id;
                 return (
-                  <button key={item.id} onClick={()=>navigate(item.href)} className={`sf-nav-btn${isActive?" active":""}`}
+                  <button key={item.id} onClick={()=>navigate(item.href)} onMouseEnter={()=>prefetch(item.href)} className={`sf-nav-btn${isActive?" active":""}`}
                     style={{ color:item.accent?"#C8FF00":"#9598a3",background:item.accent&&!isActive?"rgba(200,255,0,0.05)":"transparent" }}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink:0 }}>
                       <path d={item.icon}/>

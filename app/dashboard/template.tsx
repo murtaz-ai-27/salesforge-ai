@@ -19,12 +19,12 @@ export default function DashboardTemplate({ children }: { children: React.ReactN
     if (!el) return;
     // Reset then replay
     el.style.opacity = "0";
-    el.style.transform = "translateY(10px)";
+    el.style.transform = "translateY(6px)";
     // rAF gives the browser one frame to register the reset before animating
     const id = requestAnimationFrame(() => {
-      el.style.transition = "opacity 0.28s cubic-bezier(0.4,0,0.2,1), transform 0.28s cubic-bezier(0.4,0,0.2,1)";
+      el.style.transition = "opacity 0.15s cubic-bezier(0.4,0,0.2,1), transform 0.15s cubic-bezier(0.4,0,0.2,1)";
       el.style.opacity = "1";
-      el.style.transform = "translateY(0)";
+      el.style.transform = "translateY(0px)";
     });
     return () => cancelAnimationFrame(id);
   }, [pathname]);
@@ -32,7 +32,7 @@ export default function DashboardTemplate({ children }: { children: React.ReactN
   return (
     <div
       ref={ref}
-      style={{ opacity: 0, transform: "translateY(10px)", willChange: "opacity, transform" }}
+      style={{ opacity: 0, transform: "translateY(6px)", willChange: "opacity, transform" }}
     >
       {children}
     </div>

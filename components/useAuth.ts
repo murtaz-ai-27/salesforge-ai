@@ -13,9 +13,14 @@ import { useRouter, usePathname } from "next/navigation";
 // Public routes — no auth needed
 const PUBLIC_PATHS = ["/", "/auth/login", "/auth/signup", "/blog", "/pricing"];
 
+// Set persistence once at module load — not on every hook mount
+setPersistence(auth, browserLocalPersistence).catch(() => {});
+
 export function useAuth() {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  // auth.currentUser is synchronously set by Firebase after SDK init with
+  // local persistence — use it directly so tabs open with ZERO loading delay.
+  const [user, setUser] = useState<User | null>(auth.currentUser);
+  const [loading, setLoading] = useState<boolean>(!auth.currentUser);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -26,32 +31,22 @@ export function useAuth() {
   }, [pathname, router]);
 
   useEffect(() => {
-    let unsubscribe: (() => void) | undefined;
-
-    const init = async () => {
-      try {
-        // LOCAL persistence — survives mobile tab close/refresh
-        await setPersistence(auth, browserLocalPersistence);
-      } catch {
-        // Already set or not supported — continue
+    // onAuthStateChanged confirms/refreshes the token in the background.
+    // If currentUser was already set above, loading is already false and
+    // the page renders immediately — no spinner, no null flash.
+    const unsubscribe = onAuthStateChanged(
+      auth,
+      (u) => {
+        setUser(u);
+        setLoading(false);
+        handleRedirect(u);
+      },
+      (error) => {
+        console.error("[useAuth] Auth error:", (error as any).code ?? error.message);
+        setLoading(false);
       }
-
-      unsubscribe = onAuthStateChanged(
-        auth,
-        (u) => {
-          setUser(u);
-          setLoading(false);
-          handleRedirect(u);
-        },
-        (error) => {
-          console.error("[useAuth] Auth error:", (error as any).code ?? error.message);
-          setLoading(false);
-        }
-      );
-    };
-
-    init();
-    return () => { unsubscribe?.(); };
+    );
+    return unsubscribe;
   }, [handleRedirect]);
 
   const handleLogout = async () => {
