@@ -1,81 +1,77 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
+import { api, ApiError } from "@/lib/api";
+import type {
+  Sequence,
+  SequencesResponse,
+  SequenceResponse,
+} from "@/types";
 
-export type SequenceStep = {
-  id: string;
-  type: "email" | "linkedin" | "call" | "sms";
-  day: number;
-  subject: string;
-  body: string;
-  aiWritten: boolean;
-};
-
-export type DbSequence = {
-  id: string;
-  user_id: string;
-  name: string;
-  status: "active" | "paused" | "draft";
-  steps: SequenceStep[];
-  prospect_count: number;
-  open_rate: number;
-  reply_rate: number;
-  meeting_rate: number;
-  created_at: string;
-};
+export type { Sequence, SequenceStep } from "@/types";
 
 export function useSequences(userId: string | undefined) {
-  const [sequences, setSequences] = useState<DbSequence[]>([]);
+  const [sequences, setSequences] = useState<Sequence[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [error, setError] = useState<string>("");
 
   const fetchSequences = useCallback(async () => {
     if (!userId) { setLoading(false); return; }
     setLoading(true);
     try {
-      const res = await fetch(`/api/sequences?userId=${userId}`);
-      const data = await res.json();
-      if (data.error) throw new Error(data.error);
+      const data = await api.get<SequencesResponse>(`/api/sequences?userId=${userId}`);
       setSequences(data.sequences ?? []);
       setError("");
-    } catch (err: any) {
-      setError(err.message ?? "Failed to load sequences");
+    } catch (err) {
+      const msg = err instanceof ApiError ? err.message : "Failed to load sequences";
+      console.error("[useSequences]", msg);
+      setError(msg);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }, [userId]);
 
   useEffect(() => { fetchSequences(); }, [fetchSequences]);
 
-  const createSequence = async (seqData: Partial<DbSequence>) => {
+  const createSequence = async (seqData: Partial<Sequence>): Promise<Sequence | null> => {
     if (!userId) return null;
-    const res = await fetch("/api/sequences", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId, ...seqData }),
-    });
-    const data = await res.json();
-    if (data.error) throw new Error(data.error);
-    setSequences(prev => [data.sequence, ...prev]);
-    return data.sequence;
+    try {
+      const data = await api.post<SequenceResponse>("/api/sequences", { userId, ...seqData });
+      setSequences(prev => [data.sequence, ...prev]);
+      return data.sequence;
+    } catch (err) {
+      console.error("[useSequences] createSequence:", err);
+      throw err; // rethrow so callers can show feedback
+    }
   };
 
-  const updateSequence = async (id: string, updates: Partial<DbSequence>) => {
-    const res = await fetch("/api/sequences", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, ...updates }),
-    });
-    const data = await res.json();
-    if (data.error) throw new Error(data.error);
-    setSequences(prev => prev.map(s => s.id === id ? data.sequence : s));
-    return data.sequence;
+  const updateSequence = async (id: string, updates: Partial<Sequence>): Promise<Sequence | null> => {
+    try {
+      const data = await api.patch<SequenceResponse>("/api/sequences", { id, ...updates });
+      setSequences(prev => prev.map(s => s.id === id ? data.sequence : s));
+      return data.sequence;
+    } catch (err) {
+      console.error("[useSequences] updateSequence:", err);
+      throw err;
+    }
   };
 
   const deleteSequence = async (id: string) => {
-    const res = await fetch(`/api/sequences?id=${id}`, { method: "DELETE" });
-    const data = await res.json();
-    if (data.error) throw new Error(data.error);
-    setSequences(prev => prev.filter(s => s.id !== id));
+    try {
+      await api.delete(`/api/sequences?id=${id}`);
+      setSequences(prev => prev.filter(s => s.id !== id));
+    } catch (err) {
+      console.error("[useSequences] deleteSequence:", err);
+      throw err;
+    }
   };
 
-  return { sequences, loading, error, createSequence, updateSequence, deleteSequence, refetch: fetchSequences };
+  return {
+    sequences,
+    loading,
+    error,
+    createSequence,
+    updateSequence,
+    deleteSequence,
+    refetch: fetchSequences,
+  };
 }

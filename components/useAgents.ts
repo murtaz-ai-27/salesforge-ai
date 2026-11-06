@@ -1,64 +1,71 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
+import { api, ApiError } from "@/lib/api";
+import type {
+  Agent,
+  AgentsResponse,
+  AgentResponse,
+} from "@/types";
 
-export type DbAgent = {
-  id: string;
-  user_id: string;
-  name: string;
-  type: "sdr" | "email_coach" | "deal_analyzer" | "objection_handler" | "meeting_summarizer";
-  status: "active" | "paused" | "training";
-  config: Record<string, any>;
-  meetings_booked: number;
-  emails_sent: number;
-  replies_handled: number;
-  created_at: string;
-};
+export type { Agent } from "@/types";
 
 export function useAgents(userId: string | undefined) {
-  const [agents, setAgents] = useState<DbAgent[]>([]);
+  const [agents, setAgents] = useState<Agent[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [error, setError] = useState<string>("");
 
   const fetchAgents = useCallback(async () => {
     if (!userId) { setLoading(false); return; }
     setLoading(true);
     try {
-      const res = await fetch(`/api/agents?userId=${userId}`);
-      const data = await res.json();
-      if (data.error) throw new Error(data.error);
+      const data = await api.get<AgentsResponse>(`/api/agents?userId=${userId}`);
       setAgents(data.agents ?? []);
       setError("");
-    } catch (err: any) {
-      setError(err.message ?? "Failed to load agents");
+    } catch (err) {
+      const msg = err instanceof ApiError ? err.message : "Failed to load agents";
+      console.error("[useAgents]", msg);
+      setError(msg);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }, [userId]);
 
   useEffect(() => { fetchAgents(); }, [fetchAgents]);
 
-  const toggleAgent = async (id: string, currentStatus: string) => {
+  const toggleAgent = async (id: string, currentStatus: Agent["status"]): Promise<Agent | null> => {
     const newStatus = currentStatus === "active" ? "paused" : "active";
-    const res = await fetch("/api/agents", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, status: newStatus }),
-    });
-    const data = await res.json();
-    if (data.error) throw new Error(data.error);
-    setAgents(prev => prev.map(a => a.id === id ? data.agent : a));
-    return data.agent;
+    try {
+      const data = await api.patch<AgentResponse>("/api/agents", { id, status: newStatus });
+      setAgents(prev => prev.map(a => a.id === id ? data.agent : a));
+      return data.agent;
+    } catch (err) {
+      console.error("[useAgents] toggleAgent:", err);
+      throw err;
+    }
   };
 
-  const incrementStat = async (id: string, field: "meetings_booked"|"emails_sent"|"replies_handled", agent: DbAgent) => {
-    const res = await fetch("/api/agents", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, [field]: (agent[field] ?? 0) + 1 }),
-    });
-    const data = await res.json();
-    if (data.error) throw new Error(data.error);
-    setAgents(prev => prev.map(a => a.id === id ? data.agent : a));
+  const incrementStat = async (
+    id: string,
+    field: "meetings_booked" | "emails_sent" | "replies_handled",
+    agent: Agent
+  ) => {
+    try {
+      const data = await api.patch<AgentResponse>("/api/agents", {
+        id,
+        [field]: (agent[field] ?? 0) + 1,
+      });
+      setAgents(prev => prev.map(a => a.id === id ? data.agent : a));
+    } catch (err) {
+      console.error("[useAgents] incrementStat:", err);
+    }
   };
 
-  return { agents, loading, error, toggleAgent, incrementStat, refetch: fetchAgents };
+  return {
+    agents,
+    loading,
+    error,
+    toggleAgent,
+    incrementStat,
+    refetch: fetchAgents,
+  };
 }
