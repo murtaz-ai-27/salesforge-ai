@@ -2,7 +2,8 @@
 import { useState } from "react";
 import Sidebar from "@/components/Sidebar";
 import { useAuth } from "@/components/useAuth";
-import LoadingScreen from "@/components/LoadingScreen";
+import { useToast } from "@/components/Toast";
+import { EmptyState } from "@/components/EmptyState";
 
 const S = {
   bg:"#050505", panel:"#0c0e14", panel2:"#111520",
@@ -130,12 +131,7 @@ export default function AgentsPage() {
   const [aiOutput, setAiOutput] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [toast, setToast] = useState({msg:"",color:S.accent});
-
-  const showToast = (msg:string, color=S.accent) => {
-    setToast({msg,color});
-    setTimeout(()=>setToast({msg:"",color:S.accent}),3000);
-  };
+  const { toast } = useToast();
 
   const runAgent = async () => {
     if (!selected || !(testInput||"").trim()) return;
@@ -149,14 +145,14 @@ export default function AgentsPage() {
       const data = await res.json();
       if (data.error) {
         setAiOutput(data.upgrade ? `⚠️ ${data.error}` : `❌ ${data.error}`);
-        showToast(data.upgrade ? "Upgrade to continue" : "Error — try again", "#ef4444");
+        data.upgrade ? toast.warning("Upgrade to continue") : toast.error("Error — try again");
       } else {
         setAiOutput(data.result);
-        showToast(`✓ ${selected.name} complete!`, selected.color);
+        toast.success(`✓ ${selected.name} complete!`);
       }
     } catch {
       setAiOutput("Connection error. Check your internet and try again.");
-      showToast("Connection error", "#ef4444");
+      toast.error("Connection error");
     }
     setAiLoading(false);
   };
@@ -166,7 +162,7 @@ export default function AgentsPage() {
     navigator.clipboard.writeText(aiOutput);
     setCopied(true);
     setTimeout(()=>setCopied(false),2000);
-    showToast("Copied!", S.accent);
+    toast.success("Copied!");
   };
 
   if (authLoading) return null;
@@ -175,12 +171,6 @@ export default function AgentsPage() {
 
   return (
     <div style={{background:S.bg,minHeight:"100vh",fontFamily:"Inter,sans-serif"}}>
-      {toast.msg&&(
-        <div style={{position:"fixed",bottom:28,left:"50%",transform:"translateX(-50%)",background:"#0c0e14",border:`1px solid ${toast.color}55`,borderRadius:14,padding:"12px 24px",fontSize:13,fontWeight:600,color:toast.color,zIndex:300,whiteSpace:"nowrap",boxShadow:"0 12px 40px rgba(0,0,0,0.6)",backdropFilter:"blur(12px)"}}>
-          {toast.msg}
-        </div>
-      )}
-
       <Sidebar active="agents" user={user} onLogout={handleLogout}/>
 
       <div style={{marginLeft:240,padding:"32px",minHeight:"100vh"}}>

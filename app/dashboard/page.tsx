@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import { useAuth } from "@/components/useAuth";
-import LoadingScreen from "@/components/LoadingScreen";
+import { SkeletonStats } from "@/components/Skeleton";
 import NotificationBell from "@/components/NotificationBell";
 
 const S = { bg:"#050505",panel:"#0d1018",lineSoft:"rgba(255,255,255,0.05)",text:"#f4f5f7",muted:"#9598a3",faint:"#555a66",accent:"#C8FF00" };
@@ -107,7 +107,13 @@ export default function DashboardPage() {
     return `${Math.floor(hrs / 24)}d ago`;
   };
 
-  if (authLoading||loading) return null;
+  if (authLoading||loading) return (
+    <div style={{ background:S.bg, minHeight:"100vh", fontFamily:"Inter,sans-serif" }}>
+      <div style={{ marginLeft:240, padding:"28px 32px" }}>
+        <SkeletonStats count={8} />
+      </div>
+    </div>
+  );
 
   const kpis = [
     { label:"Total Prospects",   value:stats?.totalProspects??0,          suffix:"",   color:S.accent,  href:"/dashboard/prospects", icon:"👥", sub:"AI-scored" },

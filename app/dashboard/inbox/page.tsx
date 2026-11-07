@@ -2,7 +2,9 @@
 import { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import { useAuth } from "@/components/useAuth";
-import LoadingScreen from "@/components/LoadingScreen";
+import { useToast } from "@/components/Toast";
+import { EmptyState } from "@/components/EmptyState";
+import { SkeletonList } from "@/components/Skeleton";
 
 const S = { bg:"#050505",panel:"#0d1018",lineSoft:"rgba(255,255,255,0.05)",text:"#f4f5f7",muted:"#9598a3",faint:"#555a66",accent:"#C8FF00" };
 
@@ -53,11 +55,7 @@ export default function InboxPage() {
   const [filter, setFilter] = useState("all");
   const [scheduleDate, setScheduleDate] = useState("");
   const [showSchedule, setShowSchedule] = useState(false);
-  const [toast, setToast] = useState<{msg:string;type:"success"|"error"|"warning"}>({msg:"",type:"success"});
-
-  const showToast = (msg:string, type:"success"|"error"|"warning"="success") => {
-    setToast({msg,type}); setTimeout(()=>setToast({msg:"",type:"success"}),4000);
-  };
+  const { toast } = useToast();
 
   // Load real email logs from Supabase
   useEffect(() => {
@@ -85,9 +83,9 @@ export default function InboxPage() {
         }),
       });
       const data = await res.json();
-      if (data.error) showToast(data.upgrade?"⚠️ Daily AI limit reached. Upgrade for more.":data.error,"warning");
+      if (data.error) toast.warning(data.upgrade?"⚠️ Daily AI limit reached. Upgrade for more.":data.error);
       else setReply(data.result ?? "");
-    } catch { showToast("AI error. Try again.","error"); }
+    } catch { toast.error("AI error. Try again."); }
     setAiSuggesting(false);
   };
 
@@ -106,13 +104,13 @@ export default function InboxPage() {
     });
     const data = await res.json();
     if (!res.ok) {
-      if (data.upgrade) showToast("⚠️ Upgrade to Starter plan to send real emails","warning");
-      else showToast(data.error??"Failed to send","error");
+      if (data.upgrade) toast.warning("⚠️ Upgrade to Starter plan to send real emails");
+      else toast.error(data.error??"Failed to send");
     } else {
       const newMsg = { from:"me" as const, text:reply, time:"Just now" };
       setThreads(prev=>prev.map(t=>t.id===selected.id?{...t,messages:[...t.messages,newMsg]}:t));
       setSelected(prev=>prev?{...prev,messages:[...prev.messages,newMsg]}:null);
-      showToast(`✓ Email sent to ${selected.name}!`);
+      toast.success(`✓ Email sent to ${selected.name}!`);
       setReply("");
     }
     setSending(false);
@@ -130,9 +128,9 @@ export default function InboxPage() {
     });
     const data = await res.json();
     if (data.followup) {
-      showToast(`✓ Follow-up scheduled for ${new Date(scheduleDate).toLocaleDateString()}`);
+      toast.success(`✓ Follow-up scheduled for ${new Date(scheduleDate).toLocaleDateString()}`);
       setShowSchedule(false); setReply("");
-    } else showToast(data.error??"Error scheduling","error");
+    } else toast.error(data.error??"Error scheduling");
   };
 
   const filtered = threads.filter(t=>{
@@ -142,14 +140,10 @@ export default function InboxPage() {
     return true;
   });
 
-  const toastColor = toast.type==="error"?"#f87171":toast.type==="warning"?"#f59e0b":S.accent;
-  const toastBorder = toast.type==="error"?"rgba(248,113,113,0.3)":toast.type==="warning"?"rgba(245,158,11,0.3)":"rgba(200,255,0,0.3)";
-
   if (authLoading) return null;
 
   return (
     <div style={{ background:S.bg,minHeight:"100vh",fontFamily:"Inter,sans-serif" }}>
-      {toast.msg&&<div style={{ position:"fixed",bottom:28,left:"50%",transform:"translateX(-50%)",background:"#0d1018",border:`1px solid ${toastBorder}`,borderRadius:12,padding:"12px 20px",fontSize:13,fontWeight:600,color:toastColor,zIndex:300,whiteSpace:"nowrap",maxWidth:"90vw",textAlign:"center" }}>{toast.msg}</div>}
       <Sidebar active="inbox" user={user} onLogout={handleLogout}/>
 
       <div style={{ marginLeft:240,display:"grid",gridTemplateColumns:"340px 1fr",height:"100vh",overflow:"hidden" }}>
@@ -177,27 +171,19 @@ export default function InboxPage() {
 
           <div style={{ flex:1,overflowY:"auto" }}>
             {loading?(
-              <div style={{ padding:"32px",textAlign:"center" }}>
-                <div style={{ width:28,height:28,border:"2px solid rgba(200,255,0,0.2)",borderTopColor:S.accent,borderRadius:"50%",animation:"spin 0.8s linear infinite",margin:"0 auto" }}/>
+              <div style={{ padding:"16px" }}>
+                <SkeletonList rows={6} />
               </div>
             ):filtered.length===0?(
-              <div style={{ padding:"48px 20px",textAlign:"center" }}>
-                <div style={{ fontSize:40,marginBottom:16 }}>📭</div>
-                <div style={{ fontSize:14,fontWeight:700,color:S.text,marginBottom:8 }}>
-                  {threads.length===0?"Inbox is empty":"No threads match filter"}
-                </div>
-                <div style={{ fontSize:12,color:S.faint,lineHeight:1.6,marginBottom:20 }}>
-                  {threads.length===0
-                    ?"Your inbox fills up when you send emails to prospects. Go to Prospects and hit ⚡ AI Email to send your first one."
-                    :"Try a different filter"}
-                </div>
-                {threads.length===0&&(
-                  <a href="/dashboard/prospects"
-                    style={{ padding:"9px 18px",borderRadius:10,background:S.accent,color:"#050505",fontSize:12,fontWeight:700,textDecoration:"none" }}>
-                    Go to Prospects →
-                  </a>
-                )}
-              </div>
+              <EmptyState
+                icon="📭"
+                title={threads.length===0?"Inbox is empty":"No threads match filter"}
+                description={threads.length===0
+                  ?"Send emails to prospects and replies will appear here."
+                  :"Try a different filter."}
+                action={threads.length===0 ? { label:"Go to Prospects →", onClick:()=>window.location.href="/dashboard/prospects" } : undefined}
+                compact
+              />
             ):(
               filtered.map(t=>(
                 <div key={t.id}

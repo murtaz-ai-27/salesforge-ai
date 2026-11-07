@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import Sidebar from "@/components/Sidebar";
 import { useAuth } from "@/components/useAuth";
-import LoadingScreen from "@/components/LoadingScreen";
+import { SkeletonStats } from "@/components/Skeleton";
 
 const S = { bg:"#050505",panel:"#0d1018",panel2:"#0a0d14",lineSoft:"rgba(255,255,255,0.05)",text:"#f4f5f7",muted:"#9598a3",faint:"#3d4455",accent:"#C8FF00" };
 
@@ -303,7 +303,13 @@ export default function AnalyticsPage() {
     return () => clearInterval(interval);
   }, [user?.uid, dateRange.start, dateRange.end]);
 
-  if (authLoading) return null;
+  if (authLoading) return (
+    <div style={{ background:S.bg, minHeight:"100vh", fontFamily:"Inter,sans-serif" }}>
+      <div style={{ marginLeft:240, padding:"28px 32px" }}>
+        <SkeletonStats count={6} />
+      </div>
+    </div>
+  );
 
   const totalProspects = stats?.totalProspects ?? 0;
   const emailsSent = stats?.emailsSentThisMonth ?? 0;

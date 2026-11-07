@@ -2,7 +2,7 @@
 import { useState } from "react";
 import Sidebar from "@/components/Sidebar";
 import { useAuth } from "@/components/useAuth";
-import LoadingScreen from "@/components/LoadingScreen";
+import { useToast } from "@/components/Toast";
 
 const S = { bg:"#050505",panel:"#0d1018",lineSoft:"rgba(255,255,255,0.05)",text:"#f4f5f7",muted:"#9598a3",faint:"#555a66",accent:"#C8FF00" };
 
@@ -610,13 +610,8 @@ export default function AutomationsPage() {
   const [running, setRunning] = useState(false);
   const [aiOutput, setAiOutput] = useState("");
   const [testInput, setTestInput] = useState("");
-  const [toast, setToast] = useState({msg:"",color:S.accent});
   const [copied, setCopied] = useState(false);
-
-  const showToast = (msg:string, color=S.accent) => {
-    setToast({msg,color});
-    setTimeout(()=>setToast({msg:"",color:S.accent}),3000);
-  };
+  const { toast } = useToast();
 
   const filtered = automations.filter(a=>filter==="All"||a.category===filter);
   const activeCount = automations.filter(a=>a.status==="active").length;
@@ -625,7 +620,7 @@ export default function AutomationsPage() {
   const toggleStatus = (id:string) => {
     setAutomations(prev=>prev.map(a=>a.id===id?{...a,status:a.status==="active"?"paused":"active"}:a));
     const auto = automations.find(a=>a.id===id);
-    showToast(auto?.status==="active"?"Automation paused":"Automation activated!", auto?.color);
+    auto?.status==="active" ? toast.info("Automation paused") : toast.success("Automation activated!");
   };
 
   const getAutoPrompt = (auto: typeof AUTOMATIONS[0], input: string): {type: string; prompt: string} => {
@@ -735,14 +730,14 @@ Execute this automation and show the output.` };
       const data = await res.json();
       if (data.error) {
         setAiOutput(data.upgrade ? `⚠️ ${data.error}` : `❌ ${data.error}`);
-        showToast("Error — try again", "#ef4444");
+        toast.error("Error — try again");
       } else {
         setAiOutput(data.result);
-        showToast("✓ Automation executed!", selected.color);
+        toast.success("✓ Automation executed!");
       }
     } catch {
       setAiOutput("Connection error. Try again.");
-      showToast("Connection error", "#ef4444");
+      toast.error("Connection error");
     }
     setRunning(false);
   };
@@ -751,15 +746,13 @@ Execute this automation and show the output.` };
     navigator.clipboard.writeText(aiOutput);
     setCopied(true);
     setTimeout(()=>setCopied(false),2000);
-    showToast("Copied!", S.accent);
+    toast.success("Copied!");
   };
 
   if (authLoading) return null;
 
   return (
     <div style={{background:S.bg,minHeight:"100vh",fontFamily:"Inter,sans-serif"}}>
-      {toast.msg&&<div style={{position:"fixed",bottom:28,left:"50%",transform:"translateX(-50%)",background:"#0d1018",border:`1px solid ${toast.color}44`,borderRadius:12,padding:"12px 22px",fontSize:13,fontWeight:600,color:toast.color,zIndex:300,whiteSpace:"nowrap",boxShadow:"0 8px 32px rgba(0,0,0,0.5)"}}>{toast.msg}</div>}
-
       <Sidebar active="automations" user={user} onLogout={handleLogout}/>
 
       <div style={{marginLeft:240,padding:"28px 32px",minHeight:"100vh"}}>

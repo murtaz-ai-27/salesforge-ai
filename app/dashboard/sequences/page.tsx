@@ -2,7 +2,9 @@
 import { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import { useAuth } from "@/components/useAuth";
-import LoadingScreen from "@/components/LoadingScreen";
+import { useToast } from "@/components/Toast";
+import { EmptyState } from "@/components/EmptyState";
+import { SkeletonList } from "@/components/Skeleton";
 
 const S = { bg:"#050505",panel:"#0d1018",lineSoft:"rgba(255,255,255,0.05)",text:"#f4f5f7",muted:"#9598a3",faint:"#555a66",accent:"#C8FF00" };
 
@@ -30,13 +32,9 @@ export default function SequencesPage() {
   const [sending, setSending] = useState<string|null>(null);
   const [assigning, setAssigning] = useState(false);
   const [selectedProspects, setSelectedProspects] = useState<string[]>([]);
-  const [toast, setToast] = useState<{msg:string;type:"success"|"error"|"warning"}>({msg:"",type:"success"});
   const [dbLoading, setDbLoading] = useState(true);
   const [sendResults, setSendResults] = useState<any[]>([]);
-
-  const showToast = (msg:string, type:"success"|"error"|"warning"="success") => {
-    setToast({msg,type}); setTimeout(()=>setToast({msg:"",type:"success"}),4000);
-  };
+  const { toast } = useToast();
 
   // Load sequences from DB
   useEffect(() => {
@@ -79,8 +77,8 @@ export default function SequencesPage() {
       setActiveStep(defaultSteps[0]);
       setView("builder");
       setNewName("");
-      showToast(`✓ "${data.sequence.name}" created with 4 default steps`);
-    } else showToast(data.error??"Error creating","error");
+      toast.success(`✓ "${data.sequence.name}" created with 4 default steps`);
+    } else toast.error(data.error??"Error creating");
   };
 
   const saveSequence = async () => {
@@ -93,15 +91,15 @@ export default function SequencesPage() {
     if (data.sequence) {
       setSequences(prev=>prev.map(s=>s.id===selected.id?data.sequence:s));
       setSelected(data.sequence);
-      showToast("✓ Sequence saved to database!");
-    } else showToast(data.error??"Error saving","error");
+      toast.success("✓ Sequence saved to database!");
+    } else toast.error(data.error??"Error saving");
   };
 
   const deleteSequence = async (id:string) => {
     await fetch(`/api/sequences?id=${id}`, { method:"DELETE" });
     setSequences(prev=>prev.filter(s=>s.id!==id));
     if (selected?.id===id) { setSelected(null); setView("list"); }
-    showToast("Sequence deleted");
+    toast.success("Sequence deleted");
   };
 
   const generateAIStep = async () => {
@@ -121,9 +119,9 @@ export default function SequencesPage() {
         const updated = { ...activeStep, body:data.result, aiWritten:true };
         setSteps(prev=>prev.map(s=>s.id===activeStep.id?updated:s));
         setActiveStep(updated);
-        showToast("⚡ AI wrote this step!");
-      } else showToast(data.error??"AI error","error");
-    } catch { showToast("AI error","error"); }
+        toast.success("⚡ AI wrote this step!");
+      } else toast.error(data.error??"AI error");
+    } catch { toast.error("AI error"); }
     setAiGenerating(false);
   };
 
@@ -136,12 +134,12 @@ export default function SequencesPage() {
     });
     const data = await res.json();
     if (data.success) {
-      showToast(`✓ ${data.assigned} prospect(s) enrolled! ${selected.steps?.length??0} emails scheduled each.`);
+      toast.success(`✓ ${data.assigned} prospect(s) enrolled! ${selected.steps?.length??0} emails scheduled each.`);
       setSelectedProspects([]);
       setView("list");
       // Refresh sequences
       fetch(`/api/sequences?userId=${user.uid}`).then(r=>r.json()).then(d=>{ if(d.sequences) setSequences(d.sequences); });
-    } else showToast(data.error??"Error assigning","error");
+    } else toast.error(data.error??"Error assigning");
     setAssigning(false);
   };
 
@@ -154,11 +152,11 @@ export default function SequencesPage() {
     });
     const data = await res.json();
     if (data.success) {
-      showToast(`✓ ${data.message}. ${data.nextStep}`);
+      toast.success(`✓ ${data.message}. ${data.nextStep}`);
       setSendResults(prev=>[...prev,{ prospectId, ...data }]);
     } else {
-      if (data.upgrade) showToast("⚠️ Upgrade to Starter plan to send emails","warning");
-      else showToast(data.error??"Error sending","error");
+      if (data.upgrade) toast.warning("⚠️ Upgrade to Starter plan to send emails");
+      else toast.error(data.error??"Error sending");
     }
     setSending(null);
   };
@@ -179,11 +177,8 @@ export default function SequencesPage() {
 
   if (authLoading) return null;
 
-  const toastColor = toast.type==="error"?"#f87171":toast.type==="warning"?"#f59e0b":S.accent;
-
   return (
     <div style={{ background:S.bg,minHeight:"100vh",fontFamily:"Inter,sans-serif" }}>
-      {toast.msg&&<div style={{ position:"fixed",bottom:28,left:"50%",transform:"translateX(-50%)",background:"#0d1018",border:`1px solid ${toastColor}44`,borderRadius:12,padding:"12px 20px",fontSize:13,fontWeight:600,color:toastColor,zIndex:300,whiteSpace:"nowrap" }}>{toast.msg}</div>}
       <Sidebar active="sequences" user={user} onLogout={handleLogout}/>
       <div style={{ marginLeft:240,padding:"28px 32px" }}>
 
@@ -246,13 +241,14 @@ export default function SequencesPage() {
         {view==="list"&&(
           <>
             {dbLoading?(
-              <div style={{ padding:"48px",textAlign:"center",color:S.faint }}>Loading sequences...</div>
+              <SkeletonList rows={4} />
             ):sequences.length===0?(
-              <div style={{ background:S.panel,border:`1px solid ${S.lineSoft}`,borderRadius:16,padding:"48px 24px",textAlign:"center" }}>
-                <div style={{ fontSize:48,marginBottom:16 }}>✉️</div>
-                <div style={{ fontSize:16,fontWeight:700,color:S.text,marginBottom:8 }}>No sequences yet</div>
-                <div style={{ fontSize:13,color:S.muted,marginBottom:24 }}>Create a sequence, add AI-written steps, enroll prospects, and watch emails send automatically.</div>
-                <div style={{ fontSize:12,color:S.faint }}>Type a name above and press Enter to create your first sequence</div>
+              <div style={{ background:S.panel,border:`1px solid ${S.lineSoft}`,borderRadius:16 }}>
+                <EmptyState
+                  icon="✉️"
+                  title="No sequences yet"
+                  description="Create a sequence, add AI-written steps, enroll prospects, and watch emails send automatically."
+                />
               </div>
             ):(
               <div style={{ display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(340px,1fr))",gap:16 }}>

@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import { useAuth } from "@/components/useAuth";
-import LoadingScreen from "@/components/LoadingScreen";
+import { useToast } from "@/components/Toast";
 
 const S = {
   bg:"#050505", panel:"#0d1018", lineSoft:"rgba(255,255,255,0.05)",
@@ -10,15 +10,13 @@ const S = {
   red:"#f87171", green:"#34d399",
 };
 
-type Toast = { msg:string; type:"success"|"error"|"warning" };
-
 const TABS = ["Profile","Account","Notifications","Integrations","Danger"] as const;
 type Tab = typeof TABS[number];
 
 export default function SettingsPage() {
   const { user, loading: authLoading, handleLogout } = useAuth();
+  const { toast } = useToast();
   const [tab, setTab] = useState<Tab>("Profile");
-  const [toast, setToast] = useState<Toast>({ msg:"", type:"success" });
   const [saving, setSaving] = useState(false);
 
   // Profile fields
@@ -49,11 +47,6 @@ export default function SettingsPage() {
       .catch(() => {});
   }, [user]);
 
-  const showToast = (msg:string, type:Toast["type"]="success") => {
-    setToast({ msg, type });
-    setTimeout(() => setToast({ msg:"", type:"success" }), 4000);
-  };
-
   const saveProfile = async () => {
     if (!user?.uid) return;
     setSaving(true);
@@ -63,17 +56,15 @@ export default function SettingsPage() {
         headers: { "Content-Type":"application/json" },
         body: JSON.stringify({ userId: user.uid, displayName, company, role, timezone }),
       });
-      showToast("✓ Profile saved");
+      toast.success("✓ Profile saved");
     } catch {
-      showToast("Failed to save profile","error");
+      toast.error("Failed to save profile");
     } finally {
       setSaving(false);
     }
   };
 
   if (authLoading) return null;
-
-  const toastColor = toast.type==="error" ? S.red : toast.type==="warning" ? "#f59e0b" : S.accent;
 
   return (
     <div style={{ background:S.bg, minHeight:"100vh", fontFamily:"Inter,sans-serif" }}>
@@ -95,16 +86,6 @@ export default function SettingsPage() {
         .toggle.on::after{transform:translateX(18px)}
         .toggle.off{background:rgba(255,255,255,0.1)}
       `}</style>
-
-      {/* Toast */}
-      {toast.msg && (
-        <div style={{ position:"fixed",bottom:28,left:"50%",transform:"translateX(-50%)",
-          background:"#0d1018",border:`1px solid ${toastColor}55`,borderRadius:12,
-          padding:"12px 22px",fontSize:13,fontWeight:700,color:toastColor,
-          zIndex:500,whiteSpace:"nowrap",boxShadow:`0 4px 24px ${toastColor}22` }}>
-          {toast.msg}
-        </div>
-      )}
 
       <Sidebar active="settings" user={user} onLogout={handleLogout} />
 

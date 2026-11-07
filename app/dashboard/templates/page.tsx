@@ -2,7 +2,7 @@
 import { useState } from "react";
 import Sidebar from "@/components/Sidebar";
 import { useAuth } from "@/components/useAuth";
-import LoadingScreen from "@/components/LoadingScreen";
+import { useToast } from "@/components/Toast";
 
 const S = { bg:"#050505",panel:"#0d1018",lineSoft:"rgba(255,255,255,0.05)",text:"#f4f5f7",muted:"#9598a3",faint:"#555a66",accent:"#C8FF00" };
 
@@ -227,6 +227,7 @@ const INDUSTRIES = ["All","SaaS","Fintech","DevTools","E-commerce","Healthcare"]
 
 export default function TemplatesPage() {
   const { user, loading: authLoading, handleLogout } = useAuth();
+  const { toast } = useToast();
   const [category, setCategory] = useState("All");
   const [industry, setIndustry] = useState("All");
   const [selected, setSelected] = useState<typeof TEMPLATES[0]|null>(null);
@@ -234,10 +235,7 @@ export default function TemplatesPage() {
   const [aiGenerating, setAiGenerating] = useState(false);
   const [customized, setCustomized] = useState("");
   const [prospectInfo, setProspectInfo] = useState("");
-  const [toast, setToast] = useState("");
   const [search, setSearch] = useState("");
-
-  const showToast = (msg:string) => { setToast(msg); setTimeout(()=>setToast(""),3000); };
 
   const filtered = TEMPLATES.filter(t => {
     const matchCat = category==="All" || t.category===category;
@@ -249,7 +247,7 @@ export default function TemplatesPage() {
 
   const copyText = (text:string, type:"subject"|"body") => {
     navigator.clipboard.writeText(text).then(()=>{
-      setCopied(type); showToast(`✓ ${type==="subject"?"Subject":"Body"} copied!`);
+      setCopied(type); toast.success(`✓ ${type==="subject"?"Subject":"Body"} copied!`);
       setTimeout(()=>setCopied(null),2000);
     });
   };
@@ -276,9 +274,9 @@ Rewrite the email filling in all {{variables}} with relevant, specific informati
         }),
       });
       const data = await res.json();
-      if (data.result) { setCustomized(data.result); showToast("✓ AI customized this template!"); }
-      else showToast(data.error??"AI error");
-    } catch { showToast("AI error"); }
+      if (data.result) { setCustomized(data.result); toast.success("✓ AI customized this template!"); }
+      else toast.error(data.error??"AI error");
+    } catch { toast.error("AI error"); }
     setAiGenerating(false);
   };
 
@@ -286,7 +284,6 @@ Rewrite the email filling in all {{variables}} with relevant, specific informati
 
   return (
     <div style={{ background:S.bg,minHeight:"100vh",fontFamily:"Inter,sans-serif" }}>
-      {toast&&<div style={{ position:"fixed",bottom:28,left:"50%",transform:"translateX(-50%)",background:"#0d1018",border:"1px solid rgba(200,255,0,0.3)",borderRadius:12,padding:"12px 22px",fontSize:13,fontWeight:600,color:S.accent,zIndex:300,whiteSpace:"nowrap" }}>{toast}</div>}
       <Sidebar active="templates" user={user} onLogout={handleLogout}/>
       <div style={{ marginLeft:240,padding:"28px 32px" }}>
 
@@ -472,7 +469,7 @@ Rewrite the email filling in all {{variables}} with relevant, specific informati
                   <div style={{ background:"rgba(0,0,0,0.3)",border:`1px solid ${S.lineSoft}`,borderRadius:10,padding:"12px 14px" }}>
                     <div style={{ fontSize:10,fontWeight:700,color:S.accent,textTransform:"uppercase",letterSpacing:".08em",marginBottom:8 }}>⚡ Customized Version</div>
                     <pre style={{ fontSize:12,color:S.text,lineHeight:1.75,whiteSpace:"pre-wrap",fontFamily:"Inter,sans-serif",marginBottom:10,maxHeight:180,overflowY:"auto" }}>{customized}</pre>
-                    <button onClick={()=>{ navigator.clipboard.writeText(customized); showToast("✓ Customized email copied!"); }}
+                    <button onClick={()=>{ navigator.clipboard.writeText(customized); toast.success("✓ Customized email copied!"); }}
                       style={{ width:"100%",padding:"8px",borderRadius:9,background:"rgba(200,255,0,0.08)",border:"1px solid rgba(200,255,0,0.2)",color:S.accent,fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"Inter,sans-serif" }}>
                       Copy Customized Email
                     </button>

@@ -3,7 +3,8 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import { useAuth } from "@/components/useAuth";
 import { useProspects, Prospect } from "@/components/useProspects";
-import LoadingScreen from "@/components/LoadingScreen";
+import { useToast } from "@/components/Toast";
+import { ConfirmModal } from "@/components/ConfirmModal";
 
 // ─── Tokens ──────────────────────────────────────────────────────────────────
 const S = {
@@ -45,7 +46,6 @@ const STATUS_META: Record<string, { color: string; label: string; emoji: string 
 const ALL_STATUSES  = ["new","contacted","replied","meeting","closed","lost"];
 const FILTER_TABS   = ["all","new","contacted","replied","meeting","high"];
 
-type Toast      = { msg: string; type: "success"|"error"|"warning" };
 type StatusType = "new"|"contacted"|"replied"|"meeting"|"closed"|"lost";
 type ConfirmDel = { id: string; name: string } | null;
 
@@ -306,7 +306,7 @@ export default function ProspectsPage() {
   const [form, setForm] = useState({
     name:"", email:"", role:"", company:"", industry:"", company_size:"", notes:"", phone:"",
   });
-  const [toast,         setToast]         = useState<Toast>({ msg:"", type:"success" });
+  const { toast } = useToast();
   const [confirmDel,    setConfirmDel]    = useState<ConfirmDel>(null);
   const [csvLoading,    setCsvLoading]    = useState(false);
   const [statusLoading, setStatusLoading] = useState<Record<string,boolean>>({});
@@ -321,11 +321,6 @@ export default function ProspectsPage() {
   const [sending,      setSending]      = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  // ── Helpers
-  const showToast = useCallback((msg: string, type: Toast["type"] = "success") => {
-    setToast({ msg, type });
-    setTimeout(() => setToast({ msg:"", type:"success" }), 4000);
-  }, []);
 
   // ── Keep drawer in sync when prospects array updates (e.g. after any PATCH)
   useEffect(() => {
@@ -341,11 +336,11 @@ export default function ProspectsPage() {
       await updateProspect(id, { status: newStatus });
       setDrawer(prev => prev?.id === id ? { ...prev, status: newStatus } : prev);
     } catch (err: any) {
-      showToast(err?.message ?? "Status update failed", "error");
+      toast.error(err?.message ?? "Status update failed");
     } finally {
       setStatusLoading(p => ({ ...p, [id]: false }));
     }
-  }, [updateProspect, showToast]);
+  }, [updateProspect]);
 
   // ── Add prospect
   const handleAdd = async () => {
@@ -372,9 +367,9 @@ export default function ProspectsPage() {
       });
       setForm({ name:"", email:"", role:"", company:"", industry:"", company_size:"", notes:"", phone:"" });
       setShowAdd(false);
-      showToast(`✓ ${form.name.trim()} added`);
+      toast.success(`✓ ${form.name.trim()} added`);
     } catch (err: any) {
-      showToast(err?.message ?? "Failed to add", "error");
+      toast.error(err?.message ?? "Failed to add");
     } finally {
       setFormLoading(false);
     }
@@ -385,10 +380,10 @@ export default function ProspectsPage() {
     if (!confirmDel) return;
     try {
       await deleteProspect(confirmDel.id);
-      showToast(`${confirmDel.name} deleted`);
+      toast.success(`${confirmDel.name} deleted`);
       if (drawer?.id === confirmDel.id) setDrawer(null);
     } catch (err: any) {
-      showToast(err?.message ?? "Delete failed", "error");
+      toast.error(err?.message ?? "Delete failed");
     } finally { setConfirmDel(null); }
   };
 
@@ -399,7 +394,7 @@ export default function ProspectsPage() {
     try {
       const text  = await file.text();
       const lines = text.split("\n").filter(Boolean);
-      if (lines.length < 2) { showToast("CSV is empty", "error"); return; }
+      if (lines.length < 2) { toast.error("CSV is empty"); return; }
       const headers = lines[0].split(",").map(h => h.trim().toLowerCase().replace(/['"]/g,"").replace(/\s+/g,"_"));
       const rows = lines.slice(1).map(line => {
         const vals: string[] = []; let cur = "", inQ = false;
@@ -415,9 +410,9 @@ export default function ProspectsPage() {
         return row;
       }).filter(r => r.email || r.name);
       await bulkAddProspects(rows);
-      showToast(`✓ ${rows.length} prospects imported`);
+      toast.success(`✓ ${rows.length} prospects imported`);
     } catch (err: any) {
-      showToast(err?.message ?? "Import failed", "error");
+      toast.error(err?.message ?? "Import failed");
     } finally { setCsvLoading(false); e.target.value=""; }
   };
 
@@ -437,7 +432,7 @@ export default function ProspectsPage() {
       if (signal.aborted) return;
       const [sData, bData] = await Promise.all([sRes.json(), bRes.json()]);
       if (bData.error || sData.error) {
-        showToast(bData.upgrade ? "⚠️ Daily AI limit reached" : (bData.error ?? sData.error), "warning");
+        toast.warning(bData.upgrade ? "⚠️ Daily AI limit reached" : (bData.error ?? sData.error));
         setAiModal(null); return;
       }
       const lines = (sData.result??"").split("\n").filter((l:string) => l.trim());
@@ -445,7 +440,7 @@ export default function ProspectsPage() {
       setAiBody(replaceVars(bData.result??"", prospect));
     } catch (err: any) {
       if (err?.name==="AbortError") return;
-      showToast(err?.message??"Generation failed","error"); setAiModal(null);
+      toast.error(err?.message??"Generation failed"); setAiModal(null);
     } finally { if (!abortRef.current?.signal.aborted) setAiGenerating(false); }
   };
 
@@ -466,16 +461,16 @@ export default function ProspectsPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        showToast(data.error ?? "Failed to send", "error");
+        toast.error(data.error ?? "Failed to send");
       } else {
-        showToast(`✓ Email sent to ${aiModal.email}`);
+        toast.success(`✓ Email sent to ${aiModal.email}`);
         // Auto-status: email sent → contacted (if still new)
         const next = autoStatus(aiModal.status, "email_sent");
         if (next !== aiModal.status) await handleStatus(aiModal.id, next);
         closeAiModal();
       }
     } catch (err: any) {
-      showToast(err?.message??"Send failed","error");
+      toast.error(err?.message??"Send failed");
     } finally { setSending(false); }
   };
 
@@ -486,7 +481,7 @@ export default function ProspectsPage() {
     if (next !== p.status) {
       await handleStatus(p.id, next);
     }
-    showToast(`📞 Calling ${p.name}…`);
+    toast.info(`📞 Calling ${p.name}…`);
 
     // 2. Log call to Supabase (fire-and-forget; don't block the tel: link)
     if (user?.uid) {
@@ -502,7 +497,7 @@ export default function ProspectsPage() {
         }),
       }).catch(() => {}); // silent — call still works even if log fails
     }
-  }, [handleStatus, showToast, user]);
+  }, [handleStatus, user]);
 
   // ── Filtering
   const filtered = prospects.filter(p => {
@@ -511,8 +506,6 @@ export default function ProspectsPage() {
     const matchFilter = filter==="all" ? true : filter==="high" ? p.buying_intent==="high" : p.status===filter;
     return matchSearch && matchFilter;
   });
-
-  const toastColor = toast.type==="error" ? S.red : toast.type==="warning" ? S.amber : S.accent;
 
   if (authLoading || dataLoading) return null;
   if (!user) return null;
@@ -539,42 +532,15 @@ export default function ProspectsPage() {
         @media (max-width:768px) { .prospects-main { margin-left:0 !important; padding:16px !important; } }
       `}</style>
 
-      {/* Toast */}
-      {toast.msg && (
-        <div style={{ position:"fixed", bottom:28, left:"50%", transform:"translateX(-50%)",
-          background:"#0d1018", border:`1px solid ${toastColor}55`, borderRadius:12,
-          padding:"12px 22px", fontSize:13, fontWeight:700, color:toastColor,
-          zIndex:500, animation:"fadeIn 0.2s ease", whiteSpace:"nowrap",
-          boxShadow:`0 4px 24px ${toastColor}22` }}>
-          {toast.msg}
-        </div>
-      )}
-
-      {/* Confirm delete modal */}
-      {confirmDel && (
-        <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.75)", display:"grid",
-          placeItems:"center", zIndex:400 }}>
-          <div style={{ background:"#0d1018", border:"1px solid rgba(248,113,113,0.3)",
-            borderRadius:16, padding:28, maxWidth:380, width:"90%", animation:"fadeIn 0.18s ease" }}>
-            <div style={{ fontSize:16, fontWeight:800, color:S.text, marginBottom:8 }}>Delete Prospect?</div>
-            <div style={{ fontSize:13, color:S.muted, marginBottom:24 }}>
-              <span style={{ color:S.text, fontWeight:700 }}>{confirmDel.name}</span> will be permanently deleted.
-            </div>
-            <div style={{ display:"flex", gap:10 }}>
-              <button className="btn-smooth" onClick={handleDelete}
-                style={{ flex:1, padding:"10px", borderRadius:10, background:"rgba(248,113,113,0.12)",
-                  border:"1px solid rgba(248,113,113,0.35)", color:S.red, fontWeight:700, fontSize:13 }}>
-                Delete
-              </button>
-              <button className="btn-smooth" onClick={() => setConfirmDel(null)}
-                style={{ flex:1, padding:"10px", borderRadius:10, background:"rgba(255,255,255,0.05)",
-                  border:`1px solid ${S.line}`, color:S.muted, fontWeight:600, fontSize:13 }}>
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmModal
+        open={!!confirmDel}
+        title="Delete Prospect?"
+        description={confirmDel ? `${confirmDel.name} will be permanently deleted. This cannot be undone.` : ""}
+        confirmLabel="Delete"
+        danger
+        onConfirm={handleDelete}
+        onCancel={() => setConfirmDel(null)}
+      />
 
       {/* AI Email modal */}
       {aiModal && (
